@@ -8,7 +8,7 @@
         Stage & Geometry source & Role & Planned output \\
         \midrule
         1D & tracked 1D benchmark & analytical limit & line/profile PNG \\
-        2D & 4StraightFractures & transparent image case & 2D panel PNG \\
+        2D & 4StraightFractures & transparent image case & three-panel PNG \\
         3D & Kelvin1-200x200x200 & simple 3D topology & slice/render PNG \\
         3D large & Est\_3phase500cubed4micron & porous-media demo & multi-panel PNG \\
         \bottomrule
@@ -17,27 +17,43 @@
 
 \subsection{Simple 2D Image-Based Case}
 
-The planned 2D case reuses the existing segmented image asset:
+The implemented 2D case reuses the existing segmented image asset:
 \begin{itemize}
 \item \texttt{images/raw/4StraightFractures.raw.tar.gz}
 \item metadata: \texttt{images/raw/4StraightFractures.txt}
 \item image size: \mbox{$500 \times 500 \times 1$}
-\item phase labels: \mbox{$0 = \mathrm{solid}$}, \mbox{$1 = \mathrm{matrix}$},
-      \mbox{$2 = \mathrm{pore}$}
+\item raw labels present in the image:
+      \mbox{$1 = \mathrm{matrix}$}, \mbox{$2 = \mathrm{pore}$}
+\item draft runtime case:
+      \texttt{tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/}
+      \texttt{4StraightFracturesSurfaceComplexation}
+\item draft runtime mesh:
+      \mbox{$250 \times 250 \times 1$}
 \end{itemize}
 
 This case should play the same role as the simple 2D case in the reference
 paper: a geometrically transparent test that makes the coupling between
 transport, internal surface interaction, and retardation easy to interpret.
 
-Planned figure set:
+In this image, the source metadata reserves label \mbox{$0 = \mathrm{solid}$},
+but the actual raw data contain only matrix and pore labels. For the unresolved
+DBS surface term, the current draft therefore treats the matrix phase
+(\mbox{$1$}) as the reactive solid-like phase when constructing
+\mbox{$a_{\mathrm{surf}}$}. This is the correct interpretation for this
+fracture-network example because the reactive interface is the matrix-pore
+contact, not a separate label-\mbox{$0$} solid.
+
+Reported figure set:
 \begin{itemize}
-\item geometry PNG (already staged),
-\item aqueous concentration PNG,
-\item surface loading PNG.
+\item geometry panel,
+\item normalized aqueous calcium panel,
+\item normalized adsorbed-calcium panel.
 \end{itemize}
 
-The 2D case should be written to answer three questions:
+At the current draft endpoint (\mbox{$t = 2000$}, run on \mbox{$8$} MPI
+ranks), the case has a nonzero \mbox{$a_{\mathrm{surf}}$} field, a nonzero
+\texttt{Surf\_aCa+} field, and a clean three-panel PNG tied directly to the
+runtime case. The 2D case is now written to answer three questions:
 \begin{enumerate}
 \item does the method recover the expected directional retardation pattern in a
 simple geometry,
@@ -106,10 +122,13 @@ comparable to the earlier sections.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
-    \caption{Staged geometry panel for the 2D \texttt{4StraightFractures}
-    case. This draft figure shows the segmented source image only; the final
-    manuscript panel should add aqueous concentration and surface-loading
-    outputs from the corresponding solver run.}
+    \caption{Three-panel result for the 2D \texttt{4StraightFractures} case.
+    Left: segmented geometry. Middle: normalized dissolved Ca$^{2+}$ at
+    \mbox{$t = 2000$}. Right: normalized adsorbed calcium
+    (\texttt{Surf\_aCa+}) at the same time. The draft figure is taken directly
+    from the reproducible \mbox{$8$}-rank
+    \texttt{reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation}
+    runtime case.}
 \end{figure}
 
 \begin{figure}[htbp]
