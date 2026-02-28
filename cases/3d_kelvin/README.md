@@ -22,6 +22,15 @@
   - `1 = pore`
   - `2 = micropore` (paper rendering convention)
 
+## Current Draft Surface Model
+
+- the Kelvin draft case now uses:
+  - interface-count `aSurf`
+  - plus an intrinsic micropore contribution inside label `2`
+- current draft intrinsic micropore density:
+  - `1e5 1/m`
+- this is a case parameter, not yet a calibrated physical claim
+
 ## Planned Outputs
 
 - angled 3D outer-skin render (now staged)

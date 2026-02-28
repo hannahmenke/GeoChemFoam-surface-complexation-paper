@@ -30,6 +30,18 @@ $a_{\mathrm{surf}}$, surface fields,
 Transport uses face interpolation only inside the conservative flux assembly.
 Surface chemistry remains cell-local.
 
+For microporous image cases, the current implementation treats the cell-centered
+surface-area field as an additive quantity:
+\[
+    a_{\mathrm{surf}} =
+    a_{\mathrm{surf}}^{\mathrm{interface}} +
+    a_{\mathrm{surf}}^{\mathrm{intrinsic}}.
+\]
+The first term is the coarse-grained phase-boundary contribution. The second is
+an intrinsic volumetric surface density assigned to selected image phases
+(for example the micropore phase) and scaled by the corresponding local phase
+fraction inside each coarse cell.
+
 \subsection{PHREEQC Coupling}
 
 The PHREEQC coupling is performed through \texttt{phreeqcDBSMixture}. For each
@@ -37,7 +49,8 @@ cell, the coupling uses:
 \begin{itemize}
 \item the current aqueous state,
 \item the physical mobile-water fraction $\theta$,
-\item the current cell surface area $a_{\mathrm{surf}}$,
+\item the current cell surface area $a_{\mathrm{surf}}$, including any
+intrinsic micropore contribution,
 \item the current cell surface state.
 \end{itemize}
 
@@ -86,6 +99,8 @@ write-precision,
 percent on the fixed 1D benchmark,
 \item the current written DBS surface fields use the inherited field-scaling
 convention documented in the implementation notes.
+\item for microporous image cases, the intrinsic micropore surface density is a
+case input, not something inferred uniquely from the segmented image.
 \end{itemize}
 
 \subsection{Implementation Quantities Reported In The Paper}
