@@ -45,9 +45,17 @@ def ogata_banks(c_in: float, velocity: float, diffusion: float, time_value: floa
     return c_in * (term1 + term2)
 
 
+def profile_errors(numeric: list[float], analytical: list[float], scale: float) -> tuple[float, float]:
+    diffs = [abs(a - b) for a, b in zip(numeric, analytical)]
+    if not diffs:
+        return 0.0, 0.0
+    return (sum(diffs) / len(diffs)) / scale, max(diffs) / scale
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--surface-ca", type=Path, required=True)
+    parser.add_argument("--surface-loading", type=Path, required=True)
     parser.add_argument("--aqueous-ca", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--c-in", type=float, default=2e-9)
@@ -61,10 +69,12 @@ def main() -> None:
     args = parser.parse_args()
 
     surface_values = parse_scalar_field(args.surface_ca)
+    surface_loading_values = parse_scalar_field(args.surface_loading)
     aqueous_values = parse_scalar_field(args.aqueous_ca) if args.aqueous_ca else None
     n = len(surface_values)
     dx = args.length / max(n, 1)
     x = [(i + 0.5) * dx for i in range(n)]
+    x_um = [1.0e6 * value for value in x]
 
     r_field = 1.0 + args.asurf * args.k_s_field / (args.theta * args.theta)
     v_surface = args.u / (args.theta * r_field)
@@ -72,6 +82,8 @@ def main() -> None:
     analytical_surface = [
         ogata_banks(args.c_in, v_surface, d_surface, args.time, xi) for xi in x
     ]
+    analytical_surface_loading = [args.k_s_field * value for value in analytical_surface]
+    numerical_surface_loading = surface_loading_values
     analytical_aqueous = None
     if aqueous_values is not None:
         v_aqueous = args.u / args.theta
@@ -79,34 +91,98 @@ def main() -> None:
             ogata_banks(args.c_in, v_aqueous, args.diffusion, args.time, xi) for xi in x
         ]
 
-    fig, ax = plt.subplots(figsize=(6.5, 3.5))
+    l1_surface, linf_surface = profile_errors(surface_values, analytical_surface, max(abs(args.c_in), 1.0e-30))
+    l1_aqueous = None
+    if aqueous_values is not None and analytical_aqueous is not None:
+        l1_aqueous, _ = profile_errors(aqueous_values, analytical_aqueous, max(abs(args.c_in), 1.0e-30))
+
+    surface_scale = max(abs(args.c_in), 1.0e-30)
+    loading_scale = max(max(numerical_surface_loading), max(analytical_surface_loading), 1.0e-30)
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.0, 3.7), sharex=True)
+    ax = axes[0]
     if aqueous_values is not None:
-        ax.plot(x, aqueous_values, label="Numerical aqueous-only", linewidth=1.6, color="#c55a11")
         ax.plot(
-            x,
-            analytical_aqueous,
+            x_um,
+            [value / surface_scale for value in aqueous_values],
+            label="Numerical aqueous-only",
+            linewidth=1.4,
+            color="#c55a11",
+            marker="o",
+            markersize=2.6,
+            markevery=max(1, n // 16),
+        )
+        ax.plot(
+            x_um,
+            [value / surface_scale for value in analytical_aqueous],
             "--",
             label="Analytical aqueous-only",
             linewidth=1.2,
             color="#f2a65a",
         )
-    ax.plot(x, surface_values, label="Numerical surface-enabled", linewidth=2.0, color="#0b4f6c")
     ax.plot(
-        x,
-        analytical_surface,
+        x_um,
+        [value / surface_scale for value in surface_values],
+        label="Numerical surface-enabled",
+        linewidth=1.8,
+        color="#0b4f6c",
+        marker="o",
+        markersize=2.8,
+        markevery=max(1, n // 16),
+    )
+    ax.plot(
+        x_um,
+        [value / surface_scale for value in analytical_surface],
         "--",
         label="Analytical surface-enabled",
         linewidth=1.4,
         color="#4f9da6",
     )
-    ax.set_xlabel("x [m]")
-    ax.set_ylabel("Ca$^{2+}$ concentration")
-    ax.set_title("1D Retardation Benchmark (Advection-Diffusion)")
+    ax.set_xlabel("x [$\\mu$m]")
+    ax.set_ylabel("Normalized Ca$^{2+}$ concentration")
+    ax.set_title("Aqueous profile")
     ax.legend()
     ax.grid(True, alpha=0.25)
 
+    ax2 = axes[1]
+    ax2.plot(
+        x_um,
+        [value / loading_scale for value in numerical_surface_loading],
+        label="Numerical surface loading",
+        linewidth=1.8,
+        color="#6b2d5c",
+        marker="o",
+        markersize=2.8,
+        markevery=max(1, n // 16),
+    )
+    ax2.plot(
+        x_um,
+        [value / loading_scale for value in analytical_surface_loading],
+        "--",
+        label="Analytical linear limit",
+        linewidth=1.4,
+        color="#b565a7",
+    )
+    ax2.set_xlabel("x [$\\mu$m]")
+    ax2.set_ylabel("Normalized Surf$_{a}$Ca$^{+}$")
+    ax2.set_title("Surface loading")
+    ax2.grid(True, alpha=0.25)
+
+    annotation_lines = [f"$R_{{field}}={r_field:.3f}$", f"surface L1 = {100.0 * l1_surface:.2f}%"]
+    if l1_aqueous is not None:
+        annotation_lines.append(f"aqueous L1 = {100.0 * l1_aqueous:.2f}%")
+    ax.text(
+        0.03,
+        0.04,
+        "\n".join(annotation_lines),
+        transform=ax.transAxes,
+        fontsize=8.5,
+        bbox={"facecolor": "white", "edgecolor": "#bdbdbd", "boxstyle": "round,pad=0.25"},
+    )
+
+    fig.suptitle("1D Retardation Benchmark")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
     fig.savefig(args.output, dpi=200)
 
 

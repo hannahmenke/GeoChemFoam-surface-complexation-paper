@@ -7,9 +7,9 @@
 - section:
   - Validation
 - content:
-  - 1D aqueous concentration profile
+  - normalized 1D aqueous concentration profile
   - analytical retarded reference
-  - optional surface-loading overlay
+  - normalized surface-loading profile
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation`
 
@@ -33,7 +33,7 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - currently staged: 3D geometry slice
+  - currently staged: angled 3D outer-skin render
   - still needed: aqueous concentration slice
   - still needed: surface-loading slice
 - source asset:
@@ -46,7 +46,7 @@
 - section:
   - Test Cases / Large 3D Porous Media
 - content:
-  - currently staged: geometry overview plus zoomed subregion
+  - currently staged: angled 3D outer-skin render
   - still needed: concentration slices
   - still needed: surface-loading slices
   - still needed: one summary metric panel if space permits

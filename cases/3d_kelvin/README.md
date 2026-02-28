@@ -20,14 +20,20 @@
   - `10 mum`
 - labels:
   - `1 = pore`
-  - `2 = solid`
+  - `2 = micropore` (paper rendering convention)
 
 ## Planned Outputs
 
-- 3D geometry slice or render (now staged)
+- angled 3D outer-skin render (now staged)
 - aqueous concentration slice
 - surface-loading slice
 
 ## Planned Figure
 
 - `figures/png/fig03_3d_kelvin.png`
+
+## Current Draft Figure Convention
+
+- the staged draft geometry figure is an outer-skin render of the volume
+- all boundary phases are colored
+- no internal geometry is shown in this draft figure

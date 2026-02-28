@@ -17,11 +17,20 @@
 
 ## Planned Outputs
 
-- geometry overview
-- coarse and fine slice views that expose the multi-scale hierarchy
+- angled 3D geometry overview
+- angled 3D zoom view that exposes the multi-scale hierarchy
 - aqueous concentration slices
 - surface-loading slices
 - one summary performance/chemistry metric
+
+## Current Draft Figure Convention
+
+- the staged draft geometry figure is an outer-skin render of the cropped
+  full volume
+- all phases on the external surface are colored
+- no internal geometry is shown in this draft figure
+- when a second panel is shown, it is a second exterior viewing angle rather
+  than a cropped cutaway
 
 ## Required Reported Metadata
 

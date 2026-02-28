@@ -15,9 +15,11 @@
 
 - aqueous concentration profile
 - analytical comparison profile
-- optional surface-loading profile
+- surface-loading profile
 - one summary metric table row
 
 ## Planned Figure
 
 - `figures/png/fig01_1d_retardation.png`
+  - left panel: normalized aqueous Ca$^{2+}$ profile vs analytical reference
+  - right panel: normalized `Surf_aCa+` profile vs linear-limit reference

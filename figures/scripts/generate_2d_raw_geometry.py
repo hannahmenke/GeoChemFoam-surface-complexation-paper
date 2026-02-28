@@ -52,7 +52,9 @@ def main() -> None:
     volume = array.reshape((nz, ny, nx))
     image = volume[0, :, :]
 
-    cmap = ListedColormap(["#1f1f1f", "#7a7a7a", "#f2f2f2"])
+    # Paper geometry palette:
+    # solid = red, intermediate porous phase = blue, pore = white
+    cmap = ListedColormap(["#c94f4f", "#4f8fd6", "#ffffff"])
     norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5], cmap.N)
 
     fig, ax = plt.subplots(figsize=(6.2, 6.2))

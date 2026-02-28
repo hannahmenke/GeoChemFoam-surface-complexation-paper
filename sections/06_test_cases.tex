@@ -55,7 +55,8 @@ The planned simple 3D case reuses:
 \item metadata: \texttt{images/raw/Kelvin1-200x200x200.txt}
 \item image size: \mbox{$200 \times 200 \times 200$}
 \item voxel size: \mbox{$10~\mu\mathrm{m}$}
-\item phase labels: \mbox{$1 = \mathrm{pore}$}, \mbox{$2 = \mathrm{solid}$}
+\item phase labels: \mbox{$1 = \mathrm{pore}$}, \mbox{$2 = \mathrm{micropore}$}
+      in the manuscript rendering convention
 \end{itemize}
 
 This case should demonstrate the transition from 2D transport pathways to a
@@ -68,6 +69,10 @@ The simple 3D section should focus on:
 pattern,
 \item how much the 3D case increases chemistry cost relative to the 2D case.
 \end{itemize}
+
+The paper figures for the 3D cases should use angled 3D renders rather than
+planar slices so the geometry and the later concentration fields read
+immediately as volumetric results.
 
 \subsection{Large 3D Porous-Media Case}
 
@@ -110,18 +115,20 @@ comparable to the earlier sections.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Staged geometry panel for the simple 3D Kelvin case. This draft
-    figure shows the segmented source image only; the final manuscript panel
-    should add aqueous concentration and surface-loading outputs from the
-    corresponding solver run.}
+    \caption{Staged angled 3D outer-skin render for the simple 3D Kelvin case.
+    This draft figure colors the external surface only and omits the internal
+    geometry; the final manuscript panel should add aqueous concentration and
+    surface-loading outputs rendered from the same camera orientation.}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
-    \caption{Staged geometry panel for the large 3D Estaillades-style case.
-    This draft figure shows an overview slice and a zoomed subregion to expose
-    the multi-scale segmented structure; the final manuscript panel should add
-    concentration and surface-loading outputs from the corresponding solver
-    run.}
+    \caption{Staged angled 3D geometry renders for the large 3D
+    Estaillades-style case. This draft figure uses an outer-skin render of the
+    full volume, with all boundary phases colored and no internal geometry
+    shown; when two panels are shown, they are two exterior views of the same
+    outer surface rather than a cutaway. The final manuscript panel should add
+    concentration and surface-loading outputs from the corresponding solver run
+    using the same view direction.}
 \end{figure}
