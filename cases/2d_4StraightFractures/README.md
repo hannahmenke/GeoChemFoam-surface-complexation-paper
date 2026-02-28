@@ -12,9 +12,22 @@
 - simplest image-based geometry
 - visually transparent 2D retardation and uptake case
 
+## Source Metadata
+
+- image size:
+  - `500 x 500 x 1`
+- segmentation:
+  - `phases`
+- labels:
+  - `0 = solid`
+  - `1 = matrix`
+  - `2 = pore`
+- note:
+  - the source metadata does not currently report a resolved voxel size
+
 ## Planned Outputs
 
-- geometry panel
+- geometry panel (now staged)
 - aqueous concentration panel
 - surface-loading panel
 

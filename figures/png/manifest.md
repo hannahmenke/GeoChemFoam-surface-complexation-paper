@@ -20,9 +20,9 @@
 - section:
   - Test Cases / Simple 2D
 - content:
-  - 2D geometry panel
-  - aqueous concentration panel
-  - surface-loading panel
+  - currently staged: 2D geometry panel
+  - still needed: aqueous concentration panel
+  - still needed: surface-loading panel
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 

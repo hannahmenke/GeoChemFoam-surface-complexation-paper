@@ -21,6 +21,9 @@ The planned 2D case reuses the existing segmented image asset:
 \begin{itemize}
 \item \texttt{images/raw/4StraightFractures.raw.tar.gz}
 \item metadata: \texttt{images/raw/4StraightFractures.txt}
+\item image size: \mbox{$500 \times 500 \times 1$}
+\item phase labels: \mbox{$0 = \mathrm{solid}$}, \mbox{$1 = \mathrm{matrix}$},
+      \mbox{$2 = \mathrm{pore}$}
 \end{itemize}
 
 This case should play the same role as the simple 2D case in the reference
@@ -29,7 +32,7 @@ transport, internal surface interaction, and retardation easy to interpret.
 
 Planned figure set:
 \begin{itemize}
-\item geometry PNG,
+\item geometry PNG (already staged),
 \item aqueous concentration PNG,
 \item surface loading PNG.
 \end{itemize}
@@ -89,9 +92,11 @@ comparable to the earlier sections.
 
 \begin{figure}[htbp]
     \centering
-    \fbox{\rule{0pt}{2in}\rule{0.9\linewidth}{0pt}}
-    \caption{Placeholder for the 2D case figure set
-    (planned PNG target: \texttt{figures/png/fig02\_2d\_fractures.png}).}
+    \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
+    \caption{Staged geometry panel for the 2D \texttt{4StraightFractures}
+    case. This draft figure shows the segmented source image only; the final
+    manuscript panel should add aqueous concentration and surface-loading
+    outputs from the corresponding solver run.}
 \end{figure}
 
 \begin{figure}[htbp]
