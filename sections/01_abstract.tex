@@ -1,0 +1,16 @@
+\begin{abstract}
+This draft presents a diffuse-boundary-surface (DBS) formulation for
+PHREEQC-coupled reactive transport with cell-based surface complexation. The
+model is designed to preserve conservative aqueous transport in the mobile
+water fraction, retain a local conservative exchange between dissolved and
+adsorbed inventories, and avoid non-conservative numerical fixes such as
+species clipping. The implementation is built in stages from validated
+reductions, culminating in a production solver for DBS transport with optional
+surface complexation.
+
+The paper is organized around a validation ladder: a 1D analytical benchmark,
+a simple 2D image-based case, a simple 3D image-based case, and a larger 3D
+porous-media demonstration. The current manuscript intentionally omits final
+references so the mathematical statement, implementation details, and test-case
+results can be stabilized first.
+\end{abstract}

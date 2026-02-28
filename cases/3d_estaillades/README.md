@@ -1,0 +1,36 @@
+# 3D Manuscript Case: Estaillades-Style Multiscale Image
+
+## Source Asset
+
+- image:
+  - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
+- metadata:
+  - `images/raw/Est_3phase500cubed4micron.txt`
+
+## Paper Role
+
+- larger porous-media demonstration
+- Estaillades-style multi-scale image benchmark
+- application-scale performance and surface-complexation showcase
+- distinct from the simple 3D case because the structure must visibly span more
+  than one geometric scale in the reported slices
+
+## Planned Outputs
+
+- geometry overview
+- coarse and fine slice views that expose the multi-scale hierarchy
+- aqueous concentration slices
+- surface-loading slices
+- one summary performance/chemistry metric
+
+## Required Reported Metadata
+
+- voxel size from the source metadata
+- cropped domain size actually simulated
+- total `aSurf` used in the reported run
+- MPI rank count
+- representative runtime on the reporting machine
+
+## Planned Figure
+
+- `figures/png/fig04_3d_estaillades.png`

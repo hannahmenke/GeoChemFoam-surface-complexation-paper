@@ -1,0 +1,96 @@
+\section{Validation}
+
+\subsection{1D Analytical Retardation Benchmark}
+
+The first validation target is the tracked 1D case
+\texttt{tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation}.
+This case provides the dilute analytical benchmark used to verify the
+field-level retardation factor and the expected reduction to retarded transport
+in the linear-equilibrium limit.
+
+The current benchmark compares:
+\begin{itemize}
+\item a surface-enabled moving case,
+\item a matched aqueous-only moving case,
+\item a dilute batch secant used to estimate $K_{s,\mathrm{field}}$.
+\end{itemize}
+
+For the current validated benchmark:
+\begin{itemize}
+\item $K_{s,\mathrm{field}} = 4.2412187733863601\times 10^{-6}$,
+\item $R_{\mathrm{field}} = 2.6964875093545437$,
+\item the mesh is $80 \times 1 \times 1$ with a species diffusion coefficient
+of $10^{-11}\ \mathrm{m^2\,s^{-1}}$,
+\item the surface-enabled profile matches the retarded advection-diffusion
+reference with a relative L1 error of $0.75\%$ and a relative
+$L_{\infty}$ error of $2.68\%$,
+\item the aqueous-only profile matches its advection-diffusion reference with
+a relative L1 error of $1.87\%$ and a relative $L_{\infty}$ error of
+$8.44\%$,
+\item the field-level total-equivalent inventory differs from the analytical
+limit by $0.67\%$ for the surface-enabled run and $2.41\%$ for the
+aqueous-only run.
+\end{itemize}
+
+These values are sufficient for the manuscript to claim that the production
+solver reproduces the dilute field-level retardation limit of the current DBS
+formulation.
+
+The publication figure for this section should include:
+\begin{itemize}
+\item the 1D aqueous concentration profile,
+\item the analytical retarded reference,
+\item optionally the corresponding surface-loading profile.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig01_1d_retardation.png}
+    \caption{1D analytical retardation benchmark. The aqueous-only and
+    surface-enabled numerical profiles are compared against their matching
+    smooth advection-diffusion analytical solutions built from the current
+    field-level retardation factor.}
+\end{figure}
+
+\subsection{Controlled Numerical Validation}
+
+In addition to the analytical benchmark, the solver has been checked against a
+set of controlled numerical baselines:
+\begin{itemize}
+\item aqueous-only reduction,
+\item \mbox{$a_{\mathrm{surf}} = 0$} reduction,
+\item closed-system adsorption and desorption,
+\item decomposition, timestep, and mesh sensitivity on the fixed 1D benchmark.
+\end{itemize}
+
+These checks constrain both the mathematical correctness and the current
+operating envelope used in the later image-based test cases.
+
+\subsection{Validation Outputs Required For The Final Draft}
+
+For the manuscript to be internally reviewable, the validation section should
+end with a compact summary table containing:
+\begin{itemize}
+\item reduction-path pass/fail status,
+\item analytical benchmark error,
+\item decomposition sensitivity,
+\item timestep sensitivity,
+\item mesh sensitivity,
+\item one representative chemistry-cost metric.
+\end{itemize}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Placeholder for the validation summary table.}
+    \begin{tabular}{lll}
+        \toprule
+        Check & Metric & Placeholder status \\
+        \midrule
+        Analytical 1D & Profile error / inventory drift & Drafted \\
+        Decomposition & Total-equivalent drift & To be populated \\
+        Timestep & Front-shape drift & To be populated \\
+        Mesh & Front / total drift & To be populated \\
+        Performance & Chemistry fraction & To be populated \\
+        \bottomrule
+    \end{tabular}
+\end{table}

@@ -1,0 +1,120 @@
+\section{Model Description}
+
+\subsection{Field Definitions}
+
+The DBS formulation distinguishes between numerical and physical pore-space
+quantities:
+\begin{itemize}
+\item $\epsilon_{\mathrm{num}}$: numerical DBS porosity used for stable
+transport regularization,
+\item $\theta$: physical mobile-water fraction used for accumulation and
+chemistry,
+\item $a_{\mathrm{surf}}$: reactive internal surface area per bulk volume.
+\end{itemize}
+
+All transported aqueous species, $\theta$, $\epsilon_{\mathrm{num}}$,
+$a_{\mathrm{surf}}$, and the DBS surface fields are treated as cell-centered
+fields. The volumetric flux $\phi$ remains face-centered.
+
+\subsection{Conservative Aqueous Transport}
+
+For each aqueous species with concentration $C_i$, the conservative DBS
+transport equation is written as
+\begin{equation}
+\frac{\partial (\theta C_i)}{\partial t}
++ \nabla \cdot (\phi C_i)
+- \nabla \cdot (\theta D_i \nabla C_i) = 0,
+\end{equation}
+where $D_i$ denotes the molecular or effective diffusivity used in the
+transport step.
+
+This form is the correct mobile-water balance. The numerical porosity
+$\epsilon_{\mathrm{num}}$ is not used as a chemistry storage term unless an
+explicit modeling choice is made to set $\theta = \epsilon_{\mathrm{num}}$.
+
+For a vector of aqueous species $\bm{C}$, the transport step can be written in
+compact form as
+\begin{equation}
+\frac{\partial (\theta \bm{C})}{\partial t}
++ \nabla \cdot (\phi \bm{C})
+- \nabla \cdot (\theta \bm{D} \nabla \bm{C}) = \bm{0},
+\end{equation}
+which makes the conservative structure explicit before any chemistry update is
+applied.
+
+\subsection{Cell-Based Surface Inventory}
+
+For the unresolved DBS surface, the conservative local inventory is expressed
+in the current solver field variables as
+\begin{equation}
+M = \theta C + \frac{a_{\mathrm{surf}}}{\theta}\Gamma_{\mathrm{field}},
+\end{equation}
+where $\Gamma_{\mathrm{field}}$ is the written DBS surface field convention
+used by the current implementation.
+
+This field-level form must be used when comparing the solver state to
+analytical reductions and benchmark totals.
+
+For multiple surface species, the local bulk inventory is understood as the sum
+over all relevant aqueous and adsorbed contributions. In the present paper, the
+single-species notation is used where it improves readability, but every
+reported benchmark total is computed in the actual implemented field variables.
+
+\subsection{Local Chemistry Coupling}
+
+The chemical update is local to each cell. Over one transport-chemistry cycle:
+\begin{enumerate}
+\item the transport step advances the aqueous species in conservative
+finite-volume form,
+\item the chemistry step maps the cell aqueous state, mobile-water fraction,
+and cell surface state into PHREEQC,
+\item PHREEQC returns updated aqueous and surface states after local
+equilibration/reaction.
+\end{enumerate}
+
+The baseline production method uses a first-order Lie split. Higher-order
+splitting is intentionally deferred until the first conservative production
+path is validated.
+
+At the algorithmic level, one timestep of size $\Delta t$ is:
+\begin{align}
+\bm{C}^{n+1/2} &= \mathcal{T}_{\Delta t}(\bm{C}^{n}, \theta, \phi, \bm{D}),\\
+(\bm{C}^{n+1}, \bm{\Gamma}^{n+1}) &=
+\mathcal{R}_{\Delta t}(\bm{C}^{n+1/2}, \bm{\Gamma}^{n}, \theta, a_{\mathrm{surf}}),
+\end{align}
+where $\mathcal{T}_{\Delta t}$ is the conservative transport operator and
+$\mathcal{R}_{\Delta t}$ is the local PHREEQC reaction operator.
+
+\subsection{Analytical Dilute Limit}
+
+In the dilute linear-equilibrium limit, the current field variables satisfy
+\begin{equation}
+\Gamma_{\mathrm{field}} = K_{s,\mathrm{field}} C,
+\end{equation}
+which yields the retarded 1D transport equation
+\begin{equation}
+\left(
+\theta + \frac{a_{\mathrm{surf}}}{\theta}K_{s,\mathrm{field}}
+\right)\frac{\partial C}{\partial t}
++ \frac{\partial (\phi C)}{\partial x} = 0.
+\end{equation}
+
+The corresponding field-level retardation factor is
+\begin{equation}
+R_{\mathrm{field}} = 1 + \frac{a_{\mathrm{surf}}K_{s,\mathrm{field}}}{\theta^2}.
+\end{equation}
+
+This expression is the correct analytical comparison form for the current
+implementation and is used in the 1D validation section.
+
+\subsection{What The Validation Must Prove}
+
+The validation program in this paper must demonstrate four claims:
+\begin{enumerate}
+\item the production solver reduces to simpler known limits,
+\item the local surface-coupled chemistry conserves the intended field-level
+inventory,
+\item the production solver reproduces the dilute analytical retardation limit,
+\item the same formulation remains usable as the geometry complexity increases
+from 1D to image-based 2D and 3D domains.
+\end{enumerate}

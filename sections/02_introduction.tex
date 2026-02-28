@@ -1,0 +1,24 @@
+\section{Introduction}
+
+Surface complexation is a key control on reactive transport in porous media,
+but most pore-scale implementations assume either explicitly resolved grain
+surfaces or simplified source terms that are not tied cleanly to a
+conservative transport balance. The objective of this work is to develop a DBS
+formulation that couples PHREEQC chemistry to unresolved internal surface area
+while preserving mathematically correct inventory balances.
+
+The guiding constraints of this implementation are:
+\begin{itemize}
+\item the transport equation must conserve mobile aqueous inventory in the
+physical mobile-water fraction,
+\item local chemistry must conserve total inventory while transferring mass
+between aqueous and adsorbed states,
+\item the baseline method must not rely on concentration clipping, damping, or
+heuristic face-based reaction reconstruction.
+\end{itemize}
+
+The solver developed in this work is \texttt{reactiveScalarTransportDBSFoam}.
+It is built on a staged validation program so every major reduction path
+remains testable. This manuscript follows the same overall structure as the
+earlier GeoChemFoam reactive transport paper: introduction, model description,
+implementation, validation, and then progressively more complex test cases.

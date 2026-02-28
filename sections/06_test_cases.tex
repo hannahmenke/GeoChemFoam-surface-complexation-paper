@@ -1,0 +1,109 @@
+\section{Test Cases}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Planned test-case ladder for the manuscript.}
+    \begin{tabular}{llll}
+        \toprule
+        Stage & Geometry source & Role & Planned output \\
+        \midrule
+        1D & tracked 1D benchmark & analytical limit & line/profile PNG \\
+        2D & 4StraightFractures & transparent image case & 2D panel PNG \\
+        3D & Kelvin1-200x200x200 & simple 3D topology & slice/render PNG \\
+        3D large & Est\_3phase500cubed4micron & porous-media demo & multi-panel PNG \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Simple 2D Image-Based Case}
+
+The planned 2D case reuses the existing segmented image asset:
+\begin{itemize}
+\item \texttt{images/raw/4StraightFractures.raw.tar.gz}
+\item metadata: \texttt{images/raw/4StraightFractures.txt}
+\end{itemize}
+
+This case should play the same role as the simple 2D case in the reference
+paper: a geometrically transparent test that makes the coupling between
+transport, internal surface interaction, and retardation easy to interpret.
+
+Planned figure set:
+\begin{itemize}
+\item geometry PNG,
+\item aqueous concentration PNG,
+\item surface loading PNG.
+\end{itemize}
+
+The 2D case should be written to answer three questions:
+\begin{enumerate}
+\item does the method recover the expected directional retardation pattern in a
+simple geometry,
+\item does the surface-loading field track the geometry in an interpretable
+way,
+\item does the 2D image case remain visually and numerically easier to audit
+than the 3D cases.
+\end{enumerate}
+
+\subsection{Simple 3D Image-Based Case}
+
+The planned simple 3D case reuses:
+\begin{itemize}
+\item \texttt{images/raw/Kelvin1-200x200x200.raw.tar.gz}
+\item metadata: \texttt{images/raw/Kelvin1-200x200x200.txt}
+\end{itemize}
+
+This case should demonstrate the transition from 2D transport pathways to a
+fully 3D unresolved surface network while still remaining easy to interpret.
+
+The simple 3D section should focus on:
+\begin{itemize}
+\item how 3D topology changes the transport path,
+\item how the unresolved internal surface distribution changes the uptake
+pattern,
+\item how much the 3D case increases chemistry cost relative to the 2D case.
+\end{itemize}
+
+\subsection{Large 3D Porous-Media Case}
+
+The planned large 3D porous-media case reuses:
+\begin{itemize}
+\item \texttt{images/raw/Est\_3phase500cubed4micron.raw.tar.gz}
+\item metadata: \texttt{images/raw/Est\_3phase500cubed4micron.txt}
+\end{itemize}
+
+This case is the application-scale demonstration. It should use an
+Estaillades-style multi-scale image so the method is exercised on a domain with
+more realistic multi-scale structural contrast than the controlled 2D and
+simple 3D cases.
+
+The large porous-media section should report:
+\begin{itemize}
+\item mesh/image size,
+\item effective resolution,
+\item visible multi-scale structural contrast in the reported slices,
+\item MPI rank count,
+\item representative runtime,
+\item one concentration metric and one surface-loading metric that remain
+comparable to the earlier sections.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \fbox{\rule{0pt}{2in}\rule{0.9\linewidth}{0pt}}
+    \caption{Placeholder for the 2D case figure set
+    (planned PNG target: \texttt{figures/png/fig02\_2d\_fractures.png}).}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \fbox{\rule{0pt}{2in}\rule{0.9\linewidth}{0pt}}
+    \caption{Placeholder for the simple 3D case figure set
+    (planned PNG target: \texttt{figures/png/fig03\_3d\_kelvin.png}).}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \fbox{\rule{0pt}{2in}\rule{0.9\linewidth}{0pt}}
+    \caption{Placeholder for the large 3D porous-media Estaillades case figure
+    set (planned PNG target: \texttt{figures/png/fig04\_3d\_estaillades.png}).}
+\end{figure}
