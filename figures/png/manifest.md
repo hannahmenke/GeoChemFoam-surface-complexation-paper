@@ -33,9 +33,9 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - 3D geometry slice or render
-  - aqueous concentration slice
-  - surface-loading slice
+  - currently staged: 3D geometry slice
+  - still needed: aqueous concentration slice
+  - still needed: surface-loading slice
 - source asset:
   - `images/raw/Kelvin1-200x200x200.raw.tar.gz`
 
@@ -46,9 +46,9 @@
 - section:
   - Test Cases / Large 3D Porous Media
 - content:
-  - geometry overview
-  - concentration slices
-  - surface-loading slices
-  - one summary metric panel if space permits
+  - currently staged: geometry overview plus zoomed subregion
+  - still needed: concentration slices
+  - still needed: surface-loading slices
+  - still needed: one summary metric panel if space permits
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`

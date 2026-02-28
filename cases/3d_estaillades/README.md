@@ -31,6 +31,17 @@
 - MPI rank count
 - representative runtime on the reporting machine
 
+## Source Metadata
+
+- image size:
+  - `500 x 500 x 500`
+- voxel size:
+  - `4 mum`
+- labels:
+  - `1 = pore`
+  - `2 = micropores`
+  - `3 = solid`
+
 ## Planned Figure
 
 - `figures/png/fig04_3d_estaillades.png`

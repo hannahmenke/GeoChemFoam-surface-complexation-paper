@@ -53,6 +53,9 @@ The planned simple 3D case reuses:
 \begin{itemize}
 \item \texttt{images/raw/Kelvin1-200x200x200.raw.tar.gz}
 \item metadata: \texttt{images/raw/Kelvin1-200x200x200.txt}
+\item image size: \mbox{$200 \times 200 \times 200$}
+\item voxel size: \mbox{$10~\mu\mathrm{m}$}
+\item phase labels: \mbox{$1 = \mathrm{pore}$}, \mbox{$2 = \mathrm{solid}$}
 \end{itemize}
 
 This case should demonstrate the transition from 2D transport pathways to a
@@ -72,6 +75,11 @@ The planned large 3D porous-media case reuses:
 \begin{itemize}
 \item \texttt{images/raw/Est\_3phase500cubed4micron.raw.tar.gz}
 \item metadata: \texttt{images/raw/Est\_3phase500cubed4micron.txt}
+\item image size: \mbox{$500 \times 500 \times 500$}
+\item voxel size: \mbox{$4~\mu\mathrm{m}$}
+\item phase labels: \mbox{$1 = \mathrm{pore}$},
+      \mbox{$2 = \mathrm{micropores}$},
+      \mbox{$3 = \mathrm{solid}$}
 \end{itemize}
 
 This case is the application-scale demonstration. It should use an
@@ -101,14 +109,19 @@ comparable to the earlier sections.
 
 \begin{figure}[htbp]
     \centering
-    \fbox{\rule{0pt}{2in}\rule{0.9\linewidth}{0pt}}
-    \caption{Placeholder for the simple 3D case figure set
-    (planned PNG target: \texttt{figures/png/fig03\_3d\_kelvin.png}).}
+    \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
+    \caption{Staged geometry panel for the simple 3D Kelvin case. This draft
+    figure shows the segmented source image only; the final manuscript panel
+    should add aqueous concentration and surface-loading outputs from the
+    corresponding solver run.}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \fbox{\rule{0pt}{2in}\rule{0.9\linewidth}{0pt}}
-    \caption{Placeholder for the large 3D porous-media Estaillades case figure
-    set (planned PNG target: \texttt{figures/png/fig04\_3d\_estaillades.png}).}
+    \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
+    \caption{Staged geometry panel for the large 3D Estaillades-style case.
+    This draft figure shows an overview slice and a zoomed subregion to expose
+    the multi-scale segmented structure; the final manuscript panel should add
+    concentration and surface-loading outputs from the corresponding solver
+    run.}
 \end{figure}

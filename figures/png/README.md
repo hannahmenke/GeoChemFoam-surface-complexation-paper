@@ -15,5 +15,10 @@ Current staged figures:
   - populated with the 1D analytical validation comparison
 - `fig02_2d_fractures.png`
   - populated with the raw segmented geometry preview for the 2D case
+- `fig03_3d_kelvin.png`
+  - populated with a central geometry slice for the Kelvin case
+- `fig04_3d_estaillades.png`
+  - populated with an overview-plus-zoom geometry preview for the multiscale
+    Estaillades case
 
 The LaTeX draft already references these as the expected final PNG outputs.
