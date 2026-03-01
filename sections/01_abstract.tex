@@ -1,22 +1,20 @@
 \begin{abstract}
-This draft presents a diffuse-boundary-surface (DBS) formulation for
-PHREEQC-coupled reactive transport with cell-based surface complexation. The
-model is designed to preserve conservative aqueous transport in the mobile
-water fraction, retain a local conservative exchange between dissolved and
-adsorbed inventories, and avoid non-conservative numerical fixes such as
-species clipping. The implementation is built in stages from validated
-reductions, culminating in a production solver for DBS transport with optional
-surface complexation.
+We present a diffuse-boundary-surface (DBS) formulation for PHREEQC-coupled
+reactive transport with cell-based surface complexation in image-based porous
+media. The formulation is designed to preserve conservative aqueous transport
+in the physical mobile-water fraction, to maintain conservative local exchange
+between dissolved and adsorbed inventories, and to avoid non-conservative
+numerical corrections such as species clipping. The implementation is developed
+through a staged sequence of verified reductions, culminating in a production
+solver for DBS transport with optional unresolved surface complexation.
 
-The paper is organized around a validation ladder: a 1D analytical benchmark,
-a simple 2D image-based case, a simple 3D image-based case, and a larger 3D
-porous-media demonstration. The current draft already includes a passing 1D
-analytical retardation benchmark, a corrected 2D fracture-network result with
-matrix-wide unresolved surface uptake, and a true 3D Kelvin field render. The
-large multi-scale Estaillades-style
-case now also has a corrected production run with reported timing and field
-metrics, and the draft now includes true 3D volume-rendered field figures for
-both the Kelvin and Estaillades cases. The manuscript intentionally omits final references so the
-mathematical statement, implementation details, and test-case results can be
-stabilized first.
+The manuscript is structured as a validation ladder that proceeds from a 1D
+analytical retardation benchmark to a simple 2D image-based case, a simple 3D
+image-based case, and a larger multi-scale 3D porous-medium demonstration. The
+present manuscript includes a passing 1D analytical benchmark, a corrected 2D
+fracture-network result with matrix-wide unresolved surface uptake, and 3D
+volume-rendered field results for Kelvin and Estaillades-style test cases. At
+this stage, the emphasis is placed on consolidating the mathematical statement,
+the numerical implementation, and the benchmark evidence before final
+literature references are added.
 \end{abstract}

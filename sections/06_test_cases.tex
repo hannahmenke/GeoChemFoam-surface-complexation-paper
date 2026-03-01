@@ -17,125 +17,93 @@
 
 \subsection{Simple 2D Image-Based Case}
 
-The implemented 2D case reuses the existing segmented image asset:
-\begin{itemize}
-\item \texttt{images/raw/4StraightFractures.raw.tar.gz}
-\item metadata: \texttt{images/raw/4StraightFractures.txt}
-\item image size: \mbox{$500 \times 500 \times 1$}
-\item raw labels present in the image:
-      \mbox{$1 = \mathrm{matrix}$}, \mbox{$2 = \mathrm{pore}$}
-\item draft runtime case:
-      tracked \texttt{4StraightFracturesSurfaceComplexation} repository case
-\item draft runtime mesh:
-      \mbox{$250 \times 250 \times 1$}
-\end{itemize}
-
-This case should play the same role as the simple 2D case in the reference
-paper: a geometrically transparent test that makes the coupling between
-transport, internal surface interaction, and retardation easy to interpret.
+The 2D demonstration reuses the segmented image
+\texttt{4StraightFractures.raw.tar.gz} (stored under
+\texttt{images/raw/}) with metadata in \texttt{4StraightFractures.txt}. The
+source image has dimensions
+$500 \times 500 \times 1$ and contains two labels, corresponding to matrix
+($1$) and pore ($2$). The associated runtime case is the tracked
+\texttt{4StraightFracturesSurfaceComplexation} case, which is solved on a
+$250 \times 250 \times 1$ computational grid. This case serves the same role
+as the simple 2D example in the reference paper: it provides a geometrically
+transparent setting in which the coupling between transport, unresolved
+surface interaction, and retardation remains easy to interpret.
 
 In this image, the source metadata reserves label \mbox{$0 = \mathrm{solid}$},
 but the actual raw data contain only matrix and pore labels. For the unresolved
-DBS surface term, the current draft therefore treats the matrix phase
+DBS surface term, the present implementation therefore treats the matrix phase
 (\mbox{$1$}) as the reactive solid-like phase when constructing
 \mbox{$a_{\mathrm{surf}}$}. This is the correct interpretation for this
 fracture-network example because the reactive interface is the matrix-pore
 contact, not a separate label-\mbox{$0$} solid.
 
-Reported figure set:
-\begin{itemize}
-\item geometry panel,
-\item normalized aqueous calcium panel,
-\item normalized adsorbed-calcium panel.
-\end{itemize}
+The corresponding figure reports the segmented geometry, the normalized
+dissolved calcium field, and the normalized adsorbed-calcium field.
 
-At the current draft endpoint (\mbox{$t = 3000$}, run on \mbox{$8$} MPI
-ranks), the case has a nonzero \mbox{$a_{\mathrm{surf}}$} field, a nonzero
-\texttt{Surf\_aCa+} field, and a clean three-panel PNG tied directly to the
-runtime case. The current 2D draft also adds an intrinsic unresolved surface
-term inside the \mbox{$\epsilon = 0.4$} matrix phase, so the surface-loading
-field is no longer restricted to the matrix-pore interface. The 2D case is now
-written to answer three questions:
-\begin{enumerate}
-\item does the method recover the expected directional retardation pattern in a
-simple geometry,
-\item does the surface-loading field track both the fracture walls and the
-microporous matrix in an interpretable way,
-\item does the 2D image case remain visually and numerically easier to audit
-than the 3D cases.
-\end{enumerate}
+At the reported endpoint ($t = 3000$), obtained on eight MPI ranks, the
+case exhibits nonzero $a_{\mathrm{surf}}$ and \texttt{Surf\_aCa+} fields and
+produces a reproducible three-panel figure tied directly to the runtime case.
+An intrinsic unresolved surface term is included inside the
+$\epsilon = 0.4$ matrix phase, so the surface-loading field is no longer
+confined to the matrix--pore interface. Accordingly, the 2D case is used to
+demonstrate that the method reproduces the expected directional retardation
+pattern in a simple geometry, that the surface-loading field tracks both the
+fracture walls and the microporous matrix in an interpretable manner, and that
+the image-based formulation remains visually and numerically transparent before
+the transition to 3D.
 
 \subsection{Simple 3D Image-Based Case}
 
-The implemented simple 3D case reuses:
-\begin{itemize}
-\item \texttt{images/raw/Kelvin1-200x200x200.raw.tar.gz}
-\item metadata: \texttt{images/raw/Kelvin1-200x200x200.txt}
-\item image size: \mbox{$200 \times 200 \times 200$}
-\item voxel size: \mbox{$10~\mu\mathrm{m}$}
-\item phase labels: \mbox{$1 = \mathrm{pore}$}, \mbox{$2 = \mathrm{micropore}$}
-      in the manuscript rendering convention
-\end{itemize}
+The simple 3D case reuses the Kelvin image data set distributed with the
+repository together with its accompanying metadata file.
+The image dimensions are
+$200 \times 200 \times 200$, the voxel size is $10~\mu\mathrm{m}$, and the
+rendering convention used in the manuscript treats label $1$ as pore and label
+$2$ as micropore. This case marks the transition from 2D transport pathways to
+a fully 3D unresolved surface network while remaining sufficiently simple to
+interpret visually. It is used to illustrate how the 3D topology modifies the
+transport path, how the unresolved internal surface distribution reshapes the
+uptake pattern, and how the cost of the chemistry step increases relative to
+the 2D case.
 
-This case should demonstrate the transition from 2D transport pathways to a
-fully 3D unresolved surface network while still remaining easy to interpret.
+The 3D chemistry figures reported here are true volume renders generated from
+the stitched solver fields. Earlier slice-based views were useful during
+internal verification, but they are not used as final manuscript figures.
 
-The simple 3D section should focus on:
-\begin{itemize}
-\item how 3D topology changes the transport path,
-\item how the unresolved internal surface distribution changes the uptake
-pattern,
-\item how much the 3D case increases chemistry cost relative to the 2D case.
-\end{itemize}
-
-The accepted rendering path for the 3D chemistry figures is a true volume
-render generated from the stitched solver fields. Earlier slice-based
-diagnostics were useful for internal checks, but they are not the final
-manuscript figures.
+For the 3D cases considered here, the transported initial condition is
+calcium-free (\mbox{$\mathrm{Ca^{2+}} = 0$}, \mbox{$\mathrm{Cl^{-}} = 0$}) and
+all visible calcium enters through the inlet boundary. A tiny trace remains
+only in the PHREEQC template input so the upgraded backend retains the
+calcium component during startup mapping. The reported surface panel is
+therefore plotted as incremental loading
+(\mbox{$\Delta$\texttt{Surf\_aCa+}}) rather than absolute
+\texttt{Surf\_aCa+}, which removes the negligible startup equilibrium floor.
 
 \subsection{Large 3D Porous-Media Case}
 
-The implemented large 3D porous-media case reuses:
-\begin{itemize}
-\item \texttt{images/raw/Est\_3phase500cubed4micron.raw.tar.gz}
-\item metadata: \texttt{images/raw/Est\_3phase500cubed4micron.txt}
-\item image size: \mbox{$500 \times 500 \times 500$}
-\item voxel size: \mbox{$4~\mu\mathrm{m}$}
-\item phase labels: \mbox{$1 = \mathrm{pore}$},
-      \mbox{$2 = \mathrm{micropores}$},
-      \mbox{$3 = \mathrm{solid}$}
-\end{itemize}
+The large 3D porous-medium case reuses
+\texttt{Est\_3phase500cubed4micron.raw.tar.gz} (under \texttt{images/raw/})
+with metadata in \texttt{Est\_3phase500cubed4micron.txt}. The image dimensions are
+$500 \times 500 \times 500$, the voxel size is $4~\mu\mathrm{m}$, and the
+three phases correspond to pore ($1$), micropore ($2$), and solid ($3$). This
+case serves as the application-scale demonstration. By using an
+Estaillades-style multi-scale image, the formulation is exercised on a domain
+with substantially stronger structural contrast than the controlled 2D and
+simple 3D cases. In this setting, the manuscript reports the image and
+mesh dimensions, the effective coarse resolution, the visible multi-scale
+contrast in the volume rendering, the MPI rank count, a representative runtime,
+and one concentration and one surface-loading metric that remain comparable to
+the earlier examples.
 
-This case is the application-scale demonstration. It should use an
-Estaillades-style multi-scale image so the method is exercised on a domain with
-more realistic multi-scale structural contrast than the controlled 2D and
-simple 3D cases.
-
-The large porous-media section should report:
-\begin{itemize}
-\item mesh/image size,
-\item effective resolution,
-\item visible multi-scale structural contrast in the reported volume render,
-\item MPI rank count,
-\item representative runtime,
-\item one concentration metric and one surface-loading metric that remain
-comparable to the earlier sections.
-\end{itemize}
-
-The corrected Estaillades draft case now runs to \mbox{$t = 400$} on
-\mbox{$8$} MPI ranks on a \mbox{$50 \times 50 \times 50$} coarse grid built
-from the full \mbox{$500^3$} segmented image. For this run:
-\begin{itemize}
-\item the domain-mean dissolved \mbox{Ca$^{2+}$} is
-      \mbox{$1.72 \times 10^{-9}$},
-\item the domain-mean adsorbed \mbox{\texttt{Surf\_aCa+}} is
-      \mbox{$6.98 \times 10^{-15}$},
-\item the mean \mbox{$a_{\mathrm{surf}}$} is
-      \mbox{$7.65 \times 10^{4}\ \mathrm{m^{-1}}$},
-\item the PHREEQC timing summary reports \mbox{$80$} chemistry calls with a
-      total chemistry time of about \mbox{$58.1$} s,
-\item the total wall-clock to the final written time is about \mbox{$82$} s.
-\end{itemize}
+The corrected Estaillades case is reported here from a clean unrestarted run
+to $t = 50$ on eight MPI ranks, using a $50 \times 50 \times 50$ coarse grid
+constructed from the full $500^3$ segmented image. For this run, the
+domain-mean dissolved Ca$^{2+}$ is $5.37 \times 10^{-10}$, the domain-mean
+\texttt{Surf\_aCa+} is $2.12 \times 10^{-15}$, and the mean
+$a_{\mathrm{surf}}$ is $7.65 \times 10^{4}\ \mathrm{m^{-1}}$. The PHREEQC
+timing summary reports $10$ chemistry calls with a total chemistry time of
+approximately $7.29$~s, while the total wall-clock time to the final written
+state is approximately $25$~s.
 
 The current large-3D chemistry result is physically consistent with the case
 setup: the near-solid cells (\mbox{$\theta \le 10^{-3}$}) are now masked out of
@@ -149,7 +117,7 @@ solid skeleton.
     \caption{Three-panel result for the 2D \texttt{4StraightFractures} case.
     Left: segmented geometry. Middle: normalized dissolved Ca$^{2+}$ at
     \mbox{$t = 3000$}. Right: normalized adsorbed calcium
-    (\texttt{Surf\_aCa+}) at the same time. The draft figure is taken directly
+    (\texttt{Surf\_aCa+}) at the same time. The figure is taken directly
     from the reproducible \mbox{$8$}-rank
     \texttt{reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation}
     runtime case, using the corrected intrinsic matrix surface term in the
@@ -160,9 +128,11 @@ solid skeleton.
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
     \caption{Three-panel 3D result for the simple Kelvin case at
-    \mbox{$t = 100$}, selected because the dissolved front is still near the
+    \mbox{$t = 4$}, selected because the dissolved front is still near the
     mid-domain position. Left: initial geometry. Middle: normalized dissolved
-    Ca$^{2+}$. Right: normalized adsorbed calcium (\texttt{Surf\_aCa+}).
+    Ca$^{2+}$. Right: normalized incremental adsorbed calcium
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}} = \texttt{Surf\_aCa+}$(t)$ -
+    \texttt{Surf\_aCa+}$(0)$).
     The chemistry panels follow the same color logic as Figure~2
     (\texttt{cividis} for dissolved concentration and \texttt{magma} for
     surface loading) and are rendered from the stitched \mbox{$8$}-rank solver
@@ -173,11 +143,11 @@ solid skeleton.
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
     \caption{Three-panel 3D result for the large Estaillades-style case at
-    \mbox{$t = 100$}, selected because the dissolved front is still close to
+    \mbox{$t = 50$}, selected because the dissolved front is still close to
     the half-domain position. Left: initial geometry. Middle: normalized
-    dissolved Ca$^{2+}$. Right: normalized adsorbed calcium
-    (\texttt{Surf\_aCa+}). The chemistry panels follow the same color logic as
-    Figure~2 and are rendered from the corrected stitched \mbox{$8$}-rank
-    solver output using the same camera in all three panels to expose the
-    multi-scale spatial response.}
+    dissolved Ca$^{2+}$. Right: normalized incremental adsorbed calcium
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}}). The chemistry panels follow the same
+    color logic as Figure~2 and are rendered from the corrected stitched
+    \mbox{$8$}-rank solver output using the same camera in all three panels to
+    expose the multi-scale spatial response.}
 \end{figure}

@@ -1,27 +1,19 @@
 \section{Conclusions}
 
-This draft paper establishes the structure for a conservative DBS reactive
-transport manuscript with PHREEQC-coupled cell-based surface complexation. The
-mathematical statement, implementation path, and benchmark ladder are now laid
-out in the same overall style as the earlier GeoChemFoam reactive transport
-paper, but tailored to the unresolved DBS surface model.
+This work presents a conservative DBS formulation for PHREEQC-coupled reactive
+transport with cell-based surface complexation. The manuscript defines the
+continuous model, the discrete implementation, and the benchmark hierarchy
+used to assess the final solver on analytical, image-based, and multiscale
+porous-media cases.
 
-At the current draft stage:
-\begin{itemize}
-\item the 1D analytical retardation benchmark is reported with a profile-level
-comparison and quantitative validation metrics,
-\item the 2D fracture-network case is reported from a corrected matrix-reactive
-run with visible microporous uptake,
-\item the simple 3D Kelvin case now has a real field-based figure rather than a
-geometry placeholder,
-\item the large 3D Estaillades-style case now has a corrected production run
-with reported chemistry metrics and a real volume-rendered field figure.
-\end{itemize}
+The reported results include a quantitative 1D analytical retardation
+benchmark, a corrected 2D fracture-network example with visible microporous
+uptake, a 3D Kelvin case, and a corrected Estaillades-style production case
+with reported chemistry metrics and a true 3D volume-rendered field figure.
+Taken together, these examples show that the formulation can be reduced to
+analytical limits and then applied to progressively more complex image-based
+geometries while preserving the intended transport-reaction structure.
 
-The immediate next manuscript tasks are:
-\begin{itemize}
-\item tighten the prose around the validated operating limits and restart
-limitations,
-\item convert the remaining draft-status notes into final result statements,
-\item add references only after the technical narrative is stable.
-\end{itemize}
+The remaining work is primarily editorial. The final manuscript still requires
+complete literature citation and a final line-editing pass, but the governing
+model, solver implementation, and benchmark set are now in place.

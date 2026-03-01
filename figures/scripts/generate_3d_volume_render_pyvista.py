@@ -272,6 +272,8 @@ def main() -> None:
     parser.add_argument("--aqueous-field", default="Ca+2")
     parser.add_argument("--surface-field", default="Surf_aCa+")
     parser.add_argument("--geometry-field", default="theta")
+    parser.add_argument("--surface-baseline-time")
+    parser.add_argument("--surface-floor", type=float, default=0.0)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--title", default="3D DBS Surface Complexation")
     parser.add_argument("--lower-quantile", type=float, default=0.01)
@@ -296,6 +298,17 @@ def main() -> None:
         raise RuntimeError("Field meshes do not match")
     if (gx, gy, gz) != (nx, ny, nz):
         raise RuntimeError("Geometry field mesh does not match")
+
+    if args.surface_baseline_time:
+        surface_baseline, bx, by, bz = stitch_parallel_scalar(
+            args.case_dir, args.surface_baseline_time, args.surface_field
+        )
+        if (bx, by, bz) != (nx, ny, nz):
+            raise RuntimeError("Surface baseline field mesh does not match")
+        surface = np.maximum(surface - surface_baseline, 0.0)
+
+    if args.surface_floor > 0.0:
+        surface = np.where(surface >= args.surface_floor, surface, 0.0)
 
     aqueous_scaled, _ = normalized_field(
         aqueous,
@@ -346,7 +359,7 @@ def main() -> None:
         plotter=plotter,
         dataset=surface_img,
         subplot=(0, 2),
-        title=f"Surf_aCa+ / P99 (t = {args.time_name})",
+        title=f"Delta Surf_aCa+ / P99 (t = {args.time_name})",
         scalar_bar_title="Normalized surface loading",
         cmap="magma",
         nx=nx,
