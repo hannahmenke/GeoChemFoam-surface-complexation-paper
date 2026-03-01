@@ -10,8 +10,9 @@
 \usepackage{setspace}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage[authoryear,round]{natbib}
 
-\title{A Conservative DBS Formulation For PHREEQC-Coupled Reactive Transport\\
+\title{A Conservative Darcy-Brinkman-Stokes Formulation For PHREEQC-Coupled Reactive Transport\\
 With Cell-Based Surface Complexation}
 \author{Hannah P. Menke, Florian Doster, Julien Maes}
 \date{\today}
@@ -27,6 +28,10 @@ With Cell-Based Surface Complexation}
 \input{sections/04_numerical_implementation}
 \input{sections/05_validation}
 \input{sections/06_test_cases}
-\input{sections/07_conclusions}
+\input{sections/07_discussion}
+\input{sections/08_conclusions}
+
+\bibliographystyle{abbrvnat}
+\bibliography{references}
 
 \end{document}

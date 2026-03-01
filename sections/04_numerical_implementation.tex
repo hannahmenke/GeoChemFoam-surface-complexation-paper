@@ -1,10 +1,11 @@
 \section{Numerical Implementation}
 
-The numerical implementation couples conservative DBS transport with
-cell-centred PHREEQC chemistry and cell-based surface complexation in a single
-operator-split formulation. The discussion below describes the discrete fields,
-the transport--chemistry coupling, and the timestep algorithm used in the
-reported simulations.
+This section describes the discrete fields, the transport--chemistry coupling,
+and the per-timestep algorithm used in the reported simulations. The
+implementation couples conservative Darcy-Brinkman-Stokes (DBS) transport
+\citep{soulaine2016micro} with cell-centred PHREEQC chemistry
+\citep{parkhurst2013phreeqc} and cell-based surface complexation in a single
+operator-split formulation.
 
 \subsection{Field Locations And Discretization}
 
@@ -27,32 +28,34 @@ surface-area field as an additive quantity:
 The first term is the coarse-grained phase-boundary contribution. The second is
 an intrinsic volumetric surface density assigned to selected image phases
 (for example the micropore phase) and scaled by the corresponding local phase
-fraction inside each coarse cell.
+fraction inside each coarse cell \citep{menke2021upscaling}.
 
 \subsection{PHREEQC Coupling}
 
-The PHREEQC coupling is performed through \texttt{phreeqcDBSMixture}. For each
-cell, the coupling uses the current aqueous state, the physical mobile-water
-fraction $\theta$, the current cell surface area $a_{\mathrm{surf}}$ including
-any intrinsic micropore contribution, and the current cell surface state. The
+The PHREEQC coupling is performed through \texttt{phreeqcDBSMixture}, which
+wraps the PhreeqcRM interface \citep{parkhurst2015phreeqcrm}. For each cell,
+the coupling uses the current aqueous state, the physical mobile-water fraction
+$\theta$, the current cell surface area $a_{\mathrm{surf}}$ including any
+intrinsic micropore contribution, and the current cell surface state. The
 surface mode is optional and reduces exactly to aqueous-only mode when
 $a_{\mathrm{surf}} = 0$.
 
 Cells with negligible mobile-water fraction remain chemically inactive in the
-written finite-volume state. In the current implementation this is enforced at
-the field level, even though the PHREEQC backend may still use an internal
-dummy water volume to keep the chemistry module numerically well-posed.
+finite-volume state. This is enforced at the field level; the PHREEQC backend
+retains an internal dummy water volume only to maintain numerical
+well-posedness of the chemistry module.
 
 \subsection{Per-Timestep Algorithm}
 
-The production timestep is intentionally simple. At each step, the solver reads
-or updates the face flux $\phi$, advances each aqueous transport equation in
-conservative DBS form, pushes the updated cell state into PHREEQC, executes
-the local chemistry update, pulls the updated aqueous and surface states back
-into the finite-volume fields, and finally writes diagnostics, including
-integrated inventory summaries. This is the appropriate baseline for a first
-conservative implementation because the transport and chemistry operators
-remain individually testable.
+The production timestep uses a first-order Lie splitting
+\citep{steefel1994coupled}. At each step, the solver reads or updates the face
+flux $\phi$, advances each aqueous transport equation in conservative DBS form,
+pushes the updated cell state into PHREEQC, executes the local chemistry
+update, and pulls the updated aqueous and surface states back into the
+finite-volume fields. Integrated inventory diagnostics are written at each
+step. The operator-split structure keeps transport and chemistry individually
+testable and ensures that the conservative structure of the aqueous transport
+step is not hidden inside a composite implicit source term.
 
 \begin{figure}[htbp]
     \centering
@@ -71,24 +74,9 @@ remain individually testable.
     \label{fig:dbsWorkflow}
 \end{figure}
 
-Figure~\ref{fig:dbsWorkflow} states the implemented algorithm explicitly. The
-key point for the present formulation is that the chemistry state remains
-cell-centred throughout the loop. The solver does not reconstruct a face-based
-reaction source for the unresolved surface term. Instead, the transport
-operator acts on cell inventories through the face fluxes, while the reaction
-operator acts locally on the updated cell state through PHREEQC.
-
-\subsection{Current Operating Limits}
-
-The present operating limits should be stated explicitly. Local decomposition
-sensitivity on very small benchmark meshes is not at write precision, and
-small timestep or mesh refinements can still alter the local front shape by a
-few percent on the fixed 1D benchmark. In addition, the written DBS surface
-fields follow the inherited field-scaling convention documented in the
-implementation notes. For microporous image cases, the intrinsic micropore
-surface density remains a case input rather than a quantity inferred uniquely
-from the segmented image. Finally, exact surface-state restart is not yet a
-fully validated capability for the upgraded backend because saved
-\texttt{Surf\_*} fields are not reintroduced into PHREEQC exactly; the
-surface-enabled production results reported here therefore rely on clean
-starts.
+Figure~\ref{fig:dbsWorkflow} illustrates the implemented algorithm. The
+chemistry state remains cell-centred throughout the loop. The solver does not
+reconstruct a face-based reaction source for the unresolved surface term.
+Instead, the transport operator acts on cell inventories through the face
+fluxes, while the reaction operator acts locally on the updated cell state
+through PHREEQC \citep{parkhurst2013phreeqc}.

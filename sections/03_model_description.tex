@@ -2,16 +2,18 @@
 
 \subsection{Field Definitions}
 
-The DBS formulation distinguishes between three pore-space quantities. The
-first is the numerical porosity, $\epsilon_{\mathrm{num}}$, which is retained
-to regularize transport in nearly solid voxels. The second is the physical
-mobile-water fraction, $\theta$, which defines aqueous accumulation and
-chemical storage. The third is the reactive internal surface area per bulk
-volume, $a_{\mathrm{surf}}$, which represents unresolved surface available for
-adsorption and surface complexation. All transported aqueous species, together
-with $\theta$, $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the DBS
-surface fields, are treated as cell-centred variables. The volumetric flux
-$\phi$ remains face-centred.
+The DBS micro-continuum formulation \citep{soulaine2016micro,
+soulaine2024microcontinuum} distinguishes
+between three pore-space quantities. The first is the numerical porosity,
+$\epsilon_{\mathrm{num}}$, which is retained to regularize transport in nearly
+solid voxels. The second is the physical mobile-water fraction, $\theta$,
+which defines aqueous accumulation and chemical storage. The third is the
+reactive internal surface area per bulk volume, $a_{\mathrm{surf}}$, which
+represents unresolved surface available for adsorption and surface
+complexation \citep{dzombak1990surface}. All transported aqueous species,
+together with $\theta$, $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and
+the DBS surface fields, are treated as cell-centred variables. The volumetric
+flux $\phi$ remains face-centred.
 
 \subsection{Conservative Aqueous Transport}
 
@@ -46,8 +48,11 @@ in the current solver field variables as
 \begin{equation}
 M = \theta C + \frac{a_{\mathrm{surf}}}{\theta}\Gamma_{\mathrm{field}},
 \end{equation}
-where $\Gamma_{\mathrm{field}}$ is the written DBS surface field convention
-used by the current implementation.
+where $\Gamma_{\mathrm{field}}$ (units: $\mathrm{mol\,m^{-3}}$) is the
+cell-centred surface-state field written by the implementation. It represents
+the adsorbed molar inventory scaled by the local mobile-water fraction and
+surface-area density, following the DBS field-storage convention used
+throughout the solver.
 
 This field-level expression is the appropriate quantity for analytical
 comparisons and for benchmark inventory checks. For multiple surface species,
@@ -60,11 +65,12 @@ all reported totals are evaluated in the actual implemented field variables.
 The chemical update is local to each cell. Over one transport--chemistry
 cycle, the transport step first advances the aqueous species in conservative
 finite-volume form. The updated cell state, together with the mobile-water
-fraction and cell-based surface state, is then mapped into PHREEQC. PHREEQC
-returns updated aqueous and surface concentrations after local
-equilibration or reaction. The baseline production method uses a first-order
-Lie split. Higher-order splitting is intentionally deferred until the
-conservative baseline is fully established.
+fraction and cell-based surface state, is then mapped into PHREEQC
+\citep{parkhurst2013phreeqc} via the PhreeqcRM interface
+\citep{parkhurst2015phreeqcrm}. PHREEQC returns updated aqueous and surface
+concentrations after local equilibration or reaction. The baseline production
+method uses a first-order Lie split. Higher-order splitting is intentionally
+deferred until the conservative baseline is fully established.
 
 At the algorithmic level, one timestep of size $\Delta t$ is:
 \begin{align}
@@ -95,13 +101,15 @@ R_{\mathrm{field}} = 1 + \frac{a_{\mathrm{surf}}K_{s,\mathrm{field}}}{\theta^2}.
 \end{equation}
 
 This expression is the correct analytical comparison form for the current
-implementation and is used in the 1D validation section.
+implementation and is used in the 1D validation section. The analytical
+advection-diffusion reference against which the numerical profiles are
+compared follows \citet{ogata1961solution}.
 
-\subsection{What The Validation Must Prove}
+\subsection{Validation Requirements}
 
 The validation programme presented in this paper is designed to establish four
-points. First, the formulation must reduce to simpler known limits. Second,
+criteria. First, the formulation must reduce to simpler known limits. Second,
 the local surface-coupled chemistry must conserve the intended field-level
 inventory. Third, the formulation must reproduce the dilute analytical
-retardation limit. Fourth, the same formulation must remain usable as the
+retardation limit. Fourth, the same formulation must remain applicable as the
 geometric complexity increases from 1D to image-based 2D and 3D domains.

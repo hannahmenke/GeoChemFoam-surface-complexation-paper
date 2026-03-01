@@ -1,0 +1,35 @@
+\section{Conclusions}
+
+This work presents a conservative Darcy-Brinkman-Stokes (DBS) formulation
+\citep{soulaine2016micro} for PHREEQC-coupled reactive transport
+\citep{parkhurst2013phreeqc,parkhurst2015phreeqcrm} with cell-based surface
+complexation \citep{dzombak1990surface} in image-based porous media. The formulation defines the continuous model, the
+discrete implementation, and the benchmark hierarchy used to assess the solver
+across a range of analytical, image-based, and multi-scale porous-media cases.
+
+The key contribution is a cell-based representation of unresolved reactive
+surface area that is consistent with the DBS micro-continuum framework. By
+using the physical mobile-water fraction $\theta$ as the accumulation and
+chemistry storage variable, rather than the numerical DBS porosity, the method
+preserves conservative aqueous transport and physically interpretable local
+mass balances simultaneously. The unresolved micropore surface area is
+introduced as an additive intrinsic volumetric density, allowing the method to
+represent reactive uptake in image phases where the internal surface area
+exceeds what can be recovered from the coarse-cell boundary alone.
+
+The reported results demonstrate that the formulation: (i) reproduces the
+dilute analytical retardation limit with sub-percent bulk inventory error;
+(ii) produces physically interpretable dissolved and adsorbed fields in
+transparent 2D and 3D image-based geometries; and (iii) remains computationally
+tractable at application scale, with chemistry representing 36--55\% of the
+total wall-clock time for the calcium surface-complexation system studied here.
+
+The method closes a specific gap in existing DBS reactive transport capabilities
+\citep{maes2021geochemfoam,maes2022vos}: conservative, unresolved surface
+complexation in multi-scale image-based simulations, without requiring the
+reactive surface to coincide with an explicitly resolved mesh boundary
+\citep{soulaine2017mineral,molins2021simulation}. The natural extensions of
+this work include Strang splitting \citep{strang1968construction} for reduced
+operator-splitting error, validated surface-state restart, and multi-component
+competitive surface complexation \citep{dzombak1990surface} in multi-ion
+carbonate systems \citep{menke2015dynamic,menke2018fourd}.

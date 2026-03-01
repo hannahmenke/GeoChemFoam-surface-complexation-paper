@@ -2,16 +2,16 @@
 
 \subsection{1D Analytical Retardation Benchmark}
 
-The first validation target is the tracked 1D linear-retardation benchmark case
-in the repository. This case provides the dilute analytical reference used to
-verify the field-level retardation factor and the expected reduction to
-retarded transport in the linear-equilibrium limit. The benchmark compares a
+The first validation target is the 1D linear-retardation benchmark case. This
+case provides the dilute analytical reference used to verify the field-level
+retardation factor and the expected reduction to retarded transport in the
+linear-equilibrium limit \citep{ogata1961solution}. The benchmark compares a
 surface-enabled moving case, a matched aqueous-only moving case, and a dilute
 batch secant used to estimate $K_{s,\mathrm{field}}$.
 
 For the validated benchmark reported here,
-$K_{s,\mathrm{field}} = 4.2412187733863601\times 10^{-6}$ and
-$R_{\mathrm{field}} = 2.6964875093545437$. The mesh contains
+$K_{s,\mathrm{field}} = 4.241 \times 10^{-6}$ and
+$R_{\mathrm{field}} = 2.696$. The mesh contains
 $80 \times 1 \times 1$ cells and uses a species diffusion coefficient of
 $10^{-11}\ \mathrm{m^2\,s^{-1}}$. The surface-enabled profile matches the
 retarded advection--diffusion reference with a relative L1 error of $0.75\%$
@@ -21,10 +21,9 @@ L1 error of $1.87\%$ and a relative $L_{\infty}$ error of $8.44\%$. The
 field-level total-equivalent inventory differs from the analytical limit by
 $0.67\%$ for the surface-enabled run and by $2.41\%$ for the aqueous-only run.
 
-These values are sufficient for the manuscript to claim that the production
-solver reproduces the dilute field-level retardation limit of the current DBS
-formulation. Figure 1 therefore focuses on the profile-level comparison rather
-than a weak mean-only metric: the left panel shows the numerical cell averages
+The solver therefore reproduces the dilute field-level retardation limit of the
+DBS formulation at sub-percent bulk inventory accuracy. Figure~1 shows the
+profile-level comparison: the left panel plots the numerical cell averages
 against cell-averaged analytical advection-diffusion references, and the right
 panel shows the normalized adsorbed loading against the matching cell-averaged
 linear-limit surface response.
@@ -53,12 +52,9 @@ image-based test cases.
 
 \subsection{Validation Summary}
 
-For internal consistency, the validation section is summarized by a compact set
-of metrics that report the reduction-path status, the analytical benchmark
-error, the decomposition sensitivity, the timestep sensitivity, the mesh
-sensitivity, and one representative chemistry-cost measure.
-Table~\ref{tab:validationSummary} collects these quantities for the current
-tracked benchmark family.
+Table~\ref{tab:validationSummary} summarizes the key metrics from the tracked
+1D benchmark family, covering the reduction-path status, analytical benchmark
+errors, sensitivity studies, and a representative chemistry-cost measure.
 
 \begin{table}[htbp]
     \centering
@@ -66,7 +62,7 @@ tracked benchmark family.
     \label{tab:validationSummary}
     \begin{tabular}{lll}
         \toprule
-        Check & Metric & Current result \\
+        Check & Metric & Result \\
         \midrule
         Analytical 1D & Surface L1 / total drift & $0.75\%$ / $0.67\%$ \\
         Decomposition & Local / bulk drift & $3$--$4.5\%$ / $<0.6\%$ \\

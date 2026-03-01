@@ -1,20 +1,22 @@
 \begin{abstract}
-We present a diffuse-boundary-surface (DBS) formulation for PHREEQC-coupled
+We present a Darcy-Brinkman-Stokes (DBS) micro-continuum formulation for PHREEQC-coupled
 reactive transport with cell-based surface complexation in image-based porous
 media. The formulation is designed to preserve conservative aqueous transport
 in the physical mobile-water fraction, to maintain conservative local exchange
 between dissolved and adsorbed inventories, and to avoid non-conservative
 numerical corrections such as species clipping. The implementation is developed
-through a staged sequence of verified reductions, culminating in a production
-solver for DBS transport with optional unresolved surface complexation.
+through a staged sequence of verified reductions, yielding a production solver
+for DBS transport with optional unresolved surface complexation.
 
-The manuscript is structured as a validation ladder that proceeds from a 1D
-analytical retardation benchmark to a simple 2D image-based case, a simple 3D
-image-based case, and a larger multi-scale 3D porous-medium demonstration. The
-present manuscript includes a passing 1D analytical benchmark, a corrected 2D
-fracture-network result with matrix-wide unresolved surface uptake, and 3D
-volume-rendered field results for Kelvin and Estaillades-style test cases. At
-this stage, the emphasis is placed on consolidating the mathematical statement,
-the numerical implementation, and the benchmark evidence before final
-literature references are added.
+The method is validated through a progressive benchmark hierarchy. A 1D
+analytical retardation test confirms that the solver reproduces the field-level
+retardation factor with a relative L1 profile error of $0.75\%$. A 2D
+image-based fracture-network case demonstrates interpretable dissolved and
+adsorbed calcium fields with matrix-wide unresolved surface uptake. Simple and
+complex 3D image-based cases, based on Kelvin and Estaillades-style geometries,
+show that the formulation extends to fully three-dimensional pore structures
+while preserving the intended transport-reaction structure. Together, the
+results establish the conservative DBS surface-complexation coupling as a
+viable approach for multi-scale reactive transport in segmented porous-media
+images.
 \end{abstract}
