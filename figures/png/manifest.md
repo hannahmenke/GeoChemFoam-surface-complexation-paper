@@ -8,7 +8,7 @@
   - Validation
 - content:
   - normalized 1D aqueous concentration profile
-  - analytical retarded reference
+  - cell-averaged analytical retarded reference
   - normalized surface-loading profile
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation`
@@ -20,11 +20,13 @@
 - section:
   - Test Cases / Simple 2D
 - content:
-  - currently staged: 2D geometry panel
-  - still needed: aqueous concentration panel
-  - still needed: surface-loading panel
+  - geometry panel
+  - normalized aqueous concentration panel at `t = 3000`
+  - normalized surface-loading panel at `t = 3000`
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
+- source case:
+  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation`
 
 ## Figure 3
 
@@ -33,11 +35,12 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - currently staged: angled 3D outer-skin render
-  - still needed: aqueous concentration slice
-  - still needed: surface-loading slice
-- source asset:
-  - `images/raw/Kelvin1-200x200x200.raw.tar.gz`
+  - final target: ParaView volume render of dissolved calcium
+  - final target: ParaView volume render of adsorbed calcium
+- source case:
+  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_paraview.py`
 
 ## Figure 4
 
@@ -46,9 +49,15 @@
 - section:
   - Test Cases / Large 3D Porous Media
 - content:
-  - currently staged: angled 3D outer-skin render
-  - still needed: concentration slices
-  - still needed: surface-loading slices
-  - still needed: one summary metric panel if space permits
+  - final target: ParaView volume render of dissolved calcium
+  - final target: ParaView volume render of adsorbed calcium
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
+- source case:
+  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_paraview.py`
+- status:
+  - current PNG is only a temporary geometry placeholder
+  - corrected reactive run now exists
+  - final field render is deferred only by the current ParaView headless-rendering limitation

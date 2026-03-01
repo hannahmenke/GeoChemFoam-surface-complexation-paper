@@ -19,15 +19,26 @@ Current staged figures:
 
 - `fig01_1d_retardation.png`
   - populated with a two-panel 1D analytical validation figure
-  - left: normalized aqueous profile vs analytical reference
-  - right: normalized surface loading vs linear-limit reference
+  - left: normalized aqueous profile vs cell-averaged analytical reference
+  - right: normalized surface loading vs cell-averaged linear-limit reference
 - `fig02_2d_fractures.png`
-  - populated with the raw segmented geometry preview for the 2D case
+  - populated with a three-panel 2D results figure
+  - left: geometry
+  - middle: normalized dissolved calcium at `t = 3000`
+  - right: normalized adsorbed calcium at `t = 3000`
+  - uses the corrected intrinsic matrix surface term in the `eps = 0.4`
+    microporous phase
 - `fig03_3d_kelvin.png`
-  - populated with an angled outer-skin render for the Kelvin case, with all
-    boundary phases colored
+  - current file is only a temporary internal diagnostic
+  - the accepted final method is a ParaView volume render from the real solver field
+  - prepared script:
+    - `figures/scripts/generate_3d_volume_render_paraview.py`
 - `fig04_3d_estaillades.png`
-  - populated with an angled outer-skin render for the multiscale
-    Estaillades case, with all boundary phases colored
+  - current file is only a temporary geometry placeholder
+  - the corrected `8`-rank chemistry run already exists
+  - the accepted final method is a ParaView volume render from the real solver
+    field
+  - prepared script:
+    - `figures/scripts/generate_3d_volume_render_paraview.py`
 
 The LaTeX draft already references these as the expected final PNG outputs.

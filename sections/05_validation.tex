@@ -2,9 +2,8 @@
 
 \subsection{1D Analytical Retardation Benchmark}
 
-The first validation target is the tracked 1D case
-\texttt{tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation}.
-This case provides the dilute analytical benchmark used to verify the
+The first validation target is the tracked 1D linear-retardation benchmark case
+in the repository. This case provides the dilute analytical benchmark used to verify the
 field-level retardation factor and the expected reduction to retarded transport
 in the linear-equilibrium limit.
 
@@ -35,19 +34,20 @@ aqueous-only run.
 These values are sufficient for the manuscript to claim that the production
 solver reproduces the dilute field-level retardation limit of the current DBS
 formulation. Figure 1 therefore focuses on the profile-level comparison rather
-than a weak mean-only metric: the left panel shows the normalized aqueous
-profile against the analytical advection-diffusion reference, and the right
-panel shows the normalized adsorbed loading against the matching linear-limit
-surface response.
+than a weak mean-only metric: the left panel shows the numerical cell averages
+against cell-averaged analytical advection-diffusion references, and the right
+panel shows the normalized adsorbed loading against the matching cell-averaged
+linear-limit surface response.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig01_1d_retardation.png}
     \caption{1D analytical retardation benchmark. Left: normalized aqueous
     Ca$^{2+}$ profiles for the aqueous-only and surface-enabled runs, compared
-    against their matching smooth advection-diffusion analytical solutions.
-    Right: normalized surface loading compared against the linear-equilibrium
-    analytical limit constructed from the calibrated field-level
+    against their matching cell-averaged advection-diffusion analytical
+    solutions. Right: normalized surface loading compared against the
+    cell-averaged linear-equilibrium analytical limit constructed from the
+    calibrated field-level
     $K_{s,\mathrm{field}}$.}
 \end{figure}
 
@@ -80,16 +80,16 @@ end with a compact summary table containing:
 
 \begin{table}[htbp]
     \centering
-    \caption{Placeholder for the validation summary table.}
+    \caption{Validation summary for the tracked 1D benchmark family.}
     \begin{tabular}{lll}
         \toprule
-        Check & Metric & Placeholder status \\
+        Check & Metric & Current result \\
         \midrule
-        Analytical 1D & Profile error / inventory drift & Drafted \\
-        Decomposition & Total-equivalent drift & To be populated \\
-        Timestep & Front-shape drift & To be populated \\
-        Mesh & Front / total drift & To be populated \\
-        Performance & Chemistry fraction & To be populated \\
+        Analytical 1D & Surface L1 / total drift & $0.75\%$ / $0.67\%$ \\
+        Decomposition & Local / bulk drift & $3$--$4.5\%$ / $<0.6\%$ \\
+        Timestep & Local / bulk drift & $\approx 3\%$ / $0.25\%$ \\
+        Mesh & Front / total drift & $2.5\times 10^{-7}$ / $0.37\%$ \\
+        Performance & Surface chemistry fraction & $36$--$55\%$ \\
         \bottomrule
     \end{tabular}
 \end{table}

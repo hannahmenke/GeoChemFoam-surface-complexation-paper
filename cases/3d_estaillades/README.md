@@ -13,24 +13,22 @@
 - Estaillades-style multi-scale image benchmark
 - application-scale performance and surface-complexation showcase
 - distinct from the simple 3D case because the structure must visibly span more
-  than one geometric scale in the reported slices
+  than one geometric scale in the reported volume render
 
 ## Planned Outputs
 
 - angled 3D geometry overview
-- angled 3D zoom view that exposes the multi-scale hierarchy
-- aqueous concentration slices
-- surface-loading slices
+- aqueous concentration volume render
+- surface-loading volume render
 - one summary performance/chemistry metric
 
 ## Current Draft Figure Convention
 
-- the staged draft geometry figure is an outer-skin render of the cropped
-  full volume
-- all phases on the external surface are colored
-- no internal geometry is shown in this draft figure
-- when a second panel is shown, it is a second exterior viewing angle rather
-  than a cropped cutaway
+- the current staged PNG is only a temporary geometry placeholder
+- the accepted final figure is a ParaView volume render of the real solver
+  fields
+- the final render should show the aqueous and adsorbed response in 3D rather
+  than a sliced diagnostic plane
 
 ## Required Reported Metadata
 
@@ -54,3 +52,13 @@
 ## Planned Figure
 
 - `figures/png/fig04_3d_estaillades.png`
+
+## Current Runtime Status
+
+- the staged geometry figure is still valid as a source-asset overview
+- the solver case configuration has now been corrected to the true
+  `Est_3phase500cubed4micron` image
+- the corrected `8`-rank chemistry run to `t = 400` now exists and is valid
+- any older reactive outputs generated before that correction must not be used
+  as paper results because they were produced from the wrong image setup
+- the remaining missing piece is the final volume-rendered field figure

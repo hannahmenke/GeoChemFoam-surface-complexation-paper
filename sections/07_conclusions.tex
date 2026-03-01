@@ -6,10 +6,25 @@ mathematical statement, implementation path, and benchmark ladder are now laid
 out in the same overall style as the earlier GeoChemFoam reactive transport
 paper, but tailored to the unresolved DBS surface model.
 
+At the current draft stage:
+\begin{itemize}
+\item the 1D analytical retardation benchmark is reported with a profile-level
+comparison and quantitative validation metrics,
+\item the 2D fracture-network case is reported from a corrected matrix-reactive
+run with visible microporous uptake,
+\item the simple 3D Kelvin case now has a real field-based figure rather than a
+geometry placeholder,
+\item the large 3D Estaillades-style case now has a corrected production run
+with reported chemistry metrics, but its final paper figure is still blocked by
+the current ParaView headless volume-rendering limitation.
+\end{itemize}
+
 The immediate next manuscript tasks are:
 \begin{itemize}
-\item replace the current figure placeholders with actual PNG outputs,
-\item complete the 2D, 3D, and Estaillades-scale porous-media result sections,
-\item tighten the prose around the validated operating limits,
+\item generate the final ParaView volume-rendered 3D chemistry figures on a
+working off-screen backend,
+\item tighten the prose around the validated operating limits and restart
+limitations,
+\item convert the remaining draft-status notes into final result statements,
 \item add references only after the technical narrative is stable.
 \end{itemize}

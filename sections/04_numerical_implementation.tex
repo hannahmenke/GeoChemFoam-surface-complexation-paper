@@ -57,6 +57,11 @@ intrinsic micropore contribution,
 The surface mode is optional and reduces exactly to aqueous-only mode when
 $a_{\mathrm{surf}} = 0$.
 
+Cells with negligible mobile-water fraction remain chemically inactive in the
+written finite-volume state. In the current implementation this is enforced at
+the field level, even though the PHREEQC backend may still use an internal
+dummy water volume to keep the chemistry module numerically well-posed.
+
 \subsection{Per-Timestep Algorithm}
 
 The production timestep is intentionally simple:
@@ -101,6 +106,10 @@ percent on the fixed 1D benchmark,
 convention documented in the implementation notes.
 \item for microporous image cases, the intrinsic micropore surface density is a
 case input, not something inferred uniquely from the segmented image.
+\item exact surface-state restart is not yet a fully validated capability for
+the upgraded backend because saved \texttt{Surf\_*} fields are not pushed back
+into PHREEQC exactly; the paper results reported here therefore use clean starts
+for the surface-enabled production runs.
 \end{itemize}
 
 \subsection{Implementation Quantities Reported In The Paper}

@@ -9,8 +9,8 @@
         \midrule
         1D & tracked 1D benchmark & analytical limit & line/profile PNG \\
         2D & 4StraightFractures & transparent image case & three-panel PNG \\
-        3D & Kelvin1-200x200x200 & simple 3D topology & slice/render PNG \\
-        3D large & Est\_3phase500cubed4micron & porous-media demo & multi-panel PNG \\
+        3D & Kelvin1-200x200x200 & simple 3D topology & volume-render PNG \\
+        3D large & Est\_3phase500cubed4micron & porous-media demo & volume-render PNG \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -25,8 +25,7 @@ The implemented 2D case reuses the existing segmented image asset:
 \item raw labels present in the image:
       \mbox{$1 = \mathrm{matrix}$}, \mbox{$2 = \mathrm{pore}$}
 \item draft runtime case:
-      \texttt{tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/}
-      \texttt{4StraightFracturesSurfaceComplexation}
+      tracked \texttt{4StraightFracturesSurfaceComplexation} repository case
 \item draft runtime mesh:
       \mbox{$250 \times 250 \times 1$}
 \end{itemize}
@@ -50,15 +49,18 @@ Reported figure set:
 \item normalized adsorbed-calcium panel.
 \end{itemize}
 
-At the current draft endpoint (\mbox{$t = 2000$}, run on \mbox{$8$} MPI
+At the current draft endpoint (\mbox{$t = 3000$}, run on \mbox{$8$} MPI
 ranks), the case has a nonzero \mbox{$a_{\mathrm{surf}}$} field, a nonzero
 \texttt{Surf\_aCa+} field, and a clean three-panel PNG tied directly to the
-runtime case. The 2D case is now written to answer three questions:
+runtime case. The current 2D draft also adds an intrinsic unresolved surface
+term inside the \mbox{$\epsilon = 0.4$} matrix phase, so the surface-loading
+field is no longer restricted to the matrix-pore interface. The 2D case is now
+written to answer three questions:
 \begin{enumerate}
 \item does the method recover the expected directional retardation pattern in a
 simple geometry,
-\item does the surface-loading field track the geometry in an interpretable
-way,
+\item does the surface-loading field track both the fracture walls and the
+microporous matrix in an interpretable way,
 \item does the 2D image case remain visually and numerically easier to audit
 than the 3D cases.
 \end{enumerate}
@@ -86,9 +88,9 @@ pattern,
 \item how much the 3D case increases chemistry cost relative to the 2D case.
 \end{itemize}
 
-The paper figures for the 3D cases should use angled 3D renders rather than
-planar slices so the geometry and the later concentration fields read
-immediately as volumetric results.
+The accepted final rendering path for the 3D chemistry figures is a true
+ParaView volume render. Any interim slice-based diagnostic image should be
+treated as an internal check only, not as the final manuscript figure.
 
 \subsection{Large 3D Porous-Media Case}
 
@@ -112,42 +114,65 @@ The large porous-media section should report:
 \begin{itemize}
 \item mesh/image size,
 \item effective resolution,
-\item visible multi-scale structural contrast in the reported slices,
+\item visible multi-scale structural contrast in the reported volume render,
 \item MPI rank count,
 \item representative runtime,
 \item one concentration metric and one surface-loading metric that remain
 comparable to the earlier sections.
 \end{itemize}
 
+The corrected Estaillades draft case now runs to \mbox{$t = 400$} on
+\mbox{$8$} MPI ranks on a \mbox{$50 \times 50 \times 50$} coarse grid built
+from the full \mbox{$500^3$} segmented image. For this run:
+\begin{itemize}
+\item the domain-mean dissolved \mbox{Ca$^{2+}$} is
+      \mbox{$1.72 \times 10^{-9}$},
+\item the domain-mean adsorbed \mbox{\texttt{Surf\_aCa+}} is
+      \mbox{$6.98 \times 10^{-15}$},
+\item the mean \mbox{$a_{\mathrm{surf}}$} is
+      \mbox{$7.65 \times 10^{4}\ \mathrm{m^{-1}}$},
+\item the PHREEQC timing summary reports \mbox{$80$} chemistry calls with a
+      total chemistry time of about \mbox{$58.1$} s,
+\item the total wall-clock to the final written time is about \mbox{$82$} s.
+\end{itemize}
+
+The current large-3D chemistry result is physically consistent with the case
+setup: the near-solid cells (\mbox{$\theta \le 10^{-3}$}) are now masked out of
+the reactive-surface field, so the reported adsorption is concentrated in the
+microporous and macroporous mobile regions rather than the numerically regularized
+solid skeleton.
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
     \caption{Three-panel result for the 2D \texttt{4StraightFractures} case.
     Left: segmented geometry. Middle: normalized dissolved Ca$^{2+}$ at
-    \mbox{$t = 2000$}. Right: normalized adsorbed calcium
+    \mbox{$t = 3000$}. Right: normalized adsorbed calcium
     (\texttt{Surf\_aCa+}) at the same time. The draft figure is taken directly
     from the reproducible \mbox{$8$}-rank
     \texttt{reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation}
-    runtime case.}
+    runtime case, using the corrected intrinsic matrix surface term in the
+    \mbox{$\epsilon = 0.4$} microporous phase.}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Staged angled 3D outer-skin render for the simple 3D Kelvin case.
-    This draft figure colors the external surface only and omits the internal
-    geometry; the final manuscript panel should add aqueous concentration and
-    surface-loading outputs rendered from the same camera orientation.}
+    \caption{Temporary placeholder for the simple 3D Kelvin case. The accepted
+    final manuscript replacement is a ParaView volume render of the real
+    dissolved and adsorbed calcium fields from the tracked runtime case. The
+    placeholder is retained only to reserve layout until the final volume
+    rendering is generated on a working headless backend.}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
-    \caption{Staged angled 3D geometry renders for the large 3D
-    Estaillades-style case. This draft figure uses an outer-skin render of the
-    full volume, with all boundary phases colored and no internal geometry
-    shown; when two panels are shown, they are two exterior views of the same
-    outer surface rather than a cutaway. The final manuscript panel should add
-    concentration and surface-loading outputs from the corresponding solver run
-    using the same view direction.}
+    \caption{Temporary geometry-only placeholder for the large 3D
+    Estaillades-style case. The underlying corrected \mbox{$8$}-rank
+    Estaillades chemistry run now exists and is reported in the text, but the
+    accepted final manuscript replacement is a ParaView volume render of the
+    real dissolved and adsorbed calcium fields. This placeholder is retained
+    only until the final volume-render pipeline can be executed on a working
+    headless backend.}
 \end{figure}
