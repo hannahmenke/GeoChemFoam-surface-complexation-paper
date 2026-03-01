@@ -55,10 +55,10 @@
 
 ## Current Runtime Status
 
-- the staged geometry figure is still valid as a source-asset overview
 - the solver case configuration has now been corrected to the true
   `Est_3phase500cubed4micron` image
 - the corrected `8`-rank chemistry run to `t = 400` now exists and is valid
 - any older reactive outputs generated before that correction must not be used
   as paper results because they were produced from the wrong image setup
-- the remaining missing piece is the final volume-rendered field figure
+- the draft manuscript now uses a true 3D volume-rendered field figure from the
+  corrected run

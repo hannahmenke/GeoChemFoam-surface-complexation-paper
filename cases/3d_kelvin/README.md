@@ -33,9 +33,8 @@
 
 ## Planned Outputs
 
-- angled 3D outer-skin render (now staged)
-- aqueous concentration slice
-- surface-loading slice
+- aqueous concentration volume render
+- surface-loading volume render
 
 ## Planned Figure
 
@@ -43,6 +42,9 @@
 
 ## Current Draft Figure Convention
 
-- the staged draft geometry figure is an outer-skin render of the volume
-- all boundary phases are colored
-- no internal geometry is shown in this draft figure
+- the current draft figure is a true 3D volume render of the stitched solver
+  fields
+- both panels use the same camera
+- the left panel shows dissolved `Ca+2`
+- the right panel shows adsorbed `Surf_aCa+`
+- per-panel relative scaling is used to emphasize spatial structure

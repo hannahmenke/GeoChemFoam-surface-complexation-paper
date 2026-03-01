@@ -29,16 +29,15 @@ Current staged figures:
   - uses the corrected intrinsic matrix surface term in the `eps = 0.4`
     microporous phase
 - `fig03_3d_kelvin.png`
-  - current file is only a temporary internal diagnostic
-  - the accepted final method is a ParaView volume render from the real solver field
-  - prepared script:
-    - `figures/scripts/generate_3d_volume_render_paraview.py`
+  - populated with a true 3D volume render from the real solver field
+  - rendered through the `gcfoam` EGL VTK path
+  - active script:
+    - `figures/scripts/generate_3d_volume_render_pyvista.py`
 - `fig04_3d_estaillades.png`
-  - current file is only a temporary geometry placeholder
-  - the corrected `8`-rank chemistry run already exists
-  - the accepted final method is a ParaView volume render from the real solver
-    field
-  - prepared script:
-    - `figures/scripts/generate_3d_volume_render_paraview.py`
+  - populated with a true 3D volume render from the corrected `8`-rank
+    chemistry run
+  - rendered through the `gcfoam` EGL VTK path
+  - active script:
+    - `figures/scripts/generate_3d_volume_render_pyvista.py`
 
 The LaTeX draft already references these as the expected final PNG outputs.

@@ -2,7 +2,7 @@
 
 \begin{table}[htbp]
     \centering
-    \caption{Planned test-case ladder for the manuscript.}
+    \caption{Test-case ladder used in the current manuscript draft.}
     \begin{tabular}{llll}
         \toprule
         Stage & Geometry source & Role & Planned output \\
@@ -67,7 +67,7 @@ than the 3D cases.
 
 \subsection{Simple 3D Image-Based Case}
 
-The planned simple 3D case reuses:
+The implemented simple 3D case reuses:
 \begin{itemize}
 \item \texttt{images/raw/Kelvin1-200x200x200.raw.tar.gz}
 \item metadata: \texttt{images/raw/Kelvin1-200x200x200.txt}
@@ -88,13 +88,14 @@ pattern,
 \item how much the 3D case increases chemistry cost relative to the 2D case.
 \end{itemize}
 
-The accepted final rendering path for the 3D chemistry figures is a true
-ParaView volume render. Any interim slice-based diagnostic image should be
-treated as an internal check only, not as the final manuscript figure.
+The accepted rendering path for the 3D chemistry figures is a true volume
+render generated from the stitched solver fields. Earlier slice-based
+diagnostics were useful for internal checks, but they are not the final
+manuscript figures.
 
 \subsection{Large 3D Porous-Media Case}
 
-The planned large 3D porous-media case reuses:
+The implemented large 3D porous-media case reuses:
 \begin{itemize}
 \item \texttt{images/raw/Est\_3phase500cubed4micron.raw.tar.gz}
 \item metadata: \texttt{images/raw/Est\_3phase500cubed4micron.txt}
@@ -158,21 +159,19 @@ solid skeleton.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Temporary placeholder for the simple 3D Kelvin case. The accepted
-    final manuscript replacement is a ParaView volume render of the real
-    dissolved and adsorbed calcium fields from the tracked runtime case. The
-    placeholder is retained only to reserve layout until the final volume
-    rendering is generated on a working headless backend.}
+    \caption{Volume-rendered 3D field result for the simple Kelvin case at
+    \mbox{$t = 100$}. Left: dissolved Ca$^{2+}$. Right: adsorbed calcium
+    (\texttt{Surf\_aCa+}). Both panels are rendered from the stitched
+    \mbox{$8$}-rank solver output using the same camera and per-panel relative
+    scaling to emphasize the 3D uptake structure.}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
-    \caption{Temporary geometry-only placeholder for the large 3D
-    Estaillades-style case. The underlying corrected \mbox{$8$}-rank
-    Estaillades chemistry run now exists and is reported in the text, but the
-    accepted final manuscript replacement is a ParaView volume render of the
-    real dissolved and adsorbed calcium fields. This placeholder is retained
-    only until the final volume-render pipeline can be executed on a working
-    headless backend.}
+    \caption{Volume-rendered 3D field result for the large Estaillades-style
+    case at \mbox{$t = 400$}. Left: dissolved Ca$^{2+}$. Right: adsorbed
+    calcium (\texttt{Surf\_aCa+}). Both panels are rendered from the corrected
+    stitched \mbox{$8$}-rank solver output using the same camera and per-panel
+    relative scaling to expose the multi-scale spatial response.}
 \end{figure}

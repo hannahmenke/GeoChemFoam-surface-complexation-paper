@@ -35,12 +35,12 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - final target: ParaView volume render of dissolved calcium
-  - final target: ParaView volume render of adsorbed calcium
+  - true 3D volume render of dissolved calcium
+  - true 3D volume render of adsorbed calcium
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - renderer:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_paraview.py`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
 
 ## Figure 4
 
@@ -49,15 +49,14 @@
 - section:
   - Test Cases / Large 3D Porous Media
 - content:
-  - final target: ParaView volume render of dissolved calcium
-  - final target: ParaView volume render of adsorbed calcium
+  - true 3D volume render of dissolved calcium
+  - true 3D volume render of adsorbed calcium
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
 - renderer:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_paraview.py`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
 - status:
-  - current PNG is only a temporary geometry placeholder
-  - corrected reactive run now exists
-  - final field render is deferred only by the current ParaView headless-rendering limitation
+  - corrected reactive run exists
+  - current PNG is the active volume-rendered draft figure
