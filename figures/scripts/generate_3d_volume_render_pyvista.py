@@ -139,6 +139,74 @@ def build_image_data(values: np.ndarray) -> pv.ImageData:
     return image
 
 
+def classify_geometry(
+    theta: np.ndarray, solid_threshold: float, pore_threshold: float
+) -> np.ndarray:
+    labels = np.ones_like(theta, dtype=np.uint8)
+    labels[theta <= solid_threshold] = 0
+    labels[theta >= pore_threshold] = 2
+    return labels
+
+
+def add_geometry_panel(
+    plotter: pv.Plotter,
+    labels: np.ndarray,
+    subplot: tuple[int, int],
+    nx: int,
+    ny: int,
+    nz: int,
+) -> None:
+    plotter.subplot(*subplot)
+    plotter.set_background("white")
+
+    image = pv.ImageData(dimensions=(nx + 1, ny + 1, nz + 1))
+    image.cell_data["phase"] = labels.flatten(order="F")
+
+    phase_defs = [
+        (0, "solid", "#c94f4f", 0.28),
+        (1, "micropore", "#4f8fd6", 0.22),
+        (2, "pore", "#ffffff", 0.14),
+    ]
+
+    for phase_value, _, color, opacity in phase_defs:
+        thresholded = image.threshold(
+            [phase_value - 0.1, phase_value + 0.1],
+            scalars="phase",
+            preference="cell",
+        )
+        if thresholded.n_cells == 0:
+            continue
+        plotter.add_mesh(
+            thresholded.extract_surface(algorithm="dataset_surface"),
+            color=color,
+            opacity=opacity,
+            smooth_shading=False,
+            show_scalar_bar=False,
+            ambient=0.35,
+            diffuse=0.75,
+            specular=0.05,
+        )
+
+    plotter.add_mesh(
+        image.outline(),
+        color="#444444",
+        line_width=1.0,
+        opacity=0.35,
+    )
+    plotter.add_text("Geometry", position="upper_left", font_size=13, color="black")
+    plotter.show_bounds(
+        grid="back",
+        location="outer",
+        all_edges=False,
+        xtitle="x cell",
+        ytitle="y cell",
+        ztitle="z cell",
+        font_size=11,
+        color="black",
+    )
+    plotter.camera_position = camera_position(nx, ny, nz)
+
+
 def camera_position(nx: int, ny: int, nz: int) -> list[tuple[float, float, float]]:
     centre = (0.5 * nx, 0.5 * ny, 0.5 * nz)
     position = (2.1 * nx, -1.65 * ny, 1.45 * nz)
@@ -172,7 +240,7 @@ def add_volume_panel(
         scalar_bar_args={
             "title": scalar_bar_title,
             "vertical": True,
-            "fmt": "%.2f",
+            "fmt": "%.1f",
             "title_font_size": 14,
             "label_font_size": 11,
         },
@@ -203,11 +271,14 @@ def main() -> None:
     parser.add_argument("--time-name", required=True)
     parser.add_argument("--aqueous-field", default="Ca+2")
     parser.add_argument("--surface-field", default="Surf_aCa+")
+    parser.add_argument("--geometry-field", default="theta")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--title", default="3D DBS Surface Complexation")
     parser.add_argument("--lower-quantile", type=float, default=0.01)
     parser.add_argument("--upper-quantile", type=float, default=0.995)
     parser.add_argument("--surface-log-scale", action="store_true")
+    parser.add_argument("--solid-threshold", type=float, default=1.0e-3)
+    parser.add_argument("--pore-threshold", type=float, default=0.9)
     args = parser.parse_args()
 
     pv.OFF_SCREEN = True
@@ -218,8 +289,13 @@ def main() -> None:
     surface, sx, sy, sz = stitch_parallel_scalar(
         args.case_dir, args.time_name, args.surface_field
     )
+    geometry_field, gx, gy, gz = stitch_parallel_scalar(
+        args.case_dir, args.time_name, args.geometry_field
+    )
     if (sx, sy, sz) != (nx, ny, nz):
         raise RuntimeError("Field meshes do not match")
+    if (gx, gy, gz) != (nx, ny, nz):
+        raise RuntimeError("Geometry field mesh does not match")
 
     aqueous_scaled, _ = normalized_field(
         aqueous,
@@ -235,19 +311,33 @@ def main() -> None:
         log_scale=args.surface_log_scale,
         zero_mask=True,
     )
+    geometry_labels = classify_geometry(
+        geometry_field,
+        solid_threshold=args.solid_threshold,
+        pore_threshold=args.pore_threshold,
+    )
 
     aqueous_img = build_image_data(aqueous_scaled)
     surface_img = build_image_data(surface_scaled)
 
-    plotter = pv.Plotter(shape=(1, 2), off_screen=True, window_size=(1800, 820))
+    plotter = pv.Plotter(shape=(1, 3), off_screen=True, window_size=(2520, 820))
+
+    add_geometry_panel(
+        plotter=plotter,
+        labels=geometry_labels,
+        subplot=(0, 0),
+        nx=nx,
+        ny=ny,
+        nz=nz,
+    )
 
     add_volume_panel(
         plotter=plotter,
         dataset=aqueous_img,
-        subplot=(0, 0),
-        title=f"{args.aqueous_field} at t = {args.time_name}",
-        scalar_bar_title="Relative scale",
-        cmap="viridis",
+        subplot=(0, 1),
+        title=f"Ca+2 / Cin (t = {args.time_name})",
+        scalar_bar_title="Normalized Ca+2",
+        cmap="cividis",
         nx=nx,
         ny=ny,
         nz=nz,
@@ -255,10 +345,10 @@ def main() -> None:
     add_volume_panel(
         plotter=plotter,
         dataset=surface_img,
-        subplot=(0, 1),
-        title=f"{args.surface_field} at t = {args.time_name}",
-        scalar_bar_title="Relative scale",
-        cmap="plasma",
+        subplot=(0, 2),
+        title=f"Surf_aCa+ / P99 (t = {args.time_name})",
+        scalar_bar_title="Normalized surface loading",
+        cmap="magma",
         nx=nx,
         ny=ny,
         nz=nz,

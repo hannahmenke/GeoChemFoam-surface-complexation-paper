@@ -159,19 +159,25 @@ solid skeleton.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Volume-rendered 3D field result for the simple Kelvin case at
-    \mbox{$t = 100$}. Left: dissolved Ca$^{2+}$. Right: adsorbed calcium
-    (\texttt{Surf\_aCa+}). Both panels are rendered from the stitched
-    \mbox{$8$}-rank solver output using the same camera and per-panel relative
-    scaling to emphasize the 3D uptake structure.}
+    \caption{Three-panel 3D result for the simple Kelvin case at
+    \mbox{$t = 100$}, selected because the dissolved front is still near the
+    mid-domain position. Left: initial geometry. Middle: normalized dissolved
+    Ca$^{2+}$. Right: normalized adsorbed calcium (\texttt{Surf\_aCa+}).
+    The chemistry panels follow the same color logic as Figure~2
+    (\texttt{cividis} for dissolved concentration and \texttt{magma} for
+    surface loading) and are rendered from the stitched \mbox{$8$}-rank solver
+    output using the same camera in all three panels.}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
-    \caption{Volume-rendered 3D field result for the large Estaillades-style
-    case at \mbox{$t = 400$}. Left: dissolved Ca$^{2+}$. Right: adsorbed
-    calcium (\texttt{Surf\_aCa+}). Both panels are rendered from the corrected
-    stitched \mbox{$8$}-rank solver output using the same camera and per-panel
-    relative scaling to expose the multi-scale spatial response.}
+    \caption{Three-panel 3D result for the large Estaillades-style case at
+    \mbox{$t = 100$}, selected because the dissolved front is still close to
+    the half-domain position. Left: initial geometry. Middle: normalized
+    dissolved Ca$^{2+}$. Right: normalized adsorbed calcium
+    (\texttt{Surf\_aCa+}). The chemistry panels follow the same color logic as
+    Figure~2 and are rendered from the corrected stitched \mbox{$8$}-rank
+    solver output using the same camera in all three panels to expose the
+    multi-scale spatial response.}
 \end{figure}

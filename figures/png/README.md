@@ -30,12 +30,16 @@ Current staged figures:
     microporous phase
 - `fig03_3d_kelvin.png`
   - populated with a true 3D volume render from the real solver field
+  - three panels: geometry, normalized dissolved calcium, normalized adsorbed calcium
+  - reported time: `t = 100`
   - rendered through the `gcfoam` EGL VTK path
   - active script:
     - `figures/scripts/generate_3d_volume_render_pyvista.py`
 - `fig04_3d_estaillades.png`
   - populated with a true 3D volume render from the corrected `8`-rank
     chemistry run
+  - three panels: geometry, normalized dissolved calcium, normalized adsorbed calcium
+  - reported time: `t = 100`
   - rendered through the `gcfoam` EGL VTK path
   - active script:
     - `figures/scripts/generate_3d_volume_render_pyvista.py`
