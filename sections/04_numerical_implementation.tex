@@ -46,7 +46,7 @@ well-posedness of the chemistry module.
 
 \subsection{Per-Timestep Algorithm}
 
-The production timestep uses a first-order Lie splitting. At each step, the solver reads or updates the face
+The production timestep uses a first-order Lie splitting \citep{carrayrou2004operator}. At each step, the solver reads or updates the face
 flux $\phi$, advances each aqueous transport equation in conservative DBS form,
 pushes the updated cell state into PHREEQC, executes the local chemistry
 update, and pulls the updated aqueous and surface states back into the
