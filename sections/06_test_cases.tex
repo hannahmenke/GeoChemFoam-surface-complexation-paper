@@ -1,18 +1,79 @@
 \section{Test Cases}
 
+Table~\ref{tab:simParams} lists the full set of simulation parameters for each
+test case. All cases use the same dilute calcium surface-complexation system:
+$C_{\mathrm{in}}(\mathrm{Ca^{2+}}) = 2\times10^{-9}\ \mathrm{mol\,m^{-3}}$,
+$C_{0}(\mathrm{Ca^{2+}}) = 0$, mobile-water threshold
+$\theta_{\mathrm{mask}} \le 10^{-3}$, and the PHREEQC surface-complexation
+input from the tutorial cases distributed with GeoChemFoam. The 1D case
+uses a prescribed uniform inlet velocity $U = 10^{-6}\ \mathrm{m\,s^{-1}}$;
+the 2D and 3D image-based cases use a velocity field obtained from a
+prior \texttt{simpleDBSFoam} flow calculation with pressure drop
+$\Delta P = 5\times10^{-5}\ \mathrm{Pa}$ and kinematic viscosity
+$\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
+
 \begin{table}[htbp]
     \centering
-    \caption{Test-case ladder used in this study.}
-    \begin{tabular}{llll}
+    \caption{Simulation parameters for all test cases. Image dimensions are
+    given in voxels; the voxel size $\delta x$ gives the physical cell size
+    in the original segmented image. Phase labels are integers in the segmented
+    image; the reactive phase column identifies the label to which the
+    intrinsic surface-area density $a_{\mathrm{surf,intr}}$ is assigned (all
+    other phases have $a_{\mathrm{surf}} = 0$ or carry only resolved interface
+    area). The 1D case uses a uniform synthetic domain with no image source.
+    All image-based cases use 8 MPI ranks; the 1D case is serial.}
+    \label{tab:simParams}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{llrllrrrr}
         \toprule
-        Stage & Geometry source & Role & Figure \\
+        Case
+            & Image [vox]
+            & $\delta x$ ($\mu$m)
+            & Comp.\ grid
+            & Phase labels (reactive)
+            & $D$ (m$^{2}$\,s$^{-1}$)
+            & $a_{\mathrm{surf,intr}}$ (m$^{-1}$)
+            & $\Delta t$
+            & $t_{\mathrm{end}}$ \\
         \midrule
-        1D & tracked 1D benchmark & analytical limit & Fig.~1 \\
-        2D & 4StraightFractures & transparent image case & Fig.~2 \\
-        3D & Kelvin ($200^3$) & simple 3D topology & Fig.~3 \\
-        3D large & Estaillades ($500^3$, 3-phase) & porous-media demonstration & Fig.~4 \\
+        1D retardation
+            & ---
+            & ---
+            & $80\times1\times1$
+            & uniform, $\theta=0.5$ (bulk)
+            & $10^{-11}$
+            & $10^{5}$
+            & $0.25$
+            & $10$ \\
+        2D fractures
+            & $500\times500\times1$
+            & $100$
+            & $250\times250\times1$
+            & 1=matrix, 2=pore \; (1)
+            & $10^{-9}$
+            & $10^{5}$
+            & $5$
+            & $3000$ \\
+        3D Kelvin
+            & $200^{3}$
+            & $10$
+            & $50^{3}$
+            & 1=pore, 2=micropore \; (2)
+            & $10^{-9}$
+            & $10^{5}$
+            & $5$
+            & $4$ \\
+        3D Estaillades
+            & $500^{3}$
+            & $4$
+            & $50^{3}$
+            & 1=pore, 2=micropore, 3=solid \; (2)
+            & $10^{-9}$
+            & $10^{5}$
+            & $5$
+            & $50$ \\
         \bottomrule
-    \end{tabular}
+    \end{tabular}}
 \end{table}
 
 \subsection{Simple 2D Image-Based Case}

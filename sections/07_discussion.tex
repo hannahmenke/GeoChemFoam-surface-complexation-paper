@@ -5,33 +5,28 @@
 The central modeling choice in this work is the use of the physical
 mobile-water fraction $\theta$ as the chemistry accumulation variable rather
 than the numerical DBS porosity $\epsilon_{\mathrm{num}}$. This distinction
-is not merely notational. In the micro-continuum DBS approach
-\citep{soulaine2016micro}, the numerical porosity is retained at a finite
-minimum value throughout the solid skeleton to regularize the Brinkman drag
-term and stabilize transport in nearly solid voxels. Using
-$\epsilon_{\mathrm{num}}$ directly as a chemical storage term would therefore
-dilute aqueous concentrations into unphysical near-solid volumes and inflate
-the apparent retardation. The formulation presented here avoids this by
-defining the mobile-water fraction separately from the numerical porosity and
-by using $\theta$ consistently in both the transport accumulation term and the
-PHREEQC input \citep{parkhurst2013phreeqc,parkhurst2015phreeqcrm}.
+is not merely notational. In the DBS micro-continuum approach, the numerical
+porosity is retained at a finite minimum value throughout the solid skeleton
+to regularize the Brinkman drag term and stabilize transport in nearly solid
+voxels. Using $\epsilon_{\mathrm{num}}$ directly as a chemical storage term
+would therefore dilute aqueous concentrations into unphysical near-solid
+volumes and inflate the apparent retardation. The formulation presented here
+avoids this by defining the mobile-water fraction separately from the
+numerical porosity and by using $\theta$ consistently in both the transport
+accumulation term and the PHREEQC input.
 
-This approach is consistent in spirit with earlier micro-continuum reactive
-transport formulations \citep{maes2021geochemfoam,maes2022vos,
-soulaine2021porousmedia4foam,soulaine2024microcontinuum}, but extends them to
-the case where the reactive surface area is an unresolved cell property rather
-than an explicitly meshed boundary. In existing pore-scale DBS solvers,
-including \texttt{porousMedia4Foam} \citep{pavuluri2022reactive} and earlier
-GeoChemFoam implementations \citep{maes2018direct}, reactive uptake is
-typically imposed as a flux condition on the diffuse fluid-solid interface
-\citep{soulaine2017mineral,molins2021simulation,molins2012investigation}. This
-requires the reactive surface to coincide with the resolved image voxel
-boundary, which is a good approximation when the dominant reactive area is at
-the macropore--grain contact. In multi-scale carbonate images, however, the
-microporous phase contains large internal reactive area that cannot be recovered
-from the coarse-cell boundary alone \citep{menke2015dynamic,menke2021upscaling}.
-The present cell-based formulation addresses this gap by representing the
-unresolved micropore surface as an intrinsic volumetric density
+This approach extends earlier micro-continuum reactive transport formulations
+to the case where the reactive surface area is an unresolved cell property
+rather than an explicitly meshed boundary. In existing pore-scale DBS solvers,
+including \texttt{porousMedia4Foam} and earlier GeoChemFoam implementations,
+reactive uptake is typically imposed as a flux condition on the diffuse
+fluid-solid interface. This requires the reactive surface to coincide with the
+resolved image voxel boundary, which is a good approximation when the dominant
+reactive area is at the macropore--grain contact. In multi-scale carbonate
+images, however, the microporous phase contains large internal reactive area
+that cannot be recovered from the coarse-cell boundary alone. The present
+cell-based formulation addresses this gap by representing the unresolved
+micropore surface as an intrinsic volumetric density
 $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$, scaled by the local phase fraction
 and coupled to PHREEQC as a cell-level property.
 
@@ -43,7 +38,7 @@ conservative in the standard finite-volume sense. There is no explicit
 surface-flux term on the cell face that could introduce an additional
 non-conservation error. This cell-local coupling is simpler and more
 transparent than an implicit composite source approach, and it is directly
-auditable through the 1D analytical benchmark \citep{ogata1961solution}.
+auditable through the 1D analytical benchmark.
 
 \subsection{Geometric Scalability}
 
@@ -53,13 +48,12 @@ increases. In the 1D case, the retardation factor can be predicted analytically
 and matched at sub-percent bulk accuracy. In the 2D fracture-network case, the
 surface-loading field reflects both the fracture-wall contact and the intrinsic
 microporous-matrix uptake, producing a spatially distributed adsorption pattern
-that would be invisible to a purely boundary-resolved model
-\citep{soulaine2016micro,maes2022vos}. The 3D Kelvin case shows that the same
-formulation handles fully connected three-dimensional pore structures with no
-algorithmic change. The Estaillades-style case demonstrates that the method
-remains computationally tractable on application-scale multi-phase images
-\citep{menke2021upscaling}, with chemistry representing 36--55\% of the total
-wall-clock time at moderate MPI concurrency.
+that would be invisible to a purely boundary-resolved model. The 3D Kelvin case
+shows that the same formulation handles fully connected three-dimensional pore
+structures with no algorithmic change. The Estaillades-style case demonstrates
+that the method remains computationally tractable at application scale, with
+chemistry representing 36--55\% of the total wall-clock time at moderate MPI
+concurrency.
 
 The transition from 2D to 3D introduces qualitatively different transport paths
 and surface-loading distributions. In the 2D case, the dissolved front advances
@@ -68,30 +62,26 @@ field follows the fracture geometry. In the 3D cases, the tortuosity of the
 pore network produces a more dispersed front and a more heterogeneous
 surface-loading pattern. This spatial heterogeneity in surface uptake is
 physically important for predicting effective retardation factors at the
-continuum scale \citep{steefel1994coupled}, and it can only be captured by an
-image-based simulation that resolves the local connectivity
-\citep{menke2018fourd}.
+continuum scale, and it can only be captured by an image-based simulation that
+resolves the local connectivity.
 
 \subsection{Computational Cost and Scaling}
 
 The chemistry fraction of 36--55\% observed in the 1D benchmark sensitivity
 study reflects the fact that PHREEQC is called once per cell per timestep, with
-a full speciation and surface equilibration for each cell
-\citep{parkhurst2013phreeqc}. This is the appropriate cost model for a general
-PHREEQC-coupled solver \citep{parkhurst2015phreeqcrm,steefel2015reactive}: the
-chemistry overhead depends primarily on the number of active cells, the
-complexity of the geochemical system, and the frequency of the chemistry call.
-For the simple calcium surface-complexation system used here, the per-cell
-chemistry time is small relative to transport, but it accumulates over the full
-cell count.
+a full speciation and surface equilibration for each cell. This is the expected
+cost model for a PHREEQC-coupled operator-split solver: the chemistry overhead
+depends primarily on the number of active cells, the complexity of the
+geochemical system, and the frequency of the chemistry call. For the simple
+calcium surface-complexation system used here, the per-cell chemistry time is
+small relative to transport, but it accumulates over the full cell count.
 
-In the Estaillades case, the total wall-clock time to $t = 50$ is
-approximately $25$~s on eight MPI ranks, of which $\approx 7$~s is attributed
-to chemistry. This is already a tractable cost for a $50^3$ coarse grid derived
-from a $500^3$ image \citep{menke2021upscaling}. For larger grids or more
-complex geochemical systems, cell masking (as applied here for
-$\theta \le 10^{-3}$) is an important mechanism for reducing the chemistry
-cost by eliminating near-solid cells that carry no physical aqueous inventory.
+In the Estaillades case, the total wall-clock time to $t = 50$ is approximately
+$25$~s on eight MPI ranks, of which $\approx 7$~s is attributed to chemistry.
+This is already a tractable cost for a $50^3$ coarse grid. For larger grids or
+more complex geochemical systems, cell masking (as applied here for
+$\theta \le 10^{-3}$) is an important mechanism for reducing the chemistry cost
+by eliminating near-solid cells that carry no physical aqueous inventory.
 
 \subsection{Limitations and Future Work}
 
@@ -102,19 +92,18 @@ $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$ is supplied as a user input per image
 phase rather than inferred directly from the segmented image. In practice, this
 quantity must be estimated from complementary measurements such as nitrogen BET
 adsorption, mercury intrusion porosimetry, or secondary image analysis at a
-finer resolution \citep{menke2021upscaling}. The formulation accommodates any
-value of this parameter, but the physical accuracy of the results depends on
-how well it reflects the true internal reactive area of the microporous phase.
-Future work will investigate methods for systematically linking the
-image-derived phase fractions to measured or computed internal surface-area
-densities.
+finer resolution. The formulation accommodates any value of this parameter, but
+the physical accuracy of the results depends on how well it reflects the true
+internal reactive area of the microporous phase. Future work will investigate
+methods for systematically linking the image-derived phase fractions to measured
+or computed internal surface-area densities.
 
 Second, the current implementation uses a first-order Lie splitting between
-transport and chemistry \citep{steefel1994coupled}. This is known to introduce
-splitting error that scales with the timestep and the stiffness of the reaction
-terms. For the surface-complexation system used here, the splitting error is
-acceptable at the validated timesteps, but it may become significant for faster
-reactions or stiffer geochemical systems. A second-order Strang splitting
+transport and chemistry. This is known to introduce splitting error that scales
+with the timestep and the stiffness of the reaction terms. For the
+surface-complexation system used here, the splitting error is acceptable at the
+validated timesteps, but it may become significant for faster reactions or
+stiffer geochemical systems. A second-order Strang splitting
 \citep{strang1968construction} is a natural extension and would halve the
 splitting-error order without requiring changes to the transport or chemistry
 operators.
@@ -122,20 +111,18 @@ operators.
 Third, exact surface-state restart is not yet a fully validated capability.
 Saved \texttt{Surf\_*} fields are not identically reintroduced into PHREEQC on
 restart because the surface-state representation in the finite-volume field and
-in the PHREEQC internal state are not trivially interchangeable
-\citep{parkhurst2015phreeqcrm}. The surface-enabled production results reported
-here therefore rely on clean starts. Enabling robust restart will require
-either a direct serialization of the PHREEQC internal state or a validated
-remapping procedure that reconstructs the internal surface equilibrium from the
-written field values.
+in the PHREEQC internal state are not trivially interchangeable. The
+surface-enabled production results reported here therefore rely on clean starts.
+Enabling robust restart will require either a direct serialization of the
+PHREEQC internal state or a validated remapping procedure that reconstructs the
+internal surface equilibrium from the written field values.
 
 Finally, the present study uses a single-component surface-complexation system
 (calcium on a single surface site) for clarity. Extension to multi-component
 competitive surface complexation, in which multiple aqueous species compete for
-the same surface sites \citep{dzombak1990surface}, is mathematically
-straightforward within the PHREEQC framework \citep{parkhurst2013phreeqc} but
-requires careful attention to the cell-level mass balances and to the sign
-conventions used in the field-level inventory expression. This extension is a
-direct target for future work, particularly for applications involving multi-ion
-exchange and competitive adsorption in carbonate pore systems
-\citep{menke2015dynamic,menke2018fourd}.
+the same surface sites, is mathematically straightforward within the PHREEQC
+framework but requires careful attention to the cell-level mass balances and to
+the sign conventions used in the field-level inventory expression. This
+extension is a direct target for future work, particularly for applications
+involving multi-ion exchange and competitive adsorption in carbonate pore
+systems.
