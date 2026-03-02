@@ -14,7 +14,7 @@ reactive area \citep{menke2021upscaling}.
 Classical Darcy-scale reactive transport models can represent adsorption and
 surface complexation through effective source terms or equilibrium closures,
 and they remain indispensable for large-domain prediction
-\citep{lichtner1985continuum,steefel1994coupled,steefel2015reactive}. However, these models usually
+\citep{steefel1994coupled,steefel2015reactive}. However, these models usually
 require constitutive upscaling assumptions for both transport and reactive
 surface area, and they do not directly expose how local geometry controls the
 spatial distribution of dissolved and adsorbed species. At the other extreme,
@@ -48,8 +48,7 @@ parkhurst2015phreeqcrm}. The practical challenge is not the chemical model
 itself, but how to embed it into a transport formulation that is consistent
 with unresolved image-based geometry. Existing PHREEQC-coupled transport
 workflows are well suited to structured-grid continuum models and to
-operator-split multi-component solvers \citep{steefel2015reactive,
-parkhurst2015phreeqcrm}, but they do not automatically provide a
+operator-split multi-component solvers, but they do not automatically provide a
 mathematically clean representation of cell-based internal surface area in a
 DBS-style pore-structure model. In particular, when unresolved reactive area
 is treated as a cell property rather than an explicit mesh boundary, the
@@ -68,7 +67,7 @@ explicit-boundary DBS approaches \citep{maes2018direct,maes2021geochemfoam},
 locate reactive uptake at the meshed grain surface: this is appropriate when
 the dominant surface area coincides with the resolved pore--grain interface but
 fails for microporous phases where the internal surface area is sub-grid by
-construction. Pore-network models \citep{blunt2001flow} offer geometric
+construction. Pore-network models offer geometric
 flexibility but depend on idealized throat-and-pore representations that do
 not readily accommodate cell-based unresolved surface inventories on segmented
 images. The closest existing approach to the present work is
@@ -83,7 +82,7 @@ porosity used for transport regularization and the physical mobile-water
 fraction used for chemistry. The present work addresses this gap directly.
 
 This is also the key gap relative to earlier resolved-surface workflows within
-GeoChemFoam itself \citep{maes2021geochemfoam,maes2022heat,maes2022vos}.
+GeoChemFoam itself \citep{maes2022heat,maes2022vos}.
 Existing PHREEQC-coupled cases in the code base already support reactive
 transport and surface complexation when the reactive surface coincides with an
 explicit mesh boundary. That capability is useful and remains valid, but it

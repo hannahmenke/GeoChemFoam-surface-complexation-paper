@@ -3,9 +3,8 @@
 This section describes the discrete fields, the transport--chemistry coupling,
 and the per-timestep algorithm used in the reported simulations. The
 implementation couples conservative Darcy-Brinkman-Stokes (DBS) transport
-\citep{soulaine2016micro} with cell-centred PHREEQC chemistry
-\citep{parkhurst2013phreeqc} and cell-based surface complexation in a single
-operator-split formulation.
+with cell-centred PHREEQC chemistry and cell-based surface complexation in a
+single operator-split formulation.
 
 \subsection{Field Locations And Discretization}
 
@@ -28,12 +27,12 @@ surface-area field as an additive quantity:
 The first term is the coarse-grained phase-boundary contribution. The second is
 an intrinsic volumetric surface density assigned to selected image phases
 (for example the micropore phase) and scaled by the corresponding local phase
-fraction inside each coarse cell \citep{menke2021upscaling}.
+fraction inside each coarse cell.
 
 \subsection{PHREEQC Coupling}
 
 The PHREEQC coupling is performed through \texttt{phreeqcDBSMixture}, which
-wraps the PhreeqcRM interface \citep{parkhurst2015phreeqcrm}. For each cell,
+wraps the PhreeqcRM interface. For each cell,
 the coupling uses the current aqueous state, the physical mobile-water fraction
 $\theta$, the current cell surface area $a_{\mathrm{surf}}$ including any
 intrinsic micropore contribution, and the current cell surface state. The
@@ -47,8 +46,7 @@ well-posedness of the chemistry module.
 
 \subsection{Per-Timestep Algorithm}
 
-The production timestep uses a first-order Lie splitting
-\citep{steefel1994coupled}. At each step, the solver reads or updates the face
+The production timestep uses a first-order Lie splitting. At each step, the solver reads or updates the face
 flux $\phi$, advances each aqueous transport equation in conservative DBS form,
 pushes the updated cell state into PHREEQC, executes the local chemistry
 update, and pulls the updated aqueous and surface states back into the
@@ -79,4 +77,4 @@ chemistry state remains cell-centred throughout the loop. The solver does not
 reconstruct a face-based reaction source for the unresolved surface term.
 Instead, the transport operator acts on cell inventories through the face
 fluxes, while the reaction operator acts locally on the updated cell state
-through PHREEQC \citep{parkhurst2013phreeqc}.
+through PHREEQC.
