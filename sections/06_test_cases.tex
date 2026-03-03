@@ -94,13 +94,25 @@ included inside the $\epsilon = 0.4$ matrix phase, so the surface-loading field
 is no longer confined to the matrix-pore interface but extends across the
 microporous matrix.
 
-The corresponding figure reports the segmented geometry, the normalized
+Figure~\ref{fig:2DFractures} reports the segmented geometry, the normalized
 dissolved calcium field, and the normalized adsorbed-calcium field at
 $t = 3000$, obtained on eight MPI ranks. The 2D case demonstrates that the
 method reproduces the expected directional retardation pattern in a simple
 geometry and that the surface-loading field tracks both the fracture walls and
 the microporous matrix in an interpretable manner.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
+    \caption{Three-panel result for the 2D fracture-network case.
+    Left: segmented geometry. Middle: normalized dissolved Ca$^{2+}$ at
+    \mbox{$t = 3000$}. Right: normalized adsorbed calcium
+    (\texttt{Surf\_aCa+}) at the same time. The intrinsic matrix surface term
+    is active in the \mbox{$\epsilon = 0.4$} microporous phase.}
+    \label{fig:2DFractures}
+\end{figure}
+
+\FloatBarrier
 \subsection{Simple 3D Image-Based Case}
 
 The simple 3D case uses a Kelvin-cell image dataset with dimensions
@@ -108,10 +120,9 @@ $200 \times 200 \times 200$ and voxel size $10~\mu\mathrm{m}$, where
 label $1$ denotes pore and label $2$ denotes micropore.
 This case marks the transition from 2D transport pathways to a fully
 three-dimensional unresolved surface network while remaining sufficiently
-simple to interpret visually. It is used to illustrate how the 3D topology
-modifies the transport path, how the unresolved internal surface distribution
-reshapes the uptake pattern, and how the computational cost of the chemistry
-step increases relative to the 2D case.
+simple to interpret visually. The 3D topology produces preferential transport
+channels and a structured surface-uptake pattern that can still be read
+directly from the volume renders.
 
 The transported initial condition is calcium-free
 (\mbox{$\mathrm{Ca^{2+}} = 0$}, \mbox{$\mathrm{Cl^{-}} = 0$}) and all
@@ -120,7 +131,20 @@ reported as incremental loading
 (\mbox{$\Delta$\texttt{Surf\_aCa+}} = \texttt{Surf\_aCa+}$(t)$ $-$
 \texttt{Surf\_aCa+}$(0)$) to isolate the transport-driven uptake from the
 negligible startup equilibrium floor retained by the PHREEQC template.
+Figure~\ref{fig:3DKelvin} shows the geometry, dissolved-calcium, and
+incremental surface-loading panels at $t = 4$.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
+    \caption{Three-panel 3D result for the Kelvin case at
+    \mbox{$t = 4$}. Left: initial geometry. Middle: normalized dissolved
+    Ca$^{2+}$. Right: normalized incremental adsorbed calcium
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}}).}
+    \label{fig:3DKelvin}
+\end{figure}
+
+\FloatBarrier
 \subsection{Large 3D Porous-Media Case}
 
 The large 3D porous-medium case uses an Estaillades-style three-phase
@@ -135,36 +159,15 @@ cases.
 The run proceeds to $t = 50$ from a clean unrestarted start. At this
 endpoint, the domain-mean dissolved Ca$^{2+}$ is $5.37 \times 10^{-10}$, the
 domain-mean \texttt{Surf\_aCa+} is $2.12 \times 10^{-15}$, and the mean
-$a_{\mathrm{surf}}$ is $7.65 \times 10^{4}\ \mathrm{m^{-1}}$. The PHREEQC
-timing summary reports ten chemistry calls with a total chemistry time of
-approximately $7.29$~s and a total wall-clock time to the final written state
-of approximately $25$~s.
+$a_{\mathrm{surf}}$ is $7.65 \times 10^{4}\ \mathrm{m^{-1}}$. The PHREEQC equilibrium solve accounts for approximately $29\%$ of the
+$\approx 25$~s wall-clock time, consistent with the per-cell cost scaling
+observed in the 1D sensitivity studies.
 
-Near-solid cells (\mbox{$\theta \le 10^{-3}$}) are masked out of the reactive-surface
-field, so the reported adsorption is concentrated in the microporous and
-macroporous mobile regions rather than the numerically regularized solid
-skeleton.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
-    \caption{Three-panel result for the 2D fracture-network case.
-    Left: segmented geometry. Middle: normalized dissolved Ca$^{2+}$ at
-    \mbox{$t = 3000$}. Right: normalized adsorbed calcium
-    (\texttt{Surf\_aCa+}) at the same time. The intrinsic matrix surface term
-    is active in the \mbox{$\epsilon = 0.4$} microporous phase.}
-\end{figure}
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Three-panel 3D result for the Kelvin case at
-    \mbox{$t = 4$}. Left: initial geometry. Middle: normalized dissolved
-    Ca$^{2+}$. Right: normalized incremental adsorbed calcium
-    (\mbox{$\Delta$\texttt{Surf\_aCa+}}). All panels share the same camera
-    orientation. Colormaps: \texttt{cividis} for dissolved concentration,
-    \texttt{magma} for surface loading.}
-\end{figure}
+Near-solid cells (\mbox{$\theta \le 10^{-3}$}) are masked out of the
+reactive-surface field, so the reported adsorption is concentrated in the
+microporous and macroporous mobile regions rather than the numerically
+regularized solid skeleton. Figure~\ref{fig:3DEstaillades} shows the
+geometry and field panels at $t = 50$.
 
 \begin{figure}[htbp]
     \centering
@@ -172,6 +175,6 @@ skeleton.
     \caption{Three-panel 3D result for the Estaillades-style case at
     \mbox{$t = 50$}. Left: initial geometry. Middle: normalized dissolved
     Ca$^{2+}$. Right: normalized incremental adsorbed calcium
-    (\mbox{$\Delta$\texttt{Surf\_aCa+}}). All panels share the same camera
-    orientation to expose the multi-scale spatial response.}
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}}).}
+    \label{fig:3DEstaillades}
 \end{figure}

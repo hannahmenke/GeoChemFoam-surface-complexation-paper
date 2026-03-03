@@ -132,7 +132,7 @@ def main() -> None:
         ax.plot(
             x_um,
             [value / surface_scale for value in aqueous_values],
-            label="Numerical aqueous-only",
+            label="Numerical (aq. only)",
             linewidth=1.4,
             color="#c55a11",
             marker="o",
@@ -143,14 +143,14 @@ def main() -> None:
             x_um,
             [value / surface_scale for value in analytical_aqueous],
             "--",
-            label="Cell-averaged analytical aqueous-only",
+            label="Analytical (aq. only)",
             linewidth=1.5,
             color="#f2a65a",
         )
     ax.plot(
         x_um,
         [value / surface_scale for value in surface_values],
-        label="Numerical surface-enabled",
+        label="Numerical (surface)",
         linewidth=1.8,
         color="#0b4f6c",
         marker="o",
@@ -161,7 +161,7 @@ def main() -> None:
         x_um,
         [value / surface_scale for value in analytical_surface],
         "--",
-        label="Cell-averaged analytical surface-enabled",
+        label="Analytical (surface)",
         linewidth=1.6,
         color="#4f9da6",
     )
@@ -176,7 +176,7 @@ def main() -> None:
     ax2.plot(
         x_um,
         [value / loading_scale for value in numerical_surface_loading],
-        label="Numerical surface loading",
+        label="Numerical",
         linewidth=1.8,
         color="#6b2d5c",
         marker="o",
@@ -187,7 +187,7 @@ def main() -> None:
         x_um,
         [value / loading_scale for value in analytical_surface_loading],
         "--",
-        label="Cell-averaged analytical linear limit",
+        label="Analytical (linear limit)",
         linewidth=1.6,
         color="#b565a7",
     )
@@ -214,9 +214,8 @@ def main() -> None:
         bbox={"facecolor": "white", "edgecolor": "#bdbdbd", "boxstyle": "round,pad=0.25"},
     )
 
-    fig.suptitle("1D Linear Retardation Benchmark")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.95))
+    fig.tight_layout()
     fig.savefig(args.output, dpi=200)
 
 

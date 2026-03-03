@@ -15,45 +15,86 @@ $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the surface fields are
 therefore stored at cell centres, whereas only the volumetric flux $\phi$
 remains face-centred. Transport uses face interpolation only within the
 conservative flux assembly, while the surface chemistry remains strictly
-cell-local.
+cell-local. The additive decomposition of $a_{\mathrm{surf}}$ into interface
+and intrinsic contributions is defined in Section~\ref{sec:aSurf}
+(Eqs.~\eqref{eq:asurf}--\eqref{eq:asurf_intrinsic}).
 
-For microporous image cases, the current implementation treats the cell-centered
-surface-area field as an additive quantity:
-\[
-    a_{\mathrm{surf}} =
-    a_{\mathrm{surf}}^{\mathrm{interface}} +
-    a_{\mathrm{surf}}^{\mathrm{intrinsic}}.
-\]
-The first term is the coarse-grained phase-boundary contribution. The second is
-an intrinsic volumetric surface density assigned to selected image phases
-(for example the micropore phase) and scaled by the corresponding local phase
-fraction inside each coarse cell.
+All simulations reported here use the following discretization. Time
+integration uses the first-order implicit Euler scheme, consistent with the
+first-order Lie splitting of the transport and chemistry operators. The
+convective flux $\nabla\cdot(\phi C_i)$ is discretized with a bounded
+first-order upwind scheme, which is monotone and free of spurious oscillations
+on the unstructured image-based meshes used here. The diffusive term
+$\nabla\cdot(\theta D_i \nabla C_i)$ uses a second-order Gauss linear scheme
+with non-orthogonality correction. The combination gives a scheme that is
+first-order accurate in both time and space for advection-dominated transport,
+consistent with the overall first-order operator-split framework.
 
 \subsection{PHREEQC Coupling}
 
 The PHREEQC coupling is performed through \texttt{phreeqcDBSMixture}, which
-wraps the PhreeqcRM interface. For each cell,
-the coupling uses the current aqueous state, the physical mobile-water fraction
-$\theta$, the current cell surface area $a_{\mathrm{surf}}$ including any
-intrinsic micropore contribution, and the current cell surface state. The
-surface mode is optional and reduces exactly to aqueous-only mode when
-$a_{\mathrm{surf}} = 0$.
+wraps the PhreeqcRM interface \citep{parkhurst2015phreeqcrm}. At
+initialisation, each computational cell is registered as a separate PHREEQC
+solution. When surface complexation is active, a PHREEQC \texttt{SURFACE}
+block is also created for each cell. The block specifies the total moles of
+surface master sites as
+\begin{equation}
+n_{\mathrm{sites}} = s_k \, \frac{a_{\mathrm{surf}}}{\theta},
+\label{eq:nsites}
+\end{equation}
+where $s_k$ (mol\,m$^{-2}$) is the user-prescribed site density for surface
+master species $k$, and $a_{\mathrm{surf}}/\theta$ is the surface area per
+unit water volume (Eq.~\eqref{eq:asurf_water}). This initialises the total
+reactive capacity of the surface in each cell consistently with the
+field-level surface area.
 
-Cells with negligible mobile-water fraction remain chemically inactive in the
-finite-volume state. This is enforced at the field level; the PHREEQC backend
-retains an internal dummy water volume only to maintain numerical
-well-posedness of the chemistry module.
+The $a_{\mathrm{surf}}$ field is computed from the segmented image before the
+simulation begins (Section~\ref{sec:aSurf}) and is held constant throughout
+the reactive-transport calculation; it is not updated by the flow or chemistry
+solvers. At each timestep, the current $a_{\mathrm{surf}}$ and $\theta$ are
+used to pass the area per unit water volume to PhreeqcRM via
+\texttt{setSurfaceAreaScale}, ensuring that the surface capacity seen by
+PHREEQC remains consistent with the finite-volume fields even as $\theta$ may
+vary spatially. The surface mode is optional and reduces exactly to
+aqueous-only mode when $a_{\mathrm{surf}} = 0$ everywhere.
+
+Cells with negligible mobile-water fraction ($\theta < \theta_{\min}$, where
+$\theta_{\min}$ is a small threshold) remain chemically inactive in the
+finite-volume fields. The PHREEQC backend retains a minimal internal water
+volume for these cells only to maintain numerical well-posedness of the
+chemistry module; their aqueous and surface states do not contribute to any
+reported inventory.
+
+The cell-local nature of the chemistry step means that all PHREEQC calls are
+embarrassingly parallel across cells. PhreeqcRM distributes the cell
+chemistry over available threads using OpenMP, so the chemistry cost scales
+with the number of cores used for the transport solve.
 
 \subsection{Per-Timestep Algorithm}
 
-The production timestep uses a first-order Lie splitting \citep{carrayrou2004operator}. At each step, the solver reads or updates the face
-flux $\phi$, advances each aqueous transport equation in conservative DBS form,
-pushes the updated cell state into PHREEQC, executes the local chemistry
-update, and pulls the updated aqueous and surface states back into the
-finite-volume fields. Integrated inventory diagnostics are written at each
-step. The operator-split structure keeps transport and chemistry individually
-testable and ensures that the conservative structure of the aqueous transport
-step is not hidden inside a composite implicit source term.
+At each timestep the solver executes the following sequence. First, the face
+flux $\phi$ is read or updated from the DBS flow solution. Second, each
+aqueous transport equation is advanced in conservative DBS form using the
+implicit Euler--upwind discretization described above.
+Third, the updated aqueous concentrations and surface states are pushed into
+PhreeqcRM. Fourth, PhreeqcRM executes the local equilibrium chemistry for all
+active cells in parallel. Fifth, the updated aqueous and surface
+concentrations are pulled back into the finite-volume fields. Finally, the
+domain-integrated bulk inventory
+\begin{equation}
+M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
+\left( \theta C + \frac{a_{\mathrm{surf}}}{\theta}\Gamma_{\mathrm{field}} \right)
+\end{equation}
+is computed and written, where the sum runs over all cells and $V_{\mathrm{cell}}$
+is the cell volume. This integrated diagnostic is the primary conservation
+check: in a closed domain it should remain constant to within discretisation
+error, and in a flow-through domain it should balance the net flux through
+the inlet and outlet faces.
+
+The operator-split structure keeps
+transport and chemistry individually testable and ensures that the
+conservative structure of the aqueous transport step is not hidden inside a
+composite implicit source term.
 
 \begin{figure}[htbp]
     \centering

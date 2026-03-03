@@ -193,7 +193,7 @@ def add_geometry_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text("Geometry", position="upper_left", font_size=13, color="black")
+    plotter.add_text("Geometry", position="upper_left", font_size=15, color="black")
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -201,7 +201,7 @@ def add_geometry_panel(
         xtitle="x cell",
         ytitle="y cell",
         ztitle="z cell",
-        font_size=11,
+        font_size=12,
         color="black",
     )
     plotter.camera_position = camera_position(nx, ny, nz)
@@ -241,8 +241,8 @@ def add_volume_panel(
             "title": scalar_bar_title,
             "vertical": True,
             "fmt": "%.1f",
-            "title_font_size": 14,
-            "label_font_size": 11,
+            "title_font_size": 15,
+            "label_font_size": 12,
         },
     )
     plotter.add_mesh(
@@ -251,7 +251,7 @@ def add_volume_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text(title, position="upper_left", font_size=13, color="black")
+    plotter.add_text(title, position="upper_left", font_size=15, color="black")
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -259,7 +259,7 @@ def add_volume_panel(
         xtitle="x cell",
         ytitle="y cell",
         ztitle="z cell",
-        font_size=11,
+        font_size=12,
         color="black",
     )
     plotter.camera_position = camera_position(nx, ny, nz)
@@ -348,8 +348,8 @@ def main() -> None:
         plotter=plotter,
         dataset=aqueous_img,
         subplot=(0, 1),
-        title=f"Ca+2 / Cin (t = {args.time_name})",
-        scalar_bar_title="Normalized Ca+2",
+        title=f"Ca\u00b2\u207a / C_in  (t = {args.time_name})",
+        scalar_bar_title="Norm. Ca\u00b2\u207a / C_in",
         cmap="cividis",
         nx=nx,
         ny=ny,
@@ -359,8 +359,8 @@ def main() -> None:
         plotter=plotter,
         dataset=surface_img,
         subplot=(0, 2),
-        title=f"Delta Surf_aCa+ / P99 (t = {args.time_name})",
-        scalar_bar_title="Normalized surface loading",
+        title=f"\u0394Surf_aCa\u207a  (t = {args.time_name})",
+        scalar_bar_title="Norm. \u0394Surf_aCa\u207a",
         cmap="magma",
         nx=nx,
         ny=ny,
