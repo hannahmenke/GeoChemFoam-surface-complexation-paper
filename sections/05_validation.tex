@@ -35,20 +35,35 @@ The solver therefore reproduces the dilute field-level retardation limit of the
 DBS formulation at sub-percent bulk inventory accuracy. Because the domain
 geometry is uniform, any residual error reflects inaccuracies in the
 surface-chemistry coupling and the batch-secant estimation procedure rather than
-mesh or geometry artefacts. Figure~\ref{fig:1DRetardation} shows the aqueous
-and surface-loading profiles.
+mesh or geometry artefacts. Figure~\ref{fig:1DRetardation} shows the spatial
+profiles at $t = 10$, and Figure~\ref{fig:1DBreakthrough} shows the
+outlet breakthrough curves over the full run to $t = 80$~s.
+The surface-enabled breakthrough arrives at $1/R_{\mathrm{field}} \approx 37\%$
+of the aqueous-only breakthrough time, in agreement with the analytical prediction.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig01_1d_retardation.png}
-    \caption{1D analytical retardation benchmark. Left: normalized aqueous
-    Ca$^{2+}$ profiles for the aqueous-only and surface-enabled runs, compared
-    against their matching cell-averaged advection-diffusion analytical
-    solutions. Right: normalized surface loading compared against the
-    cell-averaged linear-equilibrium analytical limit constructed from the
-    calibrated field-level
-    $K_{s,\mathrm{field}}$.}
+    \caption{1D analytical retardation benchmark: spatial profiles at $t = 10$.
+    Left: normalized aqueous Ca$^{2+}$ profiles for the aqueous-only and
+    surface-enabled runs, compared against their matching cell-averaged
+    advection-diffusion analytical solutions. Right: normalized surface loading
+    compared against the cell-averaged linear-equilibrium analytical limit
+    constructed from the calibrated field-level $K_{s,\mathrm{field}}$.}
     \label{fig:1DRetardation}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig06_1d_breakthrough.png}
+    \caption{1D outlet breakthrough curves. Symbols show the outlet-patch
+    area-averaged Ca$^{2+}$ normalised by the inlet concentration $C_{\mathrm{in}}$
+    for the aqueous-only run (circles) and the surface-enabled run (squares).
+    Solid lines are the corresponding Ogata--Banks analytical solutions.
+    Vertical dashed lines mark the analytical breakthrough times
+    $t_{\mathrm{BT}} = L\theta/U$ (aqueous-only) and
+    $t_{\mathrm{BT}} = L\theta R_{\mathrm{field}}/U$ (surface-enabled).}
+    \label{fig:1DBreakthrough}
 \end{figure}
 
 \subsection{Validation Summary}
