@@ -24,12 +24,12 @@ $1/R_{\mathrm{field}} \approx 37\%$ of the aqueous-only front velocity.
 The mesh contains $80 \times 1 \times 1$ cells and uses a species diffusion
 coefficient of $10^{-11}\ \mathrm{m^2\,s^{-1}}$.
 The surface-enabled profile matches the retarded advection--diffusion reference
-with a relative L1 error of $0.75\%$ and $L_{\infty}$ error of $2.68\%$.
+with a relative L1 error of $1.43\%$ and $L_{\infty}$ error of $3.67\%$.
 The aqueous-only profile matches its unretarded reference with L1 and
-$L_{\infty}$ errors of $1.87\%$ and $8.44\%$, respectively.
+$L_{\infty}$ errors of $1.08\%$ and $5.97\%$, respectively.
 The field-level total-equivalent inventory---the domain integral of the combined
-aqueous and adsorbed mass---differs from the analytical limit by $0.67\%$ for
-the surface-enabled run and by $2.41\%$ for the aqueous-only run.
+aqueous and adsorbed mass---differs from the analytical limit by $1.57\%$ for
+the surface-enabled run and by $0.58\%$ for the aqueous-only run.
 
 The solver therefore reproduces the dilute field-level retardation limit of the
 DBS formulation at sub-percent bulk inventory accuracy. Because the domain
@@ -93,7 +93,7 @@ checks.
         \toprule
         Check & Metric & Result \\
         \midrule
-        Analytical 1D & Surface L1 / total drift & $0.75\%$ / $0.67\%$ \\
+        Analytical 1D & Surface L1 / total drift & $1.43\%$ / $1.57\%$ \\
         Splitting     & Local / bulk drift        & $3$--$4.5\%$ / $<0.6\%$ \\
         Timestep      & Local / bulk drift        & $\approx 3\%$ / $0.25\%$ \\
         Mesh          & Front / total drift       & $2.5\times 10^{-7}$ / $0.37\%$ \\
