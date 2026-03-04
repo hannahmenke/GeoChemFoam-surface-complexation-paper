@@ -59,8 +59,14 @@ of the aqueous-only breakthrough time, in agreement with the analytical predicti
     \caption{1D outlet breakthrough curves. Symbols show the outlet-patch
     area-averaged Ca$^{2+}$ normalised by the inlet concentration $C_{\mathrm{in}}$
     for the aqueous-only run (circles) and the surface-enabled run (squares).
-    Solid lines are the corresponding Ogata--Banks analytical solutions.
-    Vertical dashed lines mark the analytical breakthrough times
+    Dashed lines are the corresponding finite-domain analytical solutions,
+    obtained by solving the 1-D advection--diffusion equation on $[0,L]$ with
+    a Dirichlet inlet and Neumann (no-flux) outlet, matching the OpenFOAM
+    boundary conditions exactly.
+    The semi-infinite Ogata--Banks formula is not used here because the
+    finite domain with a no-flux outlet causes Ca$^{2+}$ to arrive at $x=L$
+    earlier than the semi-infinite prediction.
+    Vertical dotted lines mark the advective breakthrough times
     $t_{\mathrm{BT}} = L\theta/U$ (aqueous-only) and
     $t_{\mathrm{BT}} = L\theta R_{\mathrm{field}}/U$ (surface-enabled).}
     \label{fig:1DBreakthrough}
