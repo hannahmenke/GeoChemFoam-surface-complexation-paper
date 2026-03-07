@@ -7,6 +7,9 @@ import re
 from pathlib import Path
 
 import numpy as np
+import vtk
+import pyvista.plotting._vtk as _pv_vtk
+_pv_vtk.vtkRenderWindow = vtk.vtkEGLRenderWindow
 import pyvista as pv
 
 
@@ -281,6 +284,8 @@ def main() -> None:
     parser.add_argument("--surface-log-scale", action="store_true")
     parser.add_argument("--solid-threshold", type=float, default=1.0e-3)
     parser.add_argument("--pore-threshold", type=float, default=0.9)
+    parser.add_argument("--aqueous-title", default=None)
+    parser.add_argument("--surface-title", default=None)
     args = parser.parse_args()
 
     pv.OFF_SCREEN = True
@@ -344,12 +349,17 @@ def main() -> None:
         nz=nz,
     )
 
+    aq_title = args.aqueous_title if args.aqueous_title else f"{args.aqueous_field} / C_in  (t = {args.time_name})"
+    aq_bar = args.aqueous_title if args.aqueous_title else f"Norm. {args.aqueous_field} / C_in"
+    surf_title = args.surface_title if args.surface_title else f"\u0394{args.surface_field}  (t = {args.time_name})"
+    surf_bar = args.surface_title if args.surface_title else f"Norm. \u0394{args.surface_field}"
+
     add_volume_panel(
         plotter=plotter,
         dataset=aqueous_img,
         subplot=(0, 1),
-        title=f"Ca\u00b2\u207a / C_in  (t = {args.time_name})",
-        scalar_bar_title="Norm. Ca\u00b2\u207a / C_in",
+        title=aq_title,
+        scalar_bar_title=aq_bar,
         cmap="cividis",
         nx=nx,
         ny=ny,
@@ -359,8 +369,8 @@ def main() -> None:
         plotter=plotter,
         dataset=surface_img,
         subplot=(0, 2),
-        title=f"\u0394Surf_aCa\u207a  (t = {args.time_name})",
-        scalar_bar_title="Norm. \u0394Surf_aCa\u207a",
+        title=surf_title,
+        scalar_bar_title=surf_bar,
         cmap="magma",
         nx=nx,
         ny=ny,

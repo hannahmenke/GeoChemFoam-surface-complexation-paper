@@ -48,9 +48,9 @@
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - reported time:
-  - `t = 20`
+  - `t = 4`
 - renderer:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_field_panels.py`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
 
 ## Figure 4
 
@@ -72,7 +72,7 @@
 - reported time:
   - `t = 40`
 - renderer:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_field_panels.py`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
 
 ## Figure 5
 
