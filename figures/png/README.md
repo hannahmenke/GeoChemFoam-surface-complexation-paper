@@ -18,30 +18,26 @@ Planned figure targets:
 Current staged figures:
 
 - `fig01_1d_retardation.png`
-  - populated with a two-panel 1D analytical validation figure
+  - two-panel 1D analytical validation figure
   - left: normalized aqueous profile vs cell-averaged analytical reference
   - right: normalized surface loading vs cell-averaged linear-limit reference
 - `fig02_2d_fractures.png`
-  - populated with a three-panel 2D results figure
-  - left: geometry
-  - middle: normalized dissolved calcium at `t = 3000`
-  - right: normalized adsorbed calcium at `t = 3000`
-  - uses the corrected intrinsic matrix surface term in the `eps = 0.4`
-    microporous phase
+  - three-panel 2D results figure for Pb²⁺ / Dzombak–Morel HFO
+  - left: fracture geometry
+  - middle: log-scale Pb²⁺ / C_in at `t = 2000` (4 decades, fracture vs. matrix contrast)
+  - right: log-scale Hfo_sOPb⁺ strong-site surface loading at `t = 2000`
+  - shows near-complete Pb retardation by HFO; fracture channels visible as faster transport paths
 - `fig03_3d_kelvin.png`
-  - populated with a true 3D volume render from the real solver field
-  - three panels: geometry, normalized dissolved calcium, normalized adsorbed calcium
-  - reported time: `t = 100`
-  - rendered through the `gcfoam` EGL VTK path
-  - active script:
-    - `figures/scripts/generate_3d_volume_render_pyvista.py`
+  - needs regeneration with new Zn²⁺/Ca²⁺ competitive sorption chemistry
+  - requires display / EGL access for pyvista rendering
+  - target: Zn²⁺ breakthrough into Ca²⁺ background, Surf_aZn⁺ surface loading
 - `fig04_3d_estaillades.png`
-  - populated with a true 3D volume render from the corrected `8`-rank
-    chemistry run
-  - three panels: geometry, normalized dissolved calcium, normalized adsorbed calcium
-  - reported time: `t = 100`
-  - rendered through the `gcfoam` EGL VTK path
-  - active script:
-    - `figures/scripts/generate_3d_volume_render_pyvista.py`
+  - needs regeneration with new Sr²⁺/Ca²⁺ DGR chemistry
+  - requires display / EGL access for pyvista rendering
+  - target: Sr²⁺ front advancing into Ca²⁺-bearing formation water, Surf_aSr⁺ loading
+- `fig07_kelvin_temporal.png`
+  - two-panel temporal evolution for Kelvin Zn²⁺/Ca²⁺ competitive sorption
+  - left: domain-mean Ca²⁺ and Zn²⁺ / C_in vs time (31 time points)
+  - right: normalised incremental Surf_aCa⁺ and Surf_aZn⁺ domain-mean vs time
 
 The LaTeX draft already references these as the expected final PNG outputs.

@@ -230,6 +230,10 @@ def main() -> None:
     parser.add_argument("--time-name", required=True)
     parser.add_argument("--aqueous-field", default="Ca+2")
     parser.add_argument("--surface-field", default="Surf_aCa+")
+    parser.add_argument("--aqueous-label", default=None,
+        help="Panel label for the aqueous field (default: derived from --aqueous-field)")
+    parser.add_argument("--surface-label", default=None,
+        help="Panel label for the surface field (default: derived from --surface-field)")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--title", default="3D DBS Surface Complexation")
     parser.add_argument("--slice-normal", choices=["x", "y", "z"], default="z")
@@ -256,23 +260,26 @@ def main() -> None:
     ax1 = fig.add_subplot(1, 2, 1, projection="3d")
     ax2 = fig.add_subplot(1, 2, 2, projection="3d")
 
+    aqueous_panel_label = args.aqueous_label if args.aqueous_label is not None else f"Dissolved {args.aqueous_field}"
+    surface_panel_label = args.surface_label if args.surface_label is not None else f"Adsorbed ({args.surface_field})"
+
     sm1, title1 = add_slice_panel(
         ax1,
         aqueous_3d,
-        "Dissolved Ca$^{2+}$",
+        aqueous_panel_label,
         "viridis",
         aqueous_range,
-        "Ca$^{2+}$",
+        args.aqueous_field,
         args.slice_normal,
     )
 
     sm2, title2 = add_slice_panel(
         ax2,
         surface_3d,
-        "Adsorbed Ca (Surf_aCa+)",
+        surface_panel_label,
         "magma",
         surface_range,
-        "Surf_aCa+",
+        args.surface_field,
         args.slice_normal,
     )
 

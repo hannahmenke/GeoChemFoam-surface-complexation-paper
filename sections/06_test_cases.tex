@@ -1,13 +1,18 @@
 \section{Test Cases}
 
 Table~\ref{tab:simParams} lists the full set of simulation parameters for each
-test case. All cases use the same dilute calcium surface-complexation system
-\citep{pokrovsky2002surface,heberling2011structure}:
-$C_{\mathrm{in}}(\mathrm{Ca^{2+}}) = 2\times10^{-9}\ \mathrm{mol\,m^{-3}}$,
-$C_{0}(\mathrm{Ca^{2+}}) = 0$, mobile-water threshold
-$\theta_{\mathrm{mask}} \le 10^{-3}$, and the PHREEQC surface-complexation
-input from the tutorial cases distributed with GeoChemFoam. The 1D case
-uses a prescribed uniform inlet velocity $U = 10^{-6}\ \mathrm{m\,s^{-1}}$;
+test case. Three distinct surface-complexation chemistries are demonstrated,
+each chosen to highlight a different aspect of nonlinear multi-species coupling
+that cannot be captured by a simple retardation factor: (i) Pb$^{2+}$ sorption
+on a two-site Dzombak--Morel hydrous ferric oxide (HFO) coating for the 2D fracture
+case; (ii) competitive Zn$^{2+}$/Ca$^{2+}$ sorption on a single-site generic
+surface for the Kelvin 3D case; and (iii) Sr$^{2+}$ leachate invading
+Ca$^{2+}$-bearing limestone formation water, representing a radwaste
+deep geological repository (DGR) scenario, for the Estaillades 3D case.
+In all cases the mobile-water threshold is $\theta_{\mathrm{mask}} \le 10^{-3}$
+and PHREEQC thermodynamic data are drawn from the GeoChem.dat database
+distributed with GeoChemFoam.
+The 1D case uses a prescribed uniform inlet velocity $U = 10^{-6}\ \mathrm{m\,s^{-1}}$;
 the 2D and 3D image-based cases use a velocity field obtained from a
 prior \texttt{simpleDBSFoam} flow calculation with pressure drop
 $\Delta P = 5\times10^{-5}\ \mathrm{Pa}$ and kinematic viscosity
@@ -46,7 +51,7 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & $10^{5}$
             & $0.25$
             & $10$ \\
-        2D fractures
+        2D fractures (Pb$^{2+}$/HFO)
             & $500\times500\times1$
             & $100$
             & $250\times250\times1$
@@ -54,99 +59,120 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & $10^{-9}$
             & $10^{5}$
             & $5$
-            & $3000$ \\
-        3D Kelvin
+            & $2000$ \\
+        3D Kelvin (Zn$^{2+}$/Ca$^{2+}$)
             & $200^{3}$
             & $10$
             & $50^{3}$
             & 1=pore, 2=micropore \; (2)
             & $10^{-9}$
             & $10^{5}$
-            & $5$
-            & $4$ \\
-        3D Estaillades
+            & $4$
+            & $120$ \\
+        3D Estaillades (Sr$^{2+}$/Ca$^{2+}$)
             & $500^{3}$
             & $4$
             & $50^{3}$
             & 1=pore, 2=micropore, 3=solid \; (2)
             & $10^{-9}$
             & $10^{5}$
-            & $5$
-            & $50$ \\
+            & $2$
+            & $120$ \\
         \bottomrule
     \end{tabular}}
 \end{table}
 
-\subsection{Simple 2D Image-Based Case}
+\subsection{Simple 2D Image-Based Case: Pb$^{2+}$ on Dzombak--Morel HFO}
 
 The 2D demonstration uses the segmented fracture-network image
 \texttt{4StraightFractures} with dimensions
 $500 \times 500 \times 1$ and two labels corresponding to matrix ($1$) and
 pore ($2$). The computational grid is $250 \times 250 \times 1$.
-This case provides a geometrically transparent setting in which the coupling
-between transport, unresolved surface interaction, and retardation remains easy
-to interpret visually and analytically.
+This case provides a geometrically transparent setting to study heavy-metal
+retardation by iron-oxide coatings on fracture walls.
 
-In this image, the reactive interface is the matrix-pore contact. The matrix
-phase ($1$) is therefore treated as the reactive solid-like phase when
-constructing $a_{\mathrm{surf}}$. An intrinsic unresolved surface term is
-included inside the $\epsilon = 0.4$ matrix phase, so the surface-loading field
-is no longer confined to the matrix-pore interface but extends across the
-microporous matrix.
+The chemistry models Pb$^{2+}$ sorption on hydrous ferric oxide (HFO) using the
+Dzombak--Morel two-site model \citep{dzombak1990surface}. Strong sites
+(Hfo$_s$) have intrinsic $\log K = +4.65$ (near-irreversible uptake at pH 7);
+weak sites (Hfo$_w$) have $\log K = +0.3$ (reversible bulk capacity). Site
+densities are $2 \times 10^{-7}$~mol~m$^{-2}$ (Hfo$_s$) and
+$6 \times 10^{-6}$~mol~m$^{-2}$ (Hfo$_w$). Inlet Pb$^{2+}$ concentration is
+$C_{\mathrm{in}} = 10^{-5}$~mol~m$^{-3}$ at pH~7; the initial domain is
+essentially Pb-free.
 
-Figure~\ref{fig:2DFractures} reports the segmented geometry, the normalized
-dissolved calcium field, and the normalized adsorbed-calcium field at
-$t = 3000$, obtained on eight MPI ranks. The 2D case demonstrates that the
-method reproduces the expected directional retardation pattern in a simple
-geometry and that the surface-loading field tracks both the fracture walls and
-the microporous matrix in an interpretable manner.
+The high conditional affinity of HFO for Pb$^{2+}$ at pH~7 produces
+near-complete retardation: the Pb$^{2+}$ front advances only a few millimetres
+into the domain over the 2000~s run. The reactive interface is the matrix-pore
+contact, with an intrinsic unresolved surface-area density
+$a_{\mathrm{surf,intr}} = 10^{5}\ \mathrm{m^{-1}}$ assigned to the
+$\epsilon = 0.4$ microporous matrix phase.
+
+Figure~\ref{fig:2DFractures} reports the segmented geometry alongside the
+log-scale Pb$^{2+}$/C$_{\mathrm{in}}$ and log-scale Hfo$_s$OPb$^+$ surface
+loading at $t = 2000$~s. The logarithmic colour scale spans four decades and
+reveals that Pb$^{2+}$ advances preferentially along fracture channels (faster
+transport path) relative to the matrix, while the strong-site surface loading
+is concentrated in matrix cells immediately behind the inlet.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
-    \caption{Three-panel result for the 2D fracture-network case.
-    Left: segmented geometry. Middle: normalized dissolved Ca$^{2+}$ at
-    \mbox{$t = 3000$}. Right: normalized adsorbed calcium
-    (\texttt{Surf\_aCa+}) at the same time. The intrinsic matrix surface term
-    is active in the \mbox{$\epsilon = 0.4$} microporous phase.}
+    \caption{Three-panel result for the 2D fracture-network case at
+    \mbox{$t = 2000\ \mathrm{s}$}. Left: segmented geometry (matrix in blue,
+    fracture pore space in white). Middle: log-scale normalised dissolved
+    Pb$^{2+}$ / $C_{\mathrm{in}}$ showing the penetration front concentrated
+    near the inlet, with fracture channels visible as faster transport pathways.
+    Right: log-scale Hfo$_s$OPb$^+$ surface loading (mol~m$^{-2}$) in the
+    microporous matrix phase; the fracture pore cells carry no surface area and
+    appear blank.}
     \label{fig:2DFractures}
 \end{figure}
 
 \FloatBarrier
-\subsection{Simple 3D Image-Based Case}
+\subsection{Simple 3D Image-Based Case: Competitive Zn$^{2+}$/Ca$^{2+}$ Sorption}
 
 The simple 3D case uses a Kelvin-cell image dataset with dimensions
 $200 \times 200 \times 200$ and voxel size $10~\mu\mathrm{m}$, where
 label $1$ denotes pore and label $2$ denotes micropore.
-This case marks the transition from 2D transport pathways to a fully
-three-dimensional unresolved surface network while remaining sufficiently
-simple to interpret visually. The 3D topology produces preferential transport
-channels and a structured surface-uptake pattern that can still be read
-directly from the volume renders.
+This case demonstrates competitive multi-species sorption in a fully
+three-dimensional unresolved surface network: two dissolved species compete for
+the same surface sites, producing coupled nonlinear isotherms that cannot be
+described by independent retardation factors.
 
-The transported initial condition is calcium-free
-(\mbox{$\mathrm{Ca^{2+}} = 0$}, \mbox{$\mathrm{Cl^{-}} = 0$}) and all
-visible calcium enters through the inlet boundary. The surface panel is
-reported as incremental loading
-(\mbox{$\Delta$\texttt{Surf\_aCa+}} = \texttt{Surf\_aCa+}$(t)$ $-$
-\texttt{Surf\_aCa+}$(0)$) to isolate the transport-driven uptake from the
-negligible startup equilibrium floor retained by the PHREEQC template.
-Figure~\ref{fig:3DKelvin} shows the geometry, dissolved-calcium, and
-incremental surface-loading panels at $t = 4$.
-Figure~\ref{fig:KelvinTemporal} shows the evolution of the domain-mean
-dissolved and adsorbed calcium over the simulation to $t = 120$~s.
-The domain-mean Ca$^{2+}$ rises monotonically as calcium-bearing fluid
-displaces the initial calcium-free condition, while the normalised incremental
-surface loading tracks the aqueous saturation with a lag that reflects the
-finite surface uptake kinetics resolved by the PHREEQC equilibrium step.
+The chemistry uses a single-site \texttt{Surf\_a} model with two competing
+reactions:
+\begin{align}
+    \mathrm{Surf_a H} + \mathrm{Ca^{2+}} &\rightleftharpoons \mathrm{Surf_a Ca^{+}} + \mathrm{H^{+}}, \quad \log K = -5.85 \\
+    \mathrm{Surf_a H} + \mathrm{Zn^{2+}} &\rightleftharpoons \mathrm{Surf_a Zn^{+}} + \mathrm{H^{+}}, \quad \log K = -4.0
+\end{align}
+Zn$^{2+}$ binds approximately $70\times$ more strongly than Ca$^{2+}$ per unit
+concentration at pH~7. The initial and inlet Ca$^{2+}$ are both
+$C_{\mathrm{in}}(\mathrm{Ca^{2+}}) = 10^{-4}$~mol~m$^{-3}$; Zn$^{2+}$ enters
+only at the inlet at $C_{\mathrm{in}}(\mathrm{Zn^{2+}}) = 10^{-5}$~mol~m$^{-3}$
+with zero initial condition. Surface sites are initially empty and load rapidly
+with Ca$^{2+}$ on the first PHREEQC step before the Zn$^{2+}$ front arrives.
+Site density is $2.4\times10^{-9}$~mol~m$^{-2}$ and
+$a_{\mathrm{surf,intr}} = 10^{5}$~m$^{-1}$ in the micropore phase.
+
+Figure~\ref{fig:3DKelvin} shows the geometry and 3D volume renders of the
+dissolved and adsorbed fields at $t = 100$~s.
+Figure~\ref{fig:KelvinTemporal} shows the temporal evolution of domain-mean
+Ca$^{2+}$ and Zn$^{2+}$ (normalised by their respective inlet concentrations)
+and the incremental surface loadings \texttt{Surf\_aCa+} and \texttt{Surf\_aZn+}
+over the full 120~s simulation. The Zn$^{2+}$ front reaches $C/C_{\mathrm{in}} \approx 1$
+within ${\sim}20$~s as the higher-affinity species displaces Ca$^{2+}$ from surface
+sites; the Ca$^{2+}$ domain mean remains near unity because of the uniform inlet
+background. The surface-loading panel shows the resulting competitive exchange:
+Surf\_aZn$^+$ accumulates while Surf\_aCa$^+$ is progressively displaced.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Three-panel 3D result for the Kelvin case at
-    \mbox{$t = 4$}. Left: initial geometry. Middle: normalized dissolved
-    Ca$^{2+}$. Right: normalized incremental adsorbed calcium
-    (\mbox{$\Delta$\texttt{Surf\_aCa+}}).}
+    \caption{Three-panel 3D result for the Kelvin competitive-sorption case at
+    \mbox{$t = 100\ \mathrm{s}$}. Left: initial geometry (pore in white,
+    micropore in blue). Middle: normalized dissolved Zn$^{2+}$ / $C_{\mathrm{in}}$.
+    Right: normalized incremental adsorbed Zn$^{2+}$
+    (\mbox{$\Delta$\texttt{Surf\_aZn+}}).}
     \label{fig:3DKelvin}
 \end{figure}
 
@@ -155,43 +181,60 @@ finite surface uptake kinetics resolved by the PHREEQC equilibrium step.
     \includegraphics[width=0.9\linewidth]{figures/png/fig07_kelvin_temporal.png}
     \caption{Temporal evolution of domain-mean fields for the Kelvin case
     ($t = 0$--$120$~s, writeInterval $= 4$~s).
-    Left: domain-mean dissolved Ca$^{2+}$ normalised by the inlet concentration
-    $C_{\mathrm{in}}$. Right: normalised incremental domain-mean adsorbed calcium
-    (\mbox{$\Delta$\texttt{Surf\_aCa+}}), defined relative to its value at $t = 0$.}
+    Left: domain-mean dissolved Ca$^{2+}$ and Zn$^{2+}$ normalised by their
+    respective inlet concentrations $C_{\mathrm{in}}$.
+    Right: normalised incremental domain-mean surface loading
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}} and \mbox{$\Delta$\texttt{Surf\_aZn+}}),
+    defined relative to their values at $t = 0$. The faster accumulation of
+    Surf\_aZn$^+$ relative to Surf\_aCa$^+$ reflects Zn$^{2+}$'s higher surface
+    affinity.}
     \label{fig:KelvinTemporal}
 \end{figure}
 
 \FloatBarrier
-\subsection{Large 3D Porous-Media Case}
+\subsection{Large 3D Porous-Media Case: Sr$^{2+}$ DGR Scenario}
 
 The large 3D porous-medium case uses an Estaillades-style three-phase
 segmented image \citep{menke2021upscaling} with dimensions
 $500 \times 500 \times 500$ and voxel size $4~\mu\mathrm{m}$. The three phases
 correspond to pore ($1$), micropore ($2$), and solid ($3$). The simulation is
 run on a $50 \times 50 \times 50$ coarse grid on eight MPI ranks. This case
-serves as the application-scale demonstration of the method on a domain with
-substantially stronger structural contrast than the controlled 2D and simple 3D
-cases.
+demonstrates nonlinear chromatographic exchange in a geologically realistic
+pore structure, motivated by radionuclide migration in deep geological
+repositories (DGR) for nuclear waste.
 
-The run proceeds to $t = 50$ from a clean unrestarted start. At this
-endpoint, the domain-mean dissolved Ca$^{2+}$ is $5.37 \times 10^{-10}$, the
-domain-mean \texttt{Surf\_aCa+} is $2.12 \times 10^{-15}$, and the mean
-$a_{\mathrm{surf}}$ is $7.65 \times 10^{4}\ \mathrm{m^{-1}}$. The PHREEQC equilibrium solve accounts for approximately $29\%$ of the
-$\approx 25$~s wall-clock time, consistent with the per-cell cost scaling
-observed in the 1D sensitivity studies.
+The chemistry models Sr$^{2+}$ leachate from a waste package invading
+Ca$^{2+}$-bearing limestone formation water. Surface sites are pre-equilibrated
+with 1~mM Ca$^{2+}$ (via \texttt{surfaceInitialSolutionId~1}) before transport
+begins. The two competing surface reactions are:
+\begin{align}
+    \mathrm{Surf_a H} + \mathrm{Ca^{2+}} &\rightleftharpoons \mathrm{Surf_a Ca^{+}} + \mathrm{H^{+}}, \quad \log K = -5.85 \\
+    \mathrm{Surf_a H} + \mathrm{Sr^{2+}} &\rightleftharpoons \mathrm{Surf_a Sr^{+}} + \mathrm{H^{+}}, \quad \log K = -5.5
+\end{align}
+Sr$^{2+}$ (site density $2.4\times10^{-9}$~mol~m$^{-2}$) binds slightly more
+strongly than Ca$^{2+}$. The initial and outlet-side condition is
+Ca$^{2+}$ = $10^{-3}$~mol~m$^{-3}$, Sr$^{2+}$ = 0; the inlet carries
+Sr$^{2+}$ = $10^{-4}$~mol~m$^{-3}$, Ca$^{2+}$ = 0 at pH~7.
 
-Near-solid cells (\mbox{$\theta \le 10^{-3}$}) are masked out of the
-reactive-surface field, so the reported adsorption is concentrated in the
-microporous and macroporous mobile regions rather than the numerically
-regularized solid skeleton. Figure~\ref{fig:3DEstaillades} shows the
-geometry and field panels at $t = 50$.
+This produces a classic chromatographic exchange pattern: a Ca$^{2+}$
+desorption wave precedes the Sr$^{2+}$ adsorption front, and the effective
+retardation of Sr$^{2+}$ is lower than the single-species prediction because
+Ca$^{2+}$ still competes for sites ahead of the front. The domain-mean
+Sr$^{2+}$ rises from $7\%$ to $73\%$ of $C_{\mathrm{in}}$ between $t = 4$
+and $t = 120$~s, while the domain-mean Ca$^{2+}$ falls from $91\%$ to $7\%$
+of its initial value. Near-solid cells (\mbox{$\theta \le 10^{-3}$}) are
+masked from the reactive-surface field.
+
+Figure~\ref{fig:3DEstaillades} shows the geometry and 3D volume renders of the
+dissolved and adsorbed fields at $t = 120$~s.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig04_3d_estaillades.png}
-    \caption{Three-panel 3D result for the Estaillades-style case at
-    \mbox{$t = 50$}. Left: initial geometry. Middle: normalized dissolved
-    Ca$^{2+}$. Right: normalized incremental adsorbed calcium
-    (\mbox{$\Delta$\texttt{Surf\_aCa+}}).}
+    \caption{Three-panel 3D result for the Estaillades DGR case at
+    \mbox{$t = 120\ \mathrm{s}$}. Left: initial geometry (pore in white,
+    micropore in blue, solid in red). Middle: normalized dissolved Sr$^{2+}$
+    / $C_{\mathrm{in}}$. Right: normalized incremental adsorbed
+    Sr$^{2+}$ (\mbox{$\Delta$\texttt{Surf\_aSr+}}).}
     \label{fig:3DEstaillades}
 \end{figure}

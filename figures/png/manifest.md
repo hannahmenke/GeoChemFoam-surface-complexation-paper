@@ -21,8 +21,12 @@
   - Test Cases / Simple 2D
 - content:
   - geometry panel
-  - normalized aqueous concentration panel at `t = 3000`
-  - normalized surface-loading panel at `t = 3000`
+  - log-scale Pb²⁺/C_in aqueous panel at `t = 2000`
+  - log-scale Hfo_sOPb⁺ strong-site surface loading at `t = 2000`
+- chemistry:
+  - Pb²⁺ on Dzombak–Morel two-site HFO (Hfo_s + Hfo_w)
+  - near-complete retardation shown via log colorscale (4 decades)
+  - fracture vs. matrix transport contrast visible
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 - source case:
@@ -36,14 +40,19 @@
   - Test Cases / Simple 3D
 - content:
   - geometry panel
-  - true 3D volume render of dissolved calcium
-  - true 3D volume render of adsorbed calcium
+  - true 3D volume render of dissolved Zn²⁺ (competitive sorption)
+  - true 3D volume render of adsorbed Surf_aZn⁺
+- chemistry:
+  - Zn²⁺ + Ca²⁺ competing for Surf_a sites; Zn²⁺ log_k −4.0 vs Ca²⁺ log_k −5.85
+  - Ca²⁺ uniform background (1×10⁻⁴ mol/L); Zn²⁺ inlet 1×10⁻⁵ mol/L
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - reported time:
   - `t = 100`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
+- status:
+  - requires display / EGL to regenerate; placeholder PNG pending
 
 ## Figure 4
 
@@ -53,19 +62,21 @@
   - Test Cases / Large 3D Porous Media
 - content:
   - geometry panel
-  - true 3D volume render of dissolved calcium
-  - true 3D volume render of adsorbed calcium
+  - true 3D volume render of dissolved Sr²⁺ or Ca²⁺ (DGR scenario)
+  - true 3D volume render of adsorbed Surf_aSr⁺
+- chemistry:
+  - Sr²⁺ leachate (0.1 mM inlet) invading Ca²⁺-bearing formation water (1 mM initial)
+  - surface sites pre-loaded with Ca²⁺; Sr displaces Ca in chromatographic exchange
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
 - reported time:
-  - `t = 100`
+  - `t = 120`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
 - status:
-  - corrected reactive run exists
-  - current PNG is the active volume-rendered draft figure
+  - requires display / EGL to regenerate; placeholder PNG pending
 
 ## Figure 5
 
@@ -100,9 +111,11 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - domain-mean Ca2+/C_in vs time (left panel)
-  - normalised incremental domain-mean Surf_aCa+ vs time (right panel)
+  - left panel: domain-mean Ca²⁺/C_in and Zn²⁺/C_in vs time (competitive sorption)
+  - right panel: normalised incremental domain-mean Surf_aCa⁺ and Surf_aZn⁺ vs time
   - 31 time points: t = 0, 4, 8, ..., 120 (writeInterval=4, endTime=120)
+- chemistry:
+  - Ca²⁺ background at inlet and initial; Zn²⁺ inlet only; competing for Surf_a sites
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - renderer:

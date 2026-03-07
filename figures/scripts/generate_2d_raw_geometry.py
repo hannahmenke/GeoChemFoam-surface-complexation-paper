@@ -9,7 +9,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import BoundaryNorm, ListedColormap
+from matplotlib.colors import BoundaryNorm, ListedColormap, LogNorm
 
 
 def parse_size(metadata_path: Path) -> tuple[int, int, int]:
@@ -136,6 +136,16 @@ def main() -> None:
     parser.add_argument("--res-m", type=float, default=1.0e-4)
     parser.add_argument("--ca-inlet", type=float, default=2.0e-9)
     parser.add_argument("--time-label", default="t = 50")
+    parser.add_argument("--aqueous-field-name", default="Ca+2",
+        help="Field name for dissolved species when using --parallel-case")
+    parser.add_argument("--surface-field-name", default="Surf_aCa+",
+        help="Field name for surface species when using --parallel-case")
+    parser.add_argument("--aqueous-label", default=None,
+        help="Plot label for aqueous species (default: Ca²⁺)")
+    parser.add_argument("--surface-label", default=None,
+        help="Plot label for surface species (default: Surf_aCa+)")
+    parser.add_argument("--log-scale", action="store_true",
+        help="Use logarithmic colour scale for the aqueous field panel")
     args = parser.parse_args()
 
     raw_nx, raw_ny, raw_nz = parse_size(args.metadata)
@@ -162,10 +172,10 @@ def main() -> None:
         surf_values = parse_scalar_field(args.surf_field).reshape((args.coarse_ny, args.coarse_nx))
     elif args.parallel_case and args.time_name:
         ca_values = assemble_parallel_field(
-            args.parallel_case, args.time_name, "Ca+2", args.coarse_nx, args.coarse_ny, args.npx, args.npy
+            args.parallel_case, args.time_name, args.aqueous_field_name, args.coarse_nx, args.coarse_ny, args.npx, args.npy
         )
         surf_values = assemble_parallel_field(
-            args.parallel_case, args.time_name, "Surf_aCa+", args.coarse_nx, args.coarse_ny, args.npx, args.npy
+            args.parallel_case, args.time_name, args.surface_field_name, args.coarse_nx, args.coarse_ny, args.npx, args.npy
         )
     else:
         ca_values = None
@@ -207,15 +217,33 @@ def main() -> None:
             extent=mm_extent,
             alpha=0.20,
         )
-        field1 = axes[1].imshow(
-            ca_norm,
-            cmap="cividis",
-            origin="lower",
-            interpolation="nearest",
-            extent=mm_extent,
-            vmin=0.0,
-            vmax=1.0,
-        )
+        aq_lbl = args.aqueous_label if args.aqueous_label is not None else "Ca$^{2+}$"
+        surf_lbl = args.surface_label if args.surface_label is not None else "Surf$_a$Ca$^+$"
+        if args.log_scale:
+            ca_plot = np.where(ca_norm > 0, ca_norm, np.nan)
+            vmin_log = np.nanmin(ca_plot[ca_plot > 0]) if np.any(ca_plot > 0) else 1e-10
+            field1 = axes[1].imshow(
+                ca_plot,
+                cmap="cividis",
+                norm=LogNorm(vmin=vmin_log, vmax=1.0),
+                origin="lower",
+                interpolation="nearest",
+                extent=mm_extent,
+            )
+            axes[1].set_title(f"{aq_lbl} / C$_{{in}}$ (log scale, {args.time_label})")
+            cbar1_label = f"log$_{{10}}$ Normalized {aq_lbl}"
+        else:
+            field1 = axes[1].imshow(
+                ca_norm,
+                cmap="cividis",
+                origin="lower",
+                interpolation="nearest",
+                extent=mm_extent,
+                vmin=0.0,
+                vmax=1.0,
+            )
+            axes[1].set_title(f"{aq_lbl} / C$_{{in}}$ ({args.time_label})")
+            cbar1_label = f"Normalized {aq_lbl}"
         axes[1].contour(
             coarse_labels,
             levels=[1.5],
@@ -224,10 +252,9 @@ def main() -> None:
             origin="lower",
             extent=mm_extent,
         )
-        axes[1].set_title(f"Ca$^{{2+}}$ / C$_{{in}}$ ({args.time_label})")
         axes[1].set_xlabel("x [mm]")
         cbar1 = fig.colorbar(field1, ax=axes[1], fraction=0.046, pad=0.04)
-        cbar1.set_label("Normalized Ca$^{2+}$")
+        cbar1.set_label(cbar1_label)
 
         axes[2].imshow(
             coarse_labels,
@@ -238,15 +265,32 @@ def main() -> None:
             extent=mm_extent,
             alpha=0.20,
         )
-        field2 = axes[2].imshow(
-            surf_norm,
-            cmap="magma",
-            origin="lower",
-            interpolation="nearest",
-            extent=mm_extent,
-            vmin=0.0,
-            vmax=1.0,
-        )
+        if args.log_scale:
+            surf_plot = np.where(surf_values > 0, surf_values, np.nan)
+            vmin_surf = np.nanmin(surf_plot[surf_plot > 0]) if np.any(surf_plot > 0) else 1e-20
+            vmax_surf = float(np.nanmax(surf_plot)) if np.any(np.isfinite(surf_plot)) else 1.0
+            field2 = axes[2].imshow(
+                surf_plot,
+                cmap="magma",
+                norm=LogNorm(vmin=vmin_surf, vmax=vmax_surf),
+                origin="lower",
+                interpolation="nearest",
+                extent=mm_extent,
+            )
+            axes[2].set_title(f"{surf_lbl} (log scale, {args.time_label})")
+            cbar2_label = f"log$_{{10}}$ {surf_lbl} [mol m$^{{-2}}$]"
+        else:
+            field2 = axes[2].imshow(
+                surf_norm,
+                cmap="magma",
+                origin="lower",
+                interpolation="nearest",
+                extent=mm_extent,
+                vmin=0.0,
+                vmax=1.0,
+            )
+            axes[2].set_title(f"{surf_lbl} / P99 ({args.time_label})")
+            cbar2_label = "Normalized surface loading"
         axes[2].contour(
             coarse_labels,
             levels=[1.5],
@@ -255,10 +299,9 @@ def main() -> None:
             origin="lower",
             extent=mm_extent,
         )
-        axes[2].set_title(f"Surf$_a$Ca$^+$ / P99 ({args.time_label})")
         axes[2].set_xlabel("x [mm]")
         cbar2 = fig.colorbar(field2, ax=axes[2], fraction=0.046, pad=0.04)
-        cbar2.set_label("Normalized surface loading")
+        cbar2.set_label(cbar2_label)
 
         fig.suptitle(args.title)
     else:

@@ -2,8 +2,9 @@
 """Generate Kelvin domain-mean temporal evolution figure (fig07).
 
 Reads the parallel OpenFOAM field data at each saved timestep from the
-3DKelvinSurfaceComplexation case and plots domain-mean Ca2+ / C_in and
-incremental domain-mean Surf_aCa+ versus time.
+3DKelvinSurfaceComplexation case and plots domain-mean Zn2+ and Ca2+ / C_in
+(left panel) and incremental domain-mean Surf_aZn+ and Surf_aCa+ (right panel),
+illustrating competitive sorption between the two species.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# ── Field reader (mirrors generate_3d_volume_render_pyvista.py) ───────────────
+# ── Field reader ──────────────────────────────────────────────────────────────
 
 def parse_scalar_field(path: Path) -> list[float]:
     text = path.read_text()
@@ -68,20 +69,16 @@ def available_times(case_dir: Path) -> list[float]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Plot domain-mean Ca2+ and Surf_aCa+ vs time for the Kelvin case"
+        description="Plot domain-mean Zn2+/Ca2+ competitive sorption vs time for Kelvin case"
     )
     parser.add_argument("--case-dir", type=Path, required=True)
     parser.add_argument(
-        "--ca-in", type=float, default=2.0e-9,
-        help="Inlet Ca2+ concentration C_in (mol/m3)"
+        "--ca-in", type=float, default=1.0e-4,
+        help="Inlet Ca2+ concentration C_in [mol/m3]"
     )
     parser.add_argument(
-        "--aqueous-field", default="Ca+2",
-        help="Name of aqueous Ca field"
-    )
-    parser.add_argument(
-        "--surface-field", default="Surf_aCa+",
-        help="Name of surface Ca field"
+        "--zn-in", type=float, default=1.0e-5,
+        help="Inlet Zn2+ concentration C_in [mol/m3]"
     )
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -90,23 +87,29 @@ def main() -> None:
     print(f"Found time steps: {times}")
 
     ca_means: list[float] = []
-    surf_means: list[float] = []
+    zn_means: list[float] = []
+    surf_ca_means: list[float] = []
+    surf_zn_means: list[float] = []
 
     for t in times:
         t_str = str(int(t)) if t == int(t) else str(t)
         print(f"  Reading t = {t_str} ...")
-        ca_means.append(read_domain_mean(args.case_dir, t_str, args.aqueous_field))
-        surf_means.append(read_domain_mean(args.case_dir, t_str, args.surface_field))
+        ca_means.append(read_domain_mean(args.case_dir, t_str, "Ca+2"))
+        zn_means.append(read_domain_mean(args.case_dir, t_str, "Zn+2"))
+        surf_ca_means.append(read_domain_mean(args.case_dir, t_str, "Surf_aCa+"))
+        surf_zn_means.append(read_domain_mean(args.case_dir, t_str, "Surf_aZn+"))
 
     t_arr = np.array(times)
-    ca_arr = np.array(ca_means)
-    surf_arr = np.array(surf_means)
+    ca_norm = np.array(ca_means) / args.ca_in
+    zn_norm = np.array(zn_means) / args.zn_in
 
-    # Normalise aqueous by C_in; surface as incremental from t=0
-    ca_norm = ca_arr / args.ca_in
-    surf_incr = surf_arr - surf_arr[0]
-    surf_scale = max(surf_incr.max(), 1.0e-40)
-    surf_norm = surf_incr / surf_scale
+    surf_ca = np.array(surf_ca_means)
+    surf_zn = np.array(surf_zn_means)
+    surf_ca_incr = surf_ca - surf_ca[0]
+    surf_zn_incr = surf_zn - surf_zn[0]
+    surf_scale = max(surf_zn_incr.max(), surf_ca_incr.max(), 1.0e-40)
+    surf_ca_norm = surf_ca_incr / surf_scale
+    surf_zn_norm = surf_zn_incr / surf_scale
 
     # ── Plot ─────────────────────────────────────────────────────────────────
     fig, axes = plt.subplots(1, 2, figsize=(9.2, 3.9))
@@ -116,25 +119,39 @@ def main() -> None:
         t_arr, ca_norm,
         color="#0b4f6c", linewidth=1.8,
         marker="o", markersize=4.5,
-        label="Domain-mean Ca$^{2+}$ / $C_{\\mathrm{in}}$",
+        label="Ca$^{2+}$",
+    )
+    ax1.plot(
+        t_arr, zn_norm,
+        color="#c0392b", linewidth=1.8,
+        marker="^", markersize=4.5,
+        label="Zn$^{2+}$",
     )
     ax1.set_xlabel("Time [s]")
-    ax1.set_ylabel("Domain-mean Ca$^{2+}$ / $C_{\\mathrm{in}}$")
+    ax1.set_ylabel("Domain-mean $C$ / $C_{\\mathrm{in}}$")
     ax1.set_ylim(bottom=0.0)
-    ax1.set_title("Dissolved calcium")
+    ax1.set_title("Dissolved species")
+    ax1.legend(fontsize=9)
     ax1.grid(True, alpha=0.25)
 
     ax2 = axes[1]
     ax2.plot(
-        t_arr, surf_norm,
-        color="#6b2d5c", linewidth=1.8,
-        marker="s", markersize=4.5,
-        label="Domain-mean $\\Delta$Surf$_a$Ca$^+$ (norm.)",
+        t_arr, surf_ca_norm,
+        color="#0b4f6c", linewidth=1.8,
+        marker="o", markersize=4.5,
+        label="Surf$_a$Ca$^+$",
+    )
+    ax2.plot(
+        t_arr, surf_zn_norm,
+        color="#c0392b", linewidth=1.8,
+        marker="^", markersize=4.5,
+        label="Surf$_a$Zn$^+$",
     )
     ax2.set_xlabel("Time [s]")
-    ax2.set_ylabel("Normalised domain-mean $\\Delta$Surf$_a$Ca$^+$")
+    ax2.set_ylabel("Normalised domain-mean $\\Delta$Surf loading")
     ax2.set_ylim(bottom=0.0)
     ax2.set_title("Surface loading")
+    ax2.legend(fontsize=9)
     ax2.grid(True, alpha=0.25)
 
     fig.tight_layout()
