@@ -28,13 +28,13 @@ Current staged figures:
   - right: log-scale Hfo_sOPb⁺ strong-site surface loading at `t = 2000`
   - shows near-complete Pb retardation by HFO; fracture channels visible as faster transport paths
 - `fig03_3d_kelvin.png`
-  - needs regeneration with new Zn²⁺/Ca²⁺ competitive sorption chemistry
-  - requires display / EGL access for pyvista rendering
-  - target: Zn²⁺ breakthrough into Ca²⁺ background, Surf_aZn⁺ surface loading
+  - matplotlib 3D slice panels (generate_3d_field_panels.py), t = 20s
+  - left: dissolved Zn²⁺ (competitive sorption front traversing domain)
+  - right: adsorbed Zn (Surf_aZn⁺) in micropore phase (diamond pattern)
 - `fig04_3d_estaillades.png`
-  - needs regeneration with new Sr²⁺/Ca²⁺ DGR chemistry
-  - requires display / EGL access for pyvista rendering
-  - target: Sr²⁺ front advancing into Ca²⁺-bearing formation water, Surf_aSr⁺ loading
+  - matplotlib 3D slice panels (generate_3d_field_panels.py), t = 40s
+  - left: dissolved Sr²⁺ (DGR leachate front advancing through limestone pore structure)
+  - right: adsorbed Sr (Surf_aSr⁺) in micropore phase
 - `fig07_kelvin_temporal.png`
   - two-panel temporal evolution for Kelvin Zn²⁺/Ca²⁺ competitive sorption
   - left: domain-mean Ca²⁺ and Zn²⁺ / C_in vs time (31 time points)
