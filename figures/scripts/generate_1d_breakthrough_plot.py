@@ -20,6 +20,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.linalg import solve_banded
+from scipy.special import erfc
 
 
 # ── Physical constants (must match phase8AnalyticalTools.py) ─────────────────
@@ -28,6 +29,37 @@ BASE_ASURF = 1.0e5
 BASE_U     = 1.0e-6
 BASE_D     = 1.0e-11
 DOMAIN_LENGTH = 4.0e-5
+
+
+# ── Ogata-Banks semi-infinite reference ───────────────────────────────────────
+
+def ogata_banks_outlet(
+    t_query: np.ndarray,
+    v: float,
+    D: float,
+    L: float = DOMAIN_LENGTH,
+) -> np.ndarray:
+    """
+    Ogata-Banks (1961) breakthrough at x=L for a semi-infinite domain.
+
+      C(L,t)/C_in = (1/2) erfc[(L - v t)/(2 sqrt(D t))]
+                  + (1/2) exp(v L / D) erfc[(L + v t)/(2 sqrt(D t))]
+
+    For Pe = v L / D >> 1 the second term is negligible and is dropped to
+    avoid numerical overflow (exp(8000) for the default parameters).
+    """
+    t = np.asarray(t_query, dtype=float)
+    result = np.zeros_like(t)
+    mask = t > 0
+    tm = t[mask]
+    xi = (L - v * tm) / (2.0 * np.sqrt(D * tm))
+    pe = v * L / D
+    if pe > 100:
+        result[mask] = 0.5 * erfc(xi)
+    else:
+        xi2 = (L + v * tm) / (2.0 * np.sqrt(D * tm))
+        result[mask] = 0.5 * erfc(xi) + 0.5 * np.exp(pe) * erfc(xi2)
+    return result
 
 
 # ── Finite-domain reference solution ─────────────────────────────────────────
@@ -194,6 +226,9 @@ def main() -> None:
     print("Computing finite-domain reference for surface-enabled case …")
     c_ref_surf = finite_domain_outlet(t_ref, v_surf, D_surf)
 
+    c_ob_aq   = ogata_banks_outlet(t_ref, v_aq,   D_aq)
+    c_ob_surf = ogata_banks_outlet(t_ref, v_surf, D_surf)
+
     C_in = args.ca_in
 
     # ── Plot ─────────────────────────────────────────────────────────────────
@@ -227,6 +262,18 @@ def main() -> None:
         color="#4f9da6", linewidth=1.6,
     )
 
+    # Ogata-Banks semi-infinite reference (shown for comparison)
+    ax.plot(
+        t_ref, c_ob_aq,
+        "-.", label="Ogata--Banks (semi-$\\infty$, aq.)",
+        color="#aaaaaa", linewidth=1.1,
+    )
+    ax.plot(
+        t_ref, c_ob_surf,
+        "-.", label="Ogata--Banks (semi-$\\infty$, surf.)",
+        color="#cccccc", linewidth=1.1,
+    )
+
     # Mark analytical breakthrough times
     ax.axvline(t_bt_aq,   color="#c55a11", linewidth=0.7, linestyle=":", alpha=0.6)
     ax.axvline(t_bt_surf, color="#0b4f6c", linewidth=0.7, linestyle=":", alpha=0.6)
@@ -235,7 +282,7 @@ def main() -> None:
     ax.set_ylabel("Outlet Ca$^{2+}$ / $C_{\\mathrm{in}}$")
     ax.set_xlim(0.0, t_max)
     ax.set_ylim(-0.02, 1.10)
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=8.5, loc="lower right")
     ax.grid(True, alpha=0.25)
 
     annotation_lines = [
@@ -244,8 +291,8 @@ def main() -> None:
         f"$t_{{\\mathrm{{BT,surf}}}}$ = {t_bt_surf:.1f} s",
     ]
     ax.text(
-        0.97, 0.05, "\n".join(annotation_lines),
-        transform=ax.transAxes, fontsize=8.5, ha="right", va="bottom",
+        0.03, 0.97, "\n".join(annotation_lines),
+        transform=ax.transAxes, fontsize=8.5, ha="left", va="top",
         bbox={"facecolor": "white", "edgecolor": "#bdbdbd",
               "boxstyle": "round,pad=0.25"},
     )

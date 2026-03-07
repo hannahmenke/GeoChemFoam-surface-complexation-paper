@@ -63,9 +63,12 @@ of the aqueous-only breakthrough time, in agreement with the analytical predicti
     obtained by solving the 1-D advection--diffusion equation on $[0,L]$ with
     a Dirichlet inlet and Neumann (no-flux) outlet, matching the OpenFOAM
     boundary conditions exactly.
-    The semi-infinite Ogata--Banks formula is not used here because the
-    finite domain with a no-flux outlet causes Ca$^{2+}$ to arrive at $x=L$
-    earlier than the semi-infinite prediction.
+    Dash-dot lines show the classical semi-infinite Ogata--Banks
+    solution~\citep{ogatabanks1961} for comparison; these predict systematically
+    later breakthrough because the semi-infinite formulation allows solute to
+    diffuse freely past $x = L$, whereas the Neumann outlet in the finite domain
+    prevents any diffusive flux from leaving, causing Ca$^{2+}$ to accumulate
+    near $x = L$ faster than the semi-infinite prediction.
     Vertical dotted lines mark the advective breakthrough times
     $t_{\mathrm{BT}} = L\theta/U$ (aqueous-only) and
     $t_{\mathrm{BT}} = L\theta R_{\mathrm{field}}/U$ (surface-enabled).}
