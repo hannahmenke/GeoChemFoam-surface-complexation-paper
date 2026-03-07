@@ -102,7 +102,7 @@
 - content:
   - domain-mean Ca2+/C_in vs time (left panel)
   - normalised incremental domain-mean Surf_aCa+ vs time (right panel)
-  - 10 time points: t = 0, 4, 8, 10, 25, 50, 100, 200, 300, 400
+  - 31 time points: t = 0, 4, 8, ..., 120 (writeInterval=4, endTime=120)
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - renderer:
