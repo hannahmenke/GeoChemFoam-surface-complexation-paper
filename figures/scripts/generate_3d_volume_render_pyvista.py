@@ -172,7 +172,8 @@ def add_geometry_panel(
         (2, "Pore", "#555555", 0.14),
     ]
 
-    for phase_value, _, color, opacity in phase_defs:
+    present_phases = []
+    for phase_value, name, color, opacity in phase_defs:
         thresholded = image.threshold(
             [phase_value - 0.1, phase_value + 0.1],
             scalars="phase",
@@ -180,6 +181,7 @@ def add_geometry_panel(
         )
         if thresholded.n_cells == 0:
             continue
+        present_phases.append((name, color))
         plotter.add_mesh(
             thresholded.extract_surface(algorithm="dataset_surface"),
             color=color,
@@ -206,7 +208,7 @@ def add_geometry_panel(
     # Evenly distribute 3 items across top strip accounting for text widths.
     # "■ Solid"=8, "■ Micropore"=12, "■ Pore"=7 chars in Courier monospace.
     # Equal visual gap between end-of-item and start-of-next.
-    legend_items = [(name, color) for (_, name, color, _) in phase_defs]
+    legend_items = present_phases
     char_widths = [len(f"\u25a0 {n}") for (n, _) in legend_items]
     # Courier at 16pt: char width ≈ 10px; panel width ≈ window_w / ncols
     win_w = plotter.window_size[0]
