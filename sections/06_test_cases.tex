@@ -3,12 +3,17 @@
 Table~\ref{tab:simParams} lists the full set of simulation parameters for each
 test case. Three distinct surface-complexation chemistries are demonstrated,
 each chosen to highlight a different aspect of nonlinear multi-species coupling
-that cannot be captured by a simple retardation factor: (i) Pb$^{2+}$ sorption
-on a two-site Dzombak--Morel hydrous ferric oxide (HFO) coating for the 2D fracture
-case; (ii) competitive Zn$^{2+}$/Ca$^{2+}$ sorption on a single-site generic
-surface for the Kelvin 3D case; and (iii) Sr$^{2+}$ leachate invading
-Ca$^{2+}$-bearing limestone formation water, representing a radwaste
-deep geological repository (DGR) scenario, for the Estaillades 3D case.
+that cannot be captured by a simple retardation factor, and each motivated by
+a distinct class of subsurface application:
+(i)~Pb$^{2+}$ sorption on a two-site Dzombak--Morel hydrous ferric oxide (HFO)
+coating for the 2D fracture case, representative of heavy-metal retardation in
+fractured rock systems and permeable reactive barrier (PRB) remediation;
+(ii)~competitive Zn$^{2+}$/Ca$^{2+}$ sorption on a single-site generic surface
+for the Kelvin 3D case, representative of trace-metal contamination in
+Ca$^{2+}$-bearing groundwater and microporous industrial sorbent media; and
+(iii)~Sr$^{2+}$ leachate invading Ca$^{2+}$-bearing limestone formation water,
+representing a radwaste deep geological repository (DGR) scenario,
+for the Estaillades 3D case.
 In all cases the mobile-water threshold is $\theta_{\mathrm{mask}} \le 10^{-3}$
 and PHREEQC thermodynamic data are drawn from the GeoChem.dat database
 distributed with GeoChemFoam.
@@ -89,7 +94,10 @@ The 2D demonstration uses the segmented fracture-network image
 $500 \times 500 \times 1$ and two labels corresponding to matrix ($1$) and
 pore ($2$). The computational grid is $250 \times 250 \times 1$.
 This case provides a geometrically transparent setting to study heavy-metal
-retardation by iron-oxide coatings on fracture walls.
+retardation by iron-oxide coatings on fracture walls, directly relevant to
+Pb$^{2+}$ and other heavy-metal contaminants migrating through iron-rich
+fractured aquifers, acid mine drainage pathways, and engineered permeable
+reactive barriers where HFO is the primary sorbent phase.
 
 The chemistry models Pb$^{2+}$ sorption on hydrous ferric oxide (HFO) using the
 Dzombak--Morel two-site model \citep{dzombak1990surface}. Strong sites
@@ -138,6 +146,11 @@ This case demonstrates competitive multi-species sorption in a fully
 three-dimensional unresolved surface network: two dissolved species compete for
 the same surface sites, producing coupled nonlinear isotherms that cannot be
 described by independent retardation factors.
+The scenario is representative of trace-metal transport (e.g.\ Zn$^{2+}$
+from industrial or mining sources) in Ca$^{2+}$-bearing groundwater, where
+the background divalent cation competes for the same surface sites as the
+contaminant and suppresses effective retardation relative to single-species
+estimates.
 
 The chemistry uses a single-site \texttt{Surf\_a} model with two competing
 reactions:
