@@ -282,6 +282,7 @@ def add_volume_panel(
             "title_font_size": 22,
             "label_font_size": 20,
             "n_labels": 5,
+            "bold": True,
         },
     )
     plotter.add_mesh(
