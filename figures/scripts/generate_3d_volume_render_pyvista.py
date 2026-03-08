@@ -158,6 +158,7 @@ def add_geometry_panel(
     nx: int,
     ny: int,
     nz: int,
+    panel_label: str = "(a)",
 ) -> None:
     plotter.subplot(*subplot)
     plotter.set_background("white")
@@ -166,9 +167,9 @@ def add_geometry_panel(
     image.cell_data["phase"] = labels.flatten(order="F")
 
     phase_defs = [
-        (0, "solid", "#c94f4f", 0.28),
-        (1, "micropore", "#4f8fd6", 0.22),
-        (2, "pore", "#ffffff", 0.14),
+        (0, "Solid", "#c94f4f", 0.28),
+        (1, "Micropore", "#4f8fd6", 0.22),
+        (2, "Pore", "#ffffff", 0.14),
     ]
 
     for phase_value, _, color, opacity in phase_defs:
@@ -196,7 +197,15 @@ def add_geometry_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text("Geometry", position="upper_left", font_size=15, color="black")
+    plotter.add_text(panel_label, position="upper_left", font_size=24, color="black", font="courier")
+    plotter.add_legend(
+        labels=[(name, color) for _, name, color, _ in phase_defs],
+        face="rectangle",
+        bcolor="white",
+        border=True,
+        size=(0.28, 0.18),
+        loc="lower left",
+    )
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -204,7 +213,7 @@ def add_geometry_panel(
         xtitle="x cell",
         ytitle="y cell",
         ztitle="z cell",
-        font_size=12,
+        font_size=14,
         color="black",
     )
     plotter.camera_position = camera_position(nx, ny, nz)
@@ -212,7 +221,7 @@ def add_geometry_panel(
 
 def camera_position(nx: int, ny: int, nz: int) -> list[tuple[float, float, float]]:
     centre = (0.5 * nx, 0.5 * ny, 0.5 * nz)
-    position = (2.1 * nx, -1.65 * ny, 1.45 * nz)
+    position = (2.6 * nx, -2.0 * ny, 1.8 * nz)
     view_up = (0.0, 0.0, 1.0)
     return [position, centre, view_up]
 
@@ -227,6 +236,7 @@ def add_volume_panel(
     nx: int,
     ny: int,
     nz: int,
+    panel_label: str = "",
 ) -> None:
     plotter.subplot(*subplot)
     plotter.set_background("white")
@@ -244,8 +254,11 @@ def add_volume_panel(
             "title": scalar_bar_title,
             "vertical": True,
             "fmt": "%.1f",
-            "title_font_size": 15,
-            "label_font_size": 12,
+            "title_font_size": 20,
+            "label_font_size": 18,
+            "width": 0.07,
+            "position_x": 0.84,
+            "position_y": 0.25,
         },
     )
     plotter.add_mesh(
@@ -254,7 +267,7 @@ def add_volume_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text(title, position="upper_left", font_size=15, color="black")
+    plotter.add_text(f"{panel_label}  {title}", position="upper_left", font_size=20, color="black", font="courier")
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -262,7 +275,7 @@ def add_volume_panel(
         xtitle="x cell",
         ytitle="y cell",
         ztitle="z cell",
-        font_size=12,
+        font_size=14,
         color="black",
     )
     plotter.camera_position = camera_position(nx, ny, nz)
@@ -288,6 +301,7 @@ def main() -> None:
     parser.add_argument("--surface-title", default=None)
     parser.add_argument("--second-aqueous-field", default=None)
     parser.add_argument("--second-aqueous-title", default=None)
+    parser.add_argument("--second-aqueous-log-scale", action="store_true")
     args = parser.parse_args()
 
     pv.OFF_SCREEN = True
@@ -350,7 +364,7 @@ def main() -> None:
 
     use_2x2 = second_aqueous is not None
     shape = (2, 2) if use_2x2 else (1, 3)
-    win_size = (1680, 1640) if use_2x2 else (2520, 820)
+    win_size = (2800, 2800) if use_2x2 else (2520, 820)
     plotter = pv.Plotter(shape=shape, off_screen=True, window_size=win_size)
 
     add_geometry_panel(
@@ -360,11 +374,12 @@ def main() -> None:
         nx=nx,
         ny=ny,
         nz=nz,
+        panel_label="(a)",
     )
 
-    aq_title = args.aqueous_title if args.aqueous_title else f"{args.aqueous_field} / C_in  (t = {args.time_name})"
-    aq_bar = args.aqueous_title if args.aqueous_title else f"Norm. {args.aqueous_field} / C_in"
-    surf_title = args.surface_title if args.surface_title else f"\u0394{args.surface_field}  (t = {args.time_name})"
+    aq_title = args.aqueous_title if args.aqueous_title else f"{args.aqueous_field} / C_in"
+    aq_bar = args.aqueous_title if args.aqueous_title else f"Norm. {args.aqueous_field}"
+    surf_title = args.surface_title if args.surface_title else f"\u0394{args.surface_field}"
     surf_bar = args.surface_title if args.surface_title else f"Norm. \u0394{args.surface_field}"
 
     add_volume_panel(
@@ -377,6 +392,7 @@ def main() -> None:
         nx=nx,
         ny=ny,
         nz=nz,
+        panel_label="(b)",
     )
 
     if use_2x2:
@@ -384,22 +400,23 @@ def main() -> None:
             second_aqueous,
             lower_q=args.lower_quantile,
             upper_q=args.upper_quantile,
-            log_scale=False,
+            log_scale=args.second_aqueous_log_scale,
             zero_mask=False,
         )
         second_img = build_image_data(second_scaled)
-        aq2_title = args.second_aqueous_title if args.second_aqueous_title else f"{args.second_aqueous_field} / C_in  (t = {args.time_name})"
-        aq2_bar = args.second_aqueous_title if args.second_aqueous_title else f"Norm. {args.second_aqueous_field} / C_in"
+        aq2_title = args.second_aqueous_title if args.second_aqueous_title else f"{args.second_aqueous_field} / C_in"
+        aq2_bar = args.second_aqueous_title if args.second_aqueous_title else f"Norm. {args.second_aqueous_field}"
         add_volume_panel(
             plotter=plotter,
             dataset=second_img,
             subplot=(1, 0),
             title=aq2_title,
             scalar_bar_title=aq2_bar,
-            cmap="plasma",
+            cmap="cividis_r",
             nx=nx,
             ny=ny,
             nz=nz,
+            panel_label="(c)",
         )
         add_volume_panel(
             plotter=plotter,
@@ -411,6 +428,7 @@ def main() -> None:
             nx=nx,
             ny=ny,
             nz=nz,
+            panel_label="(d)",
         )
     else:
         add_volume_panel(
@@ -423,6 +441,7 @@ def main() -> None:
             nx=nx,
             ny=ny,
             nz=nz,
+            panel_label="(c)",
         )
 
     plotter.link_views()
