@@ -286,6 +286,8 @@ def main() -> None:
     parser.add_argument("--pore-threshold", type=float, default=0.9)
     parser.add_argument("--aqueous-title", default=None)
     parser.add_argument("--surface-title", default=None)
+    parser.add_argument("--second-aqueous-field", default=None)
+    parser.add_argument("--second-aqueous-title", default=None)
     args = parser.parse_args()
 
     pv.OFF_SCREEN = True
@@ -303,6 +305,14 @@ def main() -> None:
         raise RuntimeError("Field meshes do not match")
     if (gx, gy, gz) != (nx, ny, nz):
         raise RuntimeError("Geometry field mesh does not match")
+
+    second_aqueous = None
+    if args.second_aqueous_field:
+        second_aqueous, ax2, ay2, az2 = stitch_parallel_scalar(
+            args.case_dir, args.time_name, args.second_aqueous_field
+        )
+        if (ax2, ay2, az2) != (nx, ny, nz):
+            raise RuntimeError("Second aqueous field mesh does not match")
 
     if args.surface_baseline_time:
         surface_baseline, bx, by, bz = stitch_parallel_scalar(
@@ -338,7 +348,10 @@ def main() -> None:
     aqueous_img = build_image_data(aqueous_scaled)
     surface_img = build_image_data(surface_scaled)
 
-    plotter = pv.Plotter(shape=(1, 3), off_screen=True, window_size=(2520, 820))
+    use_2x2 = second_aqueous is not None
+    shape = (2, 2) if use_2x2 else (1, 3)
+    win_size = (1680, 1640) if use_2x2 else (2520, 820)
+    plotter = pv.Plotter(shape=shape, off_screen=True, window_size=win_size)
 
     add_geometry_panel(
         plotter=plotter,
@@ -365,17 +378,52 @@ def main() -> None:
         ny=ny,
         nz=nz,
     )
-    add_volume_panel(
-        plotter=plotter,
-        dataset=surface_img,
-        subplot=(0, 2),
-        title=surf_title,
-        scalar_bar_title=surf_bar,
-        cmap="magma",
-        nx=nx,
-        ny=ny,
-        nz=nz,
-    )
+
+    if use_2x2:
+        second_scaled, _ = normalized_field(
+            second_aqueous,
+            lower_q=args.lower_quantile,
+            upper_q=args.upper_quantile,
+            log_scale=False,
+            zero_mask=False,
+        )
+        second_img = build_image_data(second_scaled)
+        aq2_title = args.second_aqueous_title if args.second_aqueous_title else f"{args.second_aqueous_field} / C_in  (t = {args.time_name})"
+        aq2_bar = args.second_aqueous_title if args.second_aqueous_title else f"Norm. {args.second_aqueous_field} / C_in"
+        add_volume_panel(
+            plotter=plotter,
+            dataset=second_img,
+            subplot=(1, 0),
+            title=aq2_title,
+            scalar_bar_title=aq2_bar,
+            cmap="plasma",
+            nx=nx,
+            ny=ny,
+            nz=nz,
+        )
+        add_volume_panel(
+            plotter=plotter,
+            dataset=surface_img,
+            subplot=(1, 1),
+            title=surf_title,
+            scalar_bar_title=surf_bar,
+            cmap="magma",
+            nx=nx,
+            ny=ny,
+            nz=nz,
+        )
+    else:
+        add_volume_panel(
+            plotter=plotter,
+            dataset=surface_img,
+            subplot=(0, 2),
+            title=surf_title,
+            scalar_bar_title=surf_bar,
+            cmap="magma",
+            nx=nx,
+            ny=ny,
+            nz=nz,
+        )
 
     plotter.link_views()
     plotter.screenshot(str(args.output))
