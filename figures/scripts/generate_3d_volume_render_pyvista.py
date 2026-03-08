@@ -158,7 +158,7 @@ def add_geometry_panel(
     nx: int,
     ny: int,
     nz: int,
-    panel_label: str = "(a)",
+    panel_label: str = "a",
 ) -> None:
     plotter.subplot(*subplot)
     plotter.set_background("white")
@@ -168,8 +168,8 @@ def add_geometry_panel(
 
     phase_defs = [
         (0, "Solid", "#c94f4f", 0.28),
-        (1, "Micropore", "#4f8fd6", 0.22),
-        (2, "Pore", "#ffffff", 0.14),
+        (1, "Micropore", "#1a5caa", 0.22),
+        (2, "Pore", "#555555", 0.14),
     ]
 
     for phase_value, _, color, opacity in phase_defs:
@@ -198,14 +198,23 @@ def add_geometry_panel(
         opacity=0.35,
     )
     plotter.add_text(panel_label, position="upper_left", font_size=24, color="black", font="courier")
-    plotter.add_legend(
-        labels=[(name, color) for _, name, color, _ in phase_defs],
-        face="rectangle",
-        bcolor="white",
-        border=True,
-        size=(0.28, 0.18),
-        loc="lower left",
-    )
+    # Legend: placed in upper-right of the geometry subplot viewport.
+    # For 1×3 window (2520×1000): panel (a) is cols 0..839, so x=500, y tops at ~920px.
+    # For 2×2 window (2800×2800): panel (a) is cols 0..1399, rows 1400..2799, so x=900, y~2700.
+    # We use plotter.window_size to pick appropriate coords.
+    # Place legend in white strip above the 3D bounding box (viewport y > 0.90)
+    legend_positions = [(0.32, 0.95), (0.55, 0.95), (0.76, 0.95)]
+    for i, (_, name, color, _) in enumerate(phase_defs):
+        actor = plotter.add_text(
+            f"\u25a0 {name}",
+            position=legend_positions[i],
+            viewport=True,
+            font_size=15,
+            color=color,
+            font="courier",
+        )
+        actor.GetTextProperty().SetBackgroundColor(1.0, 1.0, 1.0)
+        actor.GetTextProperty().SetBackgroundOpacity(0.0)
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -236,7 +245,8 @@ def add_volume_panel(
     nx: int,
     ny: int,
     nz: int,
-    panel_label: str = "",
+    panel_label: str = "b",
+    grid_shape: tuple[int, int] = (1, 3),
 ) -> None:
     plotter.subplot(*subplot)
     plotter.set_background("white")
@@ -254,11 +264,10 @@ def add_volume_panel(
             "title": scalar_bar_title,
             "vertical": True,
             "fmt": "%.1f",
-            "title_font_size": 20,
-            "label_font_size": 18,
-            "width": 0.07,
-            "position_x": 0.84,
-            "position_y": 0.25,
+            "title_font_size": 18,
+            "label_font_size": 22,
+            "width": 0.08,
+            "height": 0.45,
         },
     )
     plotter.add_mesh(
@@ -267,7 +276,7 @@ def add_volume_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text(f"{panel_label}  {title}", position="upper_left", font_size=20, color="black", font="courier")
+    plotter.add_text(panel_label, position="upper_left", font_size=20, color="black", font="courier")
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -364,7 +373,7 @@ def main() -> None:
 
     use_2x2 = second_aqueous is not None
     shape = (2, 2) if use_2x2 else (1, 3)
-    win_size = (2800, 2800) if use_2x2 else (2520, 820)
+    win_size = (2800, 2800) if use_2x2 else (2520, 1000)
     plotter = pv.Plotter(shape=shape, off_screen=True, window_size=win_size)
 
     add_geometry_panel(
@@ -387,7 +396,7 @@ def main() -> None:
         dataset=aqueous_img,
         subplot=(0, 1),
         title=aq_title,
-        scalar_bar_title=aq_bar,
+        scalar_bar_title=aq_title,
         cmap="cividis",
         nx=nx,
         ny=ny,
@@ -405,13 +414,12 @@ def main() -> None:
         )
         second_img = build_image_data(second_scaled)
         aq2_title = args.second_aqueous_title if args.second_aqueous_title else f"{args.second_aqueous_field} / C_in"
-        aq2_bar = args.second_aqueous_title if args.second_aqueous_title else f"Norm. {args.second_aqueous_field}"
         add_volume_panel(
             plotter=plotter,
             dataset=second_img,
             subplot=(1, 0),
             title=aq2_title,
-            scalar_bar_title=aq2_bar,
+            scalar_bar_title=aq2_title,
             cmap="cividis_r",
             nx=nx,
             ny=ny,
@@ -423,7 +431,7 @@ def main() -> None:
             dataset=surface_img,
             subplot=(1, 1),
             title=surf_title,
-            scalar_bar_title=surf_bar,
+            scalar_bar_title=surf_title,
             cmap="magma",
             nx=nx,
             ny=ny,
@@ -436,7 +444,7 @@ def main() -> None:
             dataset=surface_img,
             subplot=(0, 2),
             title=surf_title,
-            scalar_bar_title=surf_bar,
+            scalar_bar_title=surf_title,
             cmap="magma",
             nx=nx,
             ny=ny,
