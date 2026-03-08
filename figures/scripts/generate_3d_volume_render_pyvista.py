@@ -197,24 +197,39 @@ def add_geometry_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text(panel_label, position="upper_left", font_size=24, color="black", font="courier")
+    plotter.add_text(panel_label, position="upper_left", font_size=18, color="black", font="courier")
     # Legend: placed in upper-right of the geometry subplot viewport.
     # For 1×3 window (2520×1000): panel (a) is cols 0..839, so x=500, y tops at ~920px.
     # For 2×2 window (2800×2800): panel (a) is cols 0..1399, rows 1400..2799, so x=900, y~2700.
     # We use plotter.window_size to pick appropriate coords.
     # Place legend in white strip above the 3D bounding box (viewport y > 0.90)
-    legend_positions = [(0.32, 0.95), (0.55, 0.95), (0.76, 0.95)]
-    for i, (_, name, color, _) in enumerate(phase_defs):
+    # Evenly distribute 3 items across top strip accounting for text widths.
+    # "■ Solid"=8, "■ Micropore"=12, "■ Pore"=7 chars in Courier monospace.
+    # Equal visual gap between end-of-item and start-of-next.
+    legend_items = [(name, color) for (_, name, color, _) in phase_defs]
+    char_widths = [len(f"\u25a0 {n}") for (n, _) in legend_items]
+    # Courier at 16pt: char width ≈ 10px; panel width ≈ window_w / ncols
+    win_w = plotter.window_size[0]
+    panel_w = win_w / plotter.shape[1]
+    char_px = 10.0 / panel_w  # fraction of panel width per char
+    text_widths = [w * char_px for w in char_widths]
+    x_start = 0.20
+    x_end = 0.95
+    total_text = sum(text_widths)
+    gap = (x_end - x_start - total_text) / (len(legend_items) - 1)
+    x = x_start
+    for (name, color), tw in zip(legend_items, text_widths):
         actor = plotter.add_text(
             f"\u25a0 {name}",
-            position=legend_positions[i],
+            position=(x, 0.95),
             viewport=True,
-            font_size=15,
+            font_size=16,
             color=color,
             font="courier",
         )
         actor.GetTextProperty().SetBackgroundColor(1.0, 1.0, 1.0)
         actor.GetTextProperty().SetBackgroundOpacity(0.0)
+        x += tw + gap
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -264,10 +279,9 @@ def add_volume_panel(
             "title": scalar_bar_title,
             "vertical": True,
             "fmt": "%.1f",
-            "title_font_size": 18,
-            "label_font_size": 22,
-            "width": 0.08,
-            "height": 0.45,
+            "title_font_size": 22,
+            "label_font_size": 20,
+            "n_labels": 5,
         },
     )
     plotter.add_mesh(
@@ -276,7 +290,7 @@ def add_volume_panel(
         line_width=1.0,
         opacity=0.35,
     )
-    plotter.add_text(panel_label, position="upper_left", font_size=20, color="black", font="courier")
+    plotter.add_text(panel_label, position="upper_left", font_size=18, color="black", font="courier")
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -373,7 +387,7 @@ def main() -> None:
 
     use_2x2 = second_aqueous is not None
     shape = (2, 2) if use_2x2 else (1, 3)
-    win_size = (2800, 2800) if use_2x2 else (2520, 1000)
+    win_size = (3200, 3200) if use_2x2 else (2400, 960)
     plotter = pv.Plotter(shape=shape, off_screen=True, window_size=win_size)
 
     add_geometry_panel(
