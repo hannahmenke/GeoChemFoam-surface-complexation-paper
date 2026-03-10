@@ -21,12 +21,12 @@
   - Test Cases / Simple 2D
 - content:
   - geometry panel
-  - log-scale Pb²⁺/C_in aqueous panel at `t = 2000`
-  - log-scale Hfo_sOPb⁺ strong-site surface loading at `t = 2000`
+  - log-scale Pb²⁺/C_in aqueous panel at `t = 20000`
+  - log-scale Hfo_sOPb⁺/Hfo_s,total strong-site occupancy at `t = 20000`
 - chemistry:
   - Pb²⁺ on Dzombak–Morel two-site HFO (Hfo_s + Hfo_w)
-  - near-complete retardation shown via log colorscale (4 decades)
-  - fracture vs. matrix transport contrast visible
+  - higher-load Pb injection (`C_in = 10^-3 mol m^-3`) with strong but incomplete retardation
+  - fracture vs. micropore transport contrast visible
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 - source case:

@@ -19,13 +19,13 @@
 - segmentation:
   - `phases`
 - labels:
-  - `1 = matrix`
+  - `1 = micropore`
   - `2 = pore`
 - note:
   - the source metadata reserves `0 = solid`, but the raw image itself uses
     only labels `1` and `2`
   - the manuscript draft currently treats label `1` as the reactive
-    solid-like matrix phase for `aSurf`
+    micropore phase for `aSurf`
   - the source metadata does not currently report a resolved voxel size
 
 ## Runtime Case
@@ -46,4 +46,4 @@
 ## Figure
 
 - `figures/png/fig02_2d_fractures.png`
-  - populated from the `t = 2000` solver output
+  - populated from the `t = 20000` solver output

@@ -1,6 +1,6 @@
 \section{Validation}
 
-\subsection{1D Analytical Retardation Benchmark}
+\subsection{1D Analytical Retardation Benchmark}\label{sec:1D}
 
 The 1D linear-retardation benchmark tests the surface-chemistry coupling on a
 uniform domain where the retardation factor has an exact analytical form.
@@ -75,15 +75,59 @@ agreement shown.
     \label{fig:1DBreakthrough}
 \end{figure}
 
-\subsection{Validation Summary}
+\subsection{Closed-System Batch Balance}
 
-In addition to the 1D analytical benchmark, the solver has been verified
-against a set of controlled numerical baselines on the same domain.
+The chemistry--transport interface is verified against the exact
+species-inventory identity for a closed batch domain (no inflow or outflow,
+$\mathbf{u} = 0$).
+Conservation of the total field-level Ca$^{2+}$ inventory requires
+\begin{equation}
+    \mathcal{M} \;=\; \theta\,C + a_{\mathrm{surf}}\,\Gamma \;=\; \mathrm{const},
+    \label{eq:closedBalance}
+\end{equation}
+where $C$ is the aqueous concentration, $\Gamma$ is the surface loading, and
+$\theta$ and $a_{\mathrm{surf}}$ are the same domain-averaged porosity and
+surface-area density as in the 1D transport benchmark.
+In the linear dilute limit, Eq.~\eqref{eq:closedBalance} gives the equilibrium
+partition
+\begin{equation}
+    C_{\mathrm{eq}} = \frac{\theta\,C_0}{\theta + a_{\mathrm{surf}}\,K_{s,\mathrm{field}}},
+    \label{eq:batchEquil}
+\end{equation}
+which is equivalent to $C_0 / (1 + a_{\mathrm{surf}}\,K_{s,\mathrm{field}}/\theta)$.
+
+Two tests are run on the 80\,\texttimes\,1\,\texttimes\,1 mesh with
+$\theta = 0.5$ and $a_{\mathrm{surf}} = 10^5\,\mathrm{m^{-1}}$ using the same
+Ca$^{2+}$--\texttt{Surf\_a} surface chemistry as in Section~\ref{sec:1D}.
+In the \emph{adsorption} test the domain is initialised with a fully aqueous
+inventory ($\theta\,C_0 = 4.49 \times 10^{-4}\,\mathrm{mol\,m^{-3}}$,
+$\Gamma_0 \approx 0$) and the batch-equilibration solver brings the system to
+equilibrium in a single PHREEQC call; Ca$^{2+}$ partitions from the pore
+fluid onto the surface.
+In the \emph{desorption} test the inventory is loaded entirely onto the
+surface ($\Gamma_0 > 0$, $C_0 \approx 0$) and equilibrium is re-established;
+Ca$^{2+}$ desorbs back into the pore fluid.
+The relative inventory drift
+$|\mathcal{M}_{\mathrm{end}} - \mathcal{M}_{\mathrm{start}}| / \mathcal{M}_{\mathrm{start}}$
+is $1.2 \times 10^{-7}$ for adsorption and $7.2 \times 10^{-7}$ for
+desorption, both well below the \mbox{$10^{-6}$} tolerance.
+This confirms that the chemistry--transport interface conserves the total
+field-level Ca$^{2+}$ inventory to the PHREEQC convergence level in both
+the adsorption and desorption directions.
+
+\subsection{Validation Summary}\label{sec:valSummary}
+
+In addition to the 1D analytical benchmark and the closed-system batch
+balance, the solver has been verified against a set of controlled numerical
+baselines on the same domain.
 The aqueous-only and \mbox{$a_{\mathrm{surf}} = 0$} reductions confirm that
 the solver degrades correctly to standard advection--diffusion transport when
 surface chemistry is absent.
-Closed-system adsorption--desorption cycles verify species-balance
-conservation across the chemistry--transport interface.
+Closed-system adsorption--desorption cycles confirm that the total
+aqueous-plus-surface Ca$^{2+}$ inventory is conserved at relative drifts of
+$1.2 \times 10^{-7}$ and $7.2 \times 10^{-7}$, demonstrating that the
+chemistry--transport interface preserves global species balance to the
+PHREEQC convergence level in both directions.
 Sensitivity studies on the operator-splitting step size, the physical
 timestep, and the mesh resolution quantify the local and bulk drift at
 practical settings.
@@ -103,6 +147,7 @@ checks.
         Check & Metric & Result \\
         \midrule
         Analytical 1D & Surface L1 / total drift & $1.43\%$ / $1.57\%$ \\
+        Closed-system (ads./des.) & Inventory drift & $1.2\times10^{-7}$ / $7.2\times10^{-7}$ \\
         Splitting     & Local / bulk drift        & $3$--$4.5\%$ / $<0.6\%$ \\
         Timestep      & Local / bulk drift        & $\approx 3\%$ / $0.25\%$ \\
         Mesh          & Front / total drift       & $2.5\times 10^{-7}$ / $0.37\%$ \\

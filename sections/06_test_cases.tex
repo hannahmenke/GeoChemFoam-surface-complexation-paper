@@ -32,7 +32,9 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
     intrinsic surface-area density $a_{\mathrm{surf,intr}}$ is assigned (all
     other phases have $a_{\mathrm{surf}} = 0$ or carry only resolved interface
     area). The 1D case uses a uniform synthetic domain with no image source.
-    All image-based cases use 8 MPI ranks; the 1D case is serial.}
+    The 2D fracture case uses 8 MPI ranks ($4\times2\times1$ decomposition);
+    the 3D cases use 64 MPI ranks ($4\times4\times4$ decomposition);
+    the 1D case is serial.}
     \label{tab:simParams}
     \resizebox{\textwidth}{!}{%
     \begin{tabular}{llrllrrrr}
@@ -64,11 +66,11 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & $10^{-9}$
             & $10^{5}$
             & $5$
-            & $2000$ \\
+            & $20000$ \\
         3D Kelvin (Zn$^{2+}$/Ca$^{2+}$)
             & $200^{3}$
             & $10$
-            & $50^{3}$
+            & $200^{3}$
             & 1=pore, 2=micropore \; (2)
             & $10^{-9}$
             & $10^{5}$
@@ -77,7 +79,7 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
         3D Estaillades (Sr$^{2+}$/Ca$^{2+}$)
             & $500^{3}$
             & $4$
-            & $50^{3}$
+            & $500^{3}$
             & 1=pore, 2=micropore, 3=solid \; (2)
             & $10^{-9}$
             & $10^{5}$
@@ -87,11 +89,101 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
     \end{tabular}}
 \end{table}
 
+\begin{table}[htbp]
+    \centering
+    \caption{Geochemical and physical parameters for each test case.
+    All surface reactions are written in the form
+    $\mathrm{SiteOH} + \mathrm{M}^{n+} \rightleftharpoons \mathrm{SiteOM}^{(n-1)+} + \mathrm{H}^+$,
+    so positive $\log K$ indicates sorption that is thermodynamically
+    favourable at neutral pH relative to proton release.
+    Dzombak--Morel HFO site densities and $\log K$ values for
+    Pb$^{2+}$ are taken from \citet{dzombak1990surface}.
+    \texttt{Surf\_a} equilibrium constants for Ca$^{2+}$, Zn$^{2+}$, and
+    Sr$^{2+}$ are from the \texttt{GeoChem.dat} database distributed with
+    GeoChemFoam \citep{maes2021geochemfoam,parkhurst2013phreeqc}.
+    The diffusivity $D = 10^{-9}$\,m$^2$\,s$^{-1}$ is a representative
+    free-aqueous value for divalent cations at 25\,\textdegree{}C; the reduced
+    value $D = 10^{-11}$\,m$^2$\,s$^{-1}$ for the 1D benchmark is chosen to
+    give a P\'{e}clet number of order unity over the 80-cell domain so that
+    both advective and diffusive spreading are visible in the spatial profiles.
+    The intrinsic surface-area density $a_{\mathrm{surf,intr}} = 10^{5}$\,m$^{-1}$
+    is representative of the BET-scale reactive area of microporous carbonate
+    \citep{menke2021upscaling} and is held uniform across cases for
+    comparability; see Section~\ref{sec:aSurf} for the physical definition.}
+    \label{tab:chemParams}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{lllll}
+        \toprule
+        Parameter
+            & 1D retardation
+            & 2D Pb$^{2+}$/HFO
+            & 3D Zn$^{2+}$/Ca$^{2+}$
+            & 3D Sr$^{2+}$/Ca$^{2+}$ \\
+        \midrule
+        Surface model
+            & \texttt{Surf\_a} (single-site)
+            & Dzombak--Morel HFO (two-site)
+            & \texttt{Surf\_a} (single-site)
+            & \texttt{Surf\_a} (single-site) \\
+        Reactive species
+            & Ca$^{2+}$
+            & Pb$^{2+}$
+            & Zn$^{2+}$, Ca$^{2+}$
+            & Sr$^{2+}$, Ca$^{2+}$ \\
+        Site density $s_k$ (mol\,m$^{-2}$)
+            & $2.4\times10^{-9}$
+            & Hfo$_s$: $2\times10^{-7}$;\enspace Hfo$_w$: $6\times10^{-6}$
+            & $2.4\times10^{-9}$
+            & $2.4\times10^{-9}$ \\
+        Surface $\log K$
+            & Ca: $-5.85$
+            & Pb/Hfo$_s$: $+4.65$;\enspace Pb/Hfo$_w$: $+0.30$
+            & Ca: $-5.85$;\enspace Zn: $-4.0$
+            & Ca: $-5.85$;\enspace Sr: $-5.5$ \\
+        Diffusivity $D$ (m$^2$\,s$^{-1}$)
+            & $10^{-11}$
+            & $10^{-9}$
+            & $10^{-9}$
+            & $10^{-9}$ \\
+        Micropore fraction $\theta$
+            & $0.5$ (uniform)
+            & $0.4$ (matrix)
+            & $0.4$ (micropore)
+            & $0.4$ (micropore) \\
+        $a_{\mathrm{surf,intr}}$ (m$^{-1}$)
+            & $10^{5}$
+            & $10^{5}$
+            & $10^{5}$
+            & $10^{5}$ \\
+        $\theta_{\mathrm{mask}}$
+            & $10^{-3}$
+            & $10^{-3}$
+            & $10^{-3}$
+            & $10^{-3}$ \\
+        $C_{\mathrm{in}}$ (mol\,m$^{-3}$)
+            & Ca: $2\times10^{-9}$
+            & Pb: $10^{-5}$
+            & Ca: $10^{-4}$;\enspace Zn: $10^{-5}$
+            & Ca: $0$;\enspace Sr: $10^{-4}$ \\
+        $C_{\mathrm{init}}$ (mol\,m$^{-3}$)
+            & Ca: $0$
+            & $\approx 0$
+            & Ca: $10^{-4}$;\enspace Zn: $0$
+            & Ca: $10^{-3}$;\enspace Sr: $0$ \\
+        pH (inlet / initial)
+            & 7
+            & 7
+            & 7
+            & 7 \\
+        \bottomrule
+    \end{tabular}}
+\end{table}
+
 \subsection{Simple 2D Image-Based Case: Pb$^{2+}$ on Dzombak--Morel HFO}
 
 The 2D demonstration uses the segmented fracture-network image
 \texttt{4StraightFractures} with dimensions
-$500 \times 500 \times 1$ and two labels corresponding to matrix ($1$) and
+$500 \times 500 \times 1$ and two labels corresponding to micropore ($1$) and
 pore ($2$). The computational grid is $250 \times 250 \times 1$.
 This case provides a geometrically transparent setting to study heavy-metal
 retardation by iron-oxide coatings on fracture walls, directly relevant to
@@ -105,34 +197,34 @@ Dzombak--Morel two-site model \citep{dzombak1990surface}. Strong sites
 weak sites (Hfo$_w$) have $\log K = +0.3$ (reversible bulk capacity). Site
 densities are $2 \times 10^{-7}$~mol~m$^{-2}$ (Hfo$_s$) and
 $6 \times 10^{-6}$~mol~m$^{-2}$ (Hfo$_w$). Inlet Pb$^{2+}$ concentration is
-$C_{\mathrm{in}} = 10^{-5}$~mol~m$^{-3}$ at pH~7; the initial domain is
+$C_{\mathrm{in}} = 10^{-3}$~mol~m$^{-3}$ at pH~7; the initial domain is
 essentially Pb-free.
 
-The high conditional affinity of HFO for Pb$^{2+}$ at pH~7 produces
-near-complete retardation: the Pb$^{2+}$ front advances only a few millimetres
-into the domain over the 2000~s run. The reactive interface is the matrix-pore
-contact, with an intrinsic unresolved surface-area density
+The high conditional affinity of HFO for Pb$^{2+}$ at pH~7 still produces
+substantial retardation at this higher loading, but the stronger injection now
+drives an observable dissolved plume across most of the domain over the
+20000~s run. The reactive interface is the micropore-pore contact, with an
+intrinsic unresolved surface-area density
 $a_{\mathrm{surf,intr}} = 10^{5}\ \mathrm{m^{-1}}$ assigned to the
-$\epsilon = 0.4$ microporous matrix phase.
+$\epsilon = 0.4$ micropore phase.
 
-Figure~\ref{fig:2DFractures} reports the segmented geometry alongside the
-log-scale Pb$^{2+}$/C$_{\mathrm{in}}$ and log-scale Hfo$_s$OPb$^+$ surface
-loading at $t = 2000$~s. The logarithmic colour scale spans four decades and
-reveals that Pb$^{2+}$ advances preferentially along fracture channels (faster
-transport path) relative to the matrix, while the strong-site surface loading
-is concentrated in matrix cells immediately behind the inlet.
+Figure~\ref{fig:2DFractures} reports the segmented geometry alongside the Pb$^{2+}$/C$_{\mathrm{in}}$ and strong-site occupancy
+Hfo$_s$OPb$^+$/Hfo$_{s,\mathrm{tot}}$ at $t = 20000$~s and reveals that Pb$^{2+}$ advances preferentially
+along fracture channels (faster transport path) relative to the micropore phase, while
+the strongest Pb uptake remains concentrated in reactive micropore cells near the
+inlet and around downstream fracture intersections.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
     \caption{Three-panel result for the 2D fracture-network case at
-    \mbox{$t = 2000\ \mathrm{s}$}. Left: segmented geometry (matrix in blue,
+    \mbox{$t = 20000\ \mathrm{s}$}. Left: segmented geometry (micropore in blue,
     fracture pore space in white). Middle: log-scale normalised dissolved
-    Pb$^{2+}$ / $C_{\mathrm{in}}$ showing the penetration front concentrated
-    near the inlet, with fracture channels visible as faster transport pathways.
-    Right: log-scale Hfo$_s$OPb$^+$ surface loading (mol~m$^{-2}$) in the
-    microporous matrix phase; the fracture pore cells carry no surface area and
-    appear blank.}
+    Pb$^{2+}$ / $C_{\mathrm{in}}$ showing a plume that extends across most of
+    the domain, with fracture channels visible as faster transport pathways.
+    Right: log-scale strong-site occupancy
+    Hfo$_s$OPb$^+$/Hfo$_{s,\mathrm{tot}}$ in the micropore phase; the
+    fracture pore cells carry no surface area and appear blank.}
     \label{fig:2DFractures}
 \end{figure}
 
@@ -168,7 +260,7 @@ Site density is $2.4\times10^{-9}$~mol~m$^{-2}$ and
 $a_{\mathrm{surf,intr}} = 10^{5}$~m$^{-1}$ in the micropore phase.
 
 Figure~\ref{fig:3DKelvin} shows the geometry and 3D volume renders of the
-dissolved and adsorbed fields at $t = 4$~s.
+dissolved and adsorbed fields at $t = 12$~s.
 Figure~\ref{fig:KelvinTemporal} shows the temporal evolution of domain-mean
 Ca$^{2+}$ and Zn$^{2+}$ (normalised by their respective inlet concentrations)
 and the incremental surface loadings \texttt{Surf\_aCa+} and \texttt{Surf\_aZn+}
@@ -181,7 +273,7 @@ Surf\_aZn$^+$ accumulates while Surf\_aCa$^+$ is progressively displaced.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{3D volume renders of the Kelvin competitive-sorption case at $t = 4$~s.
+    \caption{3D volume renders of the Kelvin competitive-sorption case at $t = 12$~s.
     (a)~Segmented geometry: micropore diamond lattice in blue, pore space in grey.
     (b)~Normalised dissolved Zn$^{2+}$ / $C_{\mathrm{in}}$; the advancing front enters
     from the left.

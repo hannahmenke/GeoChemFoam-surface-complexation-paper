@@ -24,9 +24,9 @@ Current staged figures:
 - `fig02_2d_fractures.png`
   - three-panel 2D results figure for Pb²⁺ / Dzombak–Morel HFO
   - left: fracture geometry
-  - middle: log-scale Pb²⁺ / C_in at `t = 2000` (4 decades, fracture vs. matrix contrast)
-  - right: log-scale Hfo_sOPb⁺ strong-site surface loading at `t = 2000`
-  - shows near-complete Pb retardation by HFO; fracture channels visible as faster transport paths
+  - middle: log-scale Pb²⁺ / C_in at `t = 20000` (4 decades, fracture vs. micropore contrast)
+  - right: log-scale Hfo_sOPb⁺/Hfo_s,total strong-site occupancy at `t = 20000`
+  - uses the higher-load Pb case (`C_in = 10^-3 mol m^-3`), showing strong but incomplete retardation by HFO
 - `fig03_3d_kelvin.png`
   - matplotlib 3D slice panels (generate_3d_field_panels.py), t = 20s
   - left: dissolved Zn²⁺ (competitive sorption front traversing domain)

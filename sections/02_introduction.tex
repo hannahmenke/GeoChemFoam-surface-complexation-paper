@@ -111,23 +111,17 @@ than reconstructed on mesh faces. This is the key modeling choice that allows
 the method to act on microporous matrix regions instead of only on explicitly
 resolved pore--grain boundaries.
 
-The solver developed here is \texttt{reactiveScalarTransportDBSFoam}. It
-couples conservative DBS transport to PHREEQC through a staged implementation
-path, beginning with validated reductions and adding cell-based surface
-complexation only after the simpler limits have been shown to behave
-correctly. This staged approach is deliberate: it makes each major reduction
-path auditable and avoids obscuring conceptual errors behind a large,
-monolithic solver change.
-
-Accordingly, the manuscript is organized as a validation ladder rather than a
-single end-state demonstration. The paper first states the field variables and
-the conservative transport/reaction balances, then describes the numerical
-implementation, and then validates the method in progressively richer settings:
-a 1D analytical retardation limit, a 2D image-based fracture case (Pb$^{2+}$
-on HFO, motivated by heavy-metal remediation in fractured aquifers and
-permeable reactive barriers), a 3D Kelvin-cell case (competitive
-Zn$^{2+}$/Ca$^{2+}$ sorption, representative of trace-metal contamination in
-Ca-bearing groundwater), and a 3D Estaillades case (Sr$^{2+}$ DGR scenario
-for radionuclide migration in nuclear waste repositories).
-The specific gap this method is intended to fill is conservative
-unresolved surface complexation in image-based DBS reactive transport.
+The solver presented here, \texttt{reactiveScalarTransportDBSFoam}, couples
+conservative DBS transport to PHREEQC-based surface complexation at the
+cell scale. The manuscript first states the field variables and the
+conservative transport/reaction balances, then describes the numerical
+implementation. Validation is carried out against a 1D analytical retardation
+solution, which provides a closed-form reference for the coupled
+advection--diffusion--sorption system. The method is then applied to three
+image-based test cases of increasing geometric complexity to demonstrate applicability across realistic
+pore geometries: a 2D fracture network (Pb$^{2+}$ on HFO, motivated by
+heavy-metal remediation in fractured aquifers and permeable reactive
+barriers), a 3D Kelvin-cell geometry (competitive Zn$^{2+}$/Ca$^{2+}$
+sorption, representative of trace-metal contamination in Ca-bearing
+groundwater), and a 3D Estaillades limestone (Sr$^{2+}$ DGR scenario for
+radionuclide migration in nuclear waste repositories).

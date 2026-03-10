@@ -209,29 +209,15 @@ def add_geometry_panel(
     # "■ Solid"=8, "■ Micropore"=12, "■ Pore"=7 chars in Courier monospace.
     # Equal visual gap between end-of-item and start-of-next.
     legend_items = present_phases
-    char_widths = [len(f"\u25a0 {n}") for (n, _) in legend_items]
-    # Courier at 16pt: char width ≈ 10px; panel width ≈ window_w / ncols
-    win_w = plotter.window_size[0]
-    panel_w = win_w / plotter.shape[1]
-    char_px = 10.0 / panel_w  # fraction of panel width per char
-    text_widths = [w * char_px for w in char_widths]
-    x_start = 0.20
-    x_end = 0.95
-    total_text = sum(text_widths)
-    gap = (x_end - x_start - total_text) / (len(legend_items) - 1)
-    x = x_start
-    for (name, color), tw in zip(legend_items, text_widths):
-        actor = plotter.add_text(
-            f"\u25a0 {name}",
-            position=(x, 0.95),
-            viewport=True,
-            font_size=16,
-            color=color,
-            font="courier",
-        )
-        actor.GetTextProperty().SetBackgroundColor(1.0, 1.0, 1.0)
-        actor.GetTextProperty().SetBackgroundOpacity(0.0)
-        x += tw + gap
+    plotter.add_legend(
+        labels=[[name, color] for name, color in legend_items],
+        face="rectangle",
+        bcolor=(0.96, 0.96, 0.96),
+        border=False,
+        size=(0.22, 0.12),
+        loc="lower left",
+        font_family="courier",
+    )
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -247,7 +233,7 @@ def add_geometry_panel(
 
 def camera_position(nx: int, ny: int, nz: int) -> list[tuple[float, float, float]]:
     centre = (0.5 * nx, 0.5 * ny, 0.5 * nz)
-    position = (2.6 * nx, -2.0 * ny, 1.8 * nz)
+    position = (3.5 * nx, -2.8 * ny, 2.4 * nz)
     view_up = (0.0, 0.0, 1.0)
     return [position, centre, view_up]
 
@@ -285,6 +271,9 @@ def add_volume_panel(
             "label_font_size": 20,
             "n_labels": 5,
             "bold": True,
+            "position_x": 0.87,
+            "position_y": 0.25,
+            "height": 0.50,
         },
     )
     plotter.add_mesh(

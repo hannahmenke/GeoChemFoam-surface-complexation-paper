@@ -3,17 +3,37 @@
 \subsection{Field Definitions}
 
 The DBS micro-continuum formulation \citep{brinkman1949calculation,soulaine2016micro,
-soulaine2024microcontinuum} distinguishes
-between three pore-space quantities. The first is the numerical porosity,
-$\epsilon_{\mathrm{num}}$, which is retained to regularize transport in nearly
-solid voxels. The second is the physical mobile-water fraction, $\theta$,
-which defines aqueous accumulation and chemical storage. The third is the
-reactive internal surface area per bulk volume, $a_{\mathrm{surf}}$, which
-represents unresolved surface available for adsorption and surface
-complexation. All transported aqueous species,
-together with $\theta$, $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and
-the DBS surface fields, are treated as cell-centred variables. The volumetric
-flux $\phi$ remains face-centred.
+soulaine2024microcontinuum} represents the pore medium as a continuum in which
+a cell-centred porosity field $\epsilon_{\mathrm{num}}$ varies smoothly from
+zero (solid) to unity (open pore). The steady incompressible flow is governed
+by the Darcy--Brinkman equations:
+\begin{align}
+\nabla \cdot \bm{\phi} &= 0,
+\label{eq:continuity} \\
+-\nabla p + \nabla \cdot \bigl(\mu_{\mathrm{eff}} \nabla \bm{u}\bigr)
+- \frac{\mu}{K(\epsilon_{\mathrm{num}})}\,\bm{\phi} &= \bm{0},
+\label{eq:brinkman}
+\end{align}
+where $\bm{\phi} = \epsilon_{\mathrm{num}}\bm{u}$ is the volumetric (Darcy)
+flux, $\mu$ is the fluid viscosity, $\mu_{\mathrm{eff}}$ is an effective
+viscosity that smoothly recovers the Stokes equation in open-pore cells
+\citep{soulaine2016micro}, and $K(\epsilon_{\mathrm{num}})$ is a permeability
+function that enforces a no-slip condition in solid-like cells via a large
+resistance term. In open-pore cells the resistance vanishes and
+Eq.~\eqref{eq:brinkman} reduces to the Stokes equation.
+
+Three cell-centred scalar fields are introduced for the reactive-transport
+problem. The first is the numerical porosity $\epsilon_{\mathrm{num}}$, already
+present in the flow solve and retained to regularize transport in nearly solid
+voxels. The second is the physical mobile-water fraction $\theta$ (volume of
+mobile water per bulk cell volume), which defines aqueous accumulation and
+chemical storage and may differ from $\epsilon_{\mathrm{num}}$ in microporous
+cells. The third is the reactive internal surface area per bulk volume
+$a_{\mathrm{surf}}$ (m$^2$\,m$^{-3}$), which represents surface available for
+adsorption and surface complexation. All aqueous species, together with
+$\theta$, $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the adsorbed
+surface fields, are treated as cell-centred variables. The volumetric flux
+$\bm{\phi}$ is face-centred.
 
 \subsection{Reactive Surface Area Field}
 \label{sec:aSurf}
@@ -34,12 +54,13 @@ a_{\mathrm{surf}}^{\mathrm{intrinsic}}.
 \end{equation}
 
 The first term, $a_{\mathrm{surf}}^{\mathrm{interface}}$, is computed
-geometrically from the segmented voxel image by counting all fluid--solid
-face adjacencies at the fine-image scale. Within each coarse finite-volume
-cell containing $N_{\mathrm{vox}} = p \times q \times r$ fine voxels of
-resolution $\Delta x$, let $N_{\mathrm{fs}}$ denote the number of voxel
-face pairs where one voxel belongs to a fluid phase and its neighbour belongs
-to a solid or micropore phase. The volumetric interface density is
+geometrically from the segmented voxel image. The user designates one image
+label as the \emph{reference grain phase} (which may be a microporous grain,
+a dense solid, or any other label assigned to the reactive surface). Within
+each coarse finite-volume cell containing $N_{\mathrm{vox}} = p \times q
+\times r$ fine voxels of resolution $\Delta x$, let $N_{\mathrm{fs}}$ denote
+the number of voxel face pairs in which one voxel carries the reference grain
+label and its neighbour does not. The volumetric interface density is
 \begin{equation}
 a_{\mathrm{surf}}^{\mathrm{interface}}
 = \frac{N_{\mathrm{fs}}}{N_{\mathrm{vox}}\,\Delta x}.
@@ -49,20 +70,34 @@ This is the standard specific surface area estimator from binary image
 analysis: each counted face contributes area $\Delta x^2$ to the numerator
 while the coarse cell volume is $N_{\mathrm{vox}}\,\Delta x^3$.
 
-The second term, $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$, is a
-user-specified material parameter, analogous to the permeability field. A
-volumetric surface density $s_k$ (units: m$^2$\,m$^{-3}$) characteristic of
-phase $k$ (for example the BET surface area of a carbonate micropore grain)
-is prescribed for each image label, and the intrinsic contribution is
-assembled by weighting each phase density by its local volume fraction $f_k$
-within the coarse cell:
+The interface term therefore captures only grain--fluid boundaries that are
+\emph{visible at the image voxel scale}: every face where a reference-grain
+voxel is adjacent to a voxel of any other label. It does not detect reactive
+area that lies entirely \emph{within} a voxel, such as sub-voxel surface
+roughness of a grain or the internal pore network of a microporous phase.
+Those surfaces are below the image resolution by construction.
+
+The second term, $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$, accounts for this
+sub-voxel contribution. A volumetric surface density $s_k$
+(units: m$^2$\,m$^{-3}$) is prescribed for each image label $k$; it may
+represent any sub-voxel surface that the image cannot resolve --- for example
+the BET surface area of a microporous grain measured by N$_2$ adsorption, or
+the surface roughness of a dense solid grain measured on powdered material.
+The intrinsic contribution is assembled by weighting each phase density by
+its local volume fraction $f_k$ within the coarse cell:
 \begin{equation}
 a_{\mathrm{surf}}^{\mathrm{intrinsic}} = \sum_k f_k\,s_k.
 \label{eq:asurf_intrinsic}
 \end{equation}
-Both fields are pre-computed from the segmented image before the flow
-simulation begins and are held constant throughout the reactive-transport
-calculation.
+Crucially, $s_k$ may be non-zero for any label, including the reference grain
+phase itself. This means the two terms are additive for the same phase:
+$a_{\mathrm{surf}}^{\mathrm{interface}}$ gives the image-scale outer surface
+of the grain, and $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$ adds the
+sub-voxel surface area that the image resolution cannot capture. If
+$s_k = 0$ for all labels, the total reduces to the purely geometric
+image-scale surface. Both fields are pre-computed from the segmented image
+before the flow simulation begins and are held constant throughout the
+reactive-transport calculation.
 
 Both contributions enter the geochemical module through identical treatment.
 The PHREEQC reaction engine requires surface area expressed per litre of
