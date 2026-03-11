@@ -39,18 +39,18 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - geometry panel
-  - true 3D volume render of dissolved Zn²⁺ (competitive sorption)
-  - true 3D volume render of adsorbed Surf_aZn⁺
+  - top-centred geometry panel
+  - lower 2x2 grid of true 3D volume renders for dissolved Zn²⁺, dissolved Ca²⁺,
+    incremental Surf_aZn⁺, and displaced Surf_aCa⁺
 - chemistry:
   - Zn²⁺ + Ca²⁺ competing for Surf_a sites; Zn²⁺ log_k −4.0 vs Ca²⁺ log_k −5.85
   - Ca²⁺ uniform background (1×10⁻⁴ mol/L); Zn²⁺ inlet 1×10⁻⁵ mol/L
 - source case:
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - reported time:
-  - `t = 4`
+  - `t = 12`
 - renderer:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_kelvin_competition_figure.py`
 
 ## Figure 4
 
@@ -116,3 +116,20 @@
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_kelvin_temporal_plot.py`
+
+## Figure 8
+
+- target file:
+  - `fig08_estaillades_temporal.png`
+- section:
+  - Test Cases / Large 3D Porous Media
+- content:
+  - left panel: domain-mean Ca²⁺/C_init and Sr²⁺/C_in vs time
+  - right panel: normalised incremental domain-mean Surf_aCa⁺ and Surf_aSr⁺ vs time
+  - 6 time points: t = 0, 20, 40, 60, 80, 100
+- chemistry:
+  - Sr²⁺ leachate displacing Ca²⁺ from pre-loaded Surf_a sites in Estaillades micropores
+- source case:
+  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_estaillades_temporal_plot.py`

@@ -12,7 +12,7 @@ The baseline discretization keeps all chemistry-bearing state cell-centered.
 This avoids introducing an extra face reconstruction for the unresolved
 surface-reaction source. The solution species, $\theta$,
 $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the surface fields are
-therefore stored at cell centres, whereas only the volumetric flux $\phi$
+therefore stored at cell centres, whereas only the Darcy velocity $\bm{u}_D$
 remains face-centred. Transport uses face interpolation only within the
 conservative flux assembly, while the surface chemistry remains strictly
 cell-local. The additive decomposition of $a_{\mathrm{surf}}$ into interface
@@ -22,7 +22,7 @@ and intrinsic contributions is defined in Section~\ref{sec:aSurf}
 All simulations reported here use the following discretization. Time
 integration uses the first-order implicit Euler scheme, consistent with the
 first-order Lie splitting of the transport and chemistry operators. The
-convective flux $\nabla\cdot(\phi C_i)$ is discretized with a bounded
+convective term $\nabla\cdot(\bm{u}_D C_i)$ is discretized with a bounded
 first-order upwind scheme, which is monotone and free of spurious oscillations
 on the unstructured image-based meshes used here. The diffusive term
 $\nabla\cdot(\theta D_i \nabla C_i)$ uses a second-order Gauss linear scheme
@@ -46,7 +46,10 @@ where $s_k$ (mol\,m$^{-2}$) is the user-prescribed site density for surface
 master species $k$, and $a_{\mathrm{surf}}/\theta$ is the surface area per
 unit water volume (Eq.~\eqref{eq:asurf_water}). This initialises the total
 reactive capacity of the surface in each cell consistently with the
-field-level surface area.
+field-level surface area. The factor $1/\theta$ therefore enters only in the
+conversion from the bulk-based field $a_{\mathrm{surf}}$ to the water-volume
+basis required by PHREEQC; it is not part of the geometric or image-based
+estimation of $a_{\mathrm{surf}}$ itself.
 
 The $a_{\mathrm{surf}}$ field is computed from the segmented image before the
 simulation begins (Section~\ref{sec:aSurf}) and is held constant throughout
@@ -73,7 +76,7 @@ with the number of cores used for the transport solve.
 \subsection{Per-Timestep Algorithm}
 
 At each timestep the solver executes the following sequence. First, the face
-flux $\phi$ is read or updated from the DBS flow solution. Second, each
+Darcy velocity $\bm{u}_D$ is read or updated from the DBS flow solution. Second, each
 aqueous transport equation is advanced in conservative DBS form using the
 implicit Euler--upwind discretization described above.
 Third, the updated aqueous concentrations and surface states are pushed into

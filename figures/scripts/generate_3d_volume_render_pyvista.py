@@ -6,11 +6,28 @@ import argparse
 import re
 from pathlib import Path
 
+from matplotlib.colors import ListedColormap
 import numpy as np
 import vtk
 import pyvista.plotting._vtk as _pv_vtk
 _pv_vtk.vtkRenderWindow = vtk.vtkEGLRenderWindow
 import pyvista as pv
+
+
+SOFT_BLUE_CMAP = ListedColormap(
+    [
+        "#eef5ff",
+        "#dbeafe",
+        "#bfdbfe",
+        "#93c5fd",
+        "#60a5fa",
+        "#3b82f6",
+        "#2563eb",
+        "#1d4ed8",
+        "#1e3a8a",
+    ]
+)
+SECOND_AQUEOUS_OPACITY = [0.0, 0.0, 0.004, 0.010, 0.022, 0.045, 0.085, 0.140]
 
 
 def parse_scalar_field(path: Path) -> list[float]:
@@ -244,22 +261,25 @@ def add_volume_panel(
     subplot: tuple[int, int],
     title: str,
     scalar_bar_title: str,
-    cmap: str,
+    cmap,
     nx: int,
     ny: int,
     nz: int,
     panel_label: str = "b",
-    grid_shape: tuple[int, int] = (1, 3),
+    shade: bool = True,
+    opacity: list[float] | None = None,
 ) -> None:
     plotter.subplot(*subplot)
     plotter.set_background("white")
+    if opacity is None:
+        opacity = [0.0, 0.0, 0.01, 0.04, 0.10, 0.20, 0.38, 0.62]
     plotter.add_volume(
         dataset,
         scalars="value",
         cmap=cmap,
         clim=(0.0, 1.0),
-        opacity=[0.0, 0.0, 0.03, 0.10, 0.24, 0.45, 0.75, 1.0],
-        shade=True,
+        opacity=opacity,
+        shade=shade,
         ambient=0.25,
         diffuse=0.85,
         specular=0.10,
@@ -317,6 +337,8 @@ def main() -> None:
     parser.add_argument("--second-aqueous-field", default=None)
     parser.add_argument("--second-aqueous-title", default=None)
     parser.add_argument("--second-aqueous-log-scale", action="store_true")
+    parser.add_argument("--second-aqueous-cmap", default="soft_blues")
+    parser.add_argument("--second-aqueous-no-shade", action="store_true")
     args = parser.parse_args()
 
     pv.OFF_SCREEN = True
@@ -418,19 +440,25 @@ def main() -> None:
             log_scale=args.second_aqueous_log_scale,
             zero_mask=False,
         )
+        # Most of the Ca field sits near the upper end, so darken the upper range
+        # to recover visible tonal structure instead of a single pale block.
+        second_scaled = np.power(second_scaled, 2.0)
         second_img = build_image_data(second_scaled)
         aq2_title = args.second_aqueous_title if args.second_aqueous_title else f"{args.second_aqueous_field} / C_in"
+        second_cmap = SOFT_BLUE_CMAP if args.second_aqueous_cmap == "soft_blues" else args.second_aqueous_cmap
         add_volume_panel(
             plotter=plotter,
             dataset=second_img,
             subplot=(1, 0),
             title=aq2_title,
             scalar_bar_title=aq2_title,
-            cmap="cividis_r",
+            cmap=second_cmap,
             nx=nx,
             ny=ny,
             nz=nz,
             panel_label="(c)",
+            shade=not args.second_aqueous_no_shade,
+            opacity=SECOND_AQUEOUS_OPACITY,
         )
         add_volume_panel(
             plotter=plotter,

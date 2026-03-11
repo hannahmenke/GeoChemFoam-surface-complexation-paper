@@ -259,8 +259,9 @@ with Ca$^{2+}$ on the first PHREEQC step before the Zn$^{2+}$ front arrives.
 Site density is $2.4\times10^{-9}$~mol~m$^{-2}$ and
 $a_{\mathrm{surf,intr}} = 10^{5}$~m$^{-1}$ in the micropore phase.
 
-Figure~\ref{fig:3DKelvin} shows the geometry and 3D volume renders of the
-dissolved and adsorbed fields at $t = 12$~s.
+Figure~\ref{fig:3DKelvin} shows the geometry and 3D volume renders of both
+competing dissolved species and their corresponding surface-loading changes at
+$t = 12$~s.
 Figure~\ref{fig:KelvinTemporal} shows the temporal evolution of domain-mean
 Ca$^{2+}$ and Zn$^{2+}$ (normalised by their respective inlet concentrations)
 and the incremental surface loadings \texttt{Surf\_aCa+} and \texttt{Surf\_aZn+}
@@ -273,12 +274,16 @@ Surf\_aZn$^+$ accumulates while Surf\_aCa$^+$ is progressively displaced.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{3D volume renders of the Kelvin competitive-sorption case at $t = 12$~s.
+    \caption{Five-panel 3D competition snapshot for the Kelvin case at $t = 12$~s.
     (a)~Segmented geometry: micropore diamond lattice in blue, pore space in grey.
     (b)~Normalised dissolved Zn$^{2+}$ / $C_{\mathrm{in}}$; the advancing front enters
     from the left.
-    (c)~Adsorbed Zn$^{2+}$ (\texttt{Surf\_aZn+}), concentrated in the microporous
-    diamond-lattice channels.}
+    (c)~Normalised dissolved Ca$^{2+}$ / $C_{\mathrm{init}}$.
+    (d)~Incremental Zn surface loading (\mbox{$\Delta$\texttt{Surf\_aZn+}}),
+    concentrated in the microporous diamond-lattice channels.
+    (e)~Magnitude of the displaced Ca surface loading
+    (\mbox{$-\Delta$\texttt{Surf\_aCa+}}), showing where Zn$^{2+}$ has replaced
+    initially sorbed Ca$^{2+}$ on the reactive surface.}
     \label{fig:3DKelvin}
 \end{figure}
 
@@ -325,14 +330,21 @@ Sr$^{2+}$ = $10^{-4}$~mol~m$^{-3}$, Ca$^{2+}$ = 0 at pH~7.
 This produces a classic chromatographic exchange pattern: a Ca$^{2+}$
 desorption wave precedes the Sr$^{2+}$ adsorption front, and the effective
 retardation of Sr$^{2+}$ is lower than the single-species prediction because
-Ca$^{2+}$ still competes for sites ahead of the front. The domain-mean
-Sr$^{2+}$ rises from $7\%$ to $73\%$ of $C_{\mathrm{in}}$ between $t = 4$
-and $t = 120$~s, while the domain-mean Ca$^{2+}$ falls from $91\%$ to $7\%$
-of its initial value. Near-solid cells (\mbox{$\theta \le 10^{-3}$}) are
-masked from the reactive-surface field.
+Ca$^{2+}$ still competes for sites ahead of the front. Over the saved output
+sequence used here ($t = 0, 20, 40, 60, 80, 100$~s), the domain-mean
+Sr$^{2+}$ rises from approximately $0.13$ to $0.53$ of
+$C_{\mathrm{in}}$, while the domain-mean Ca$^{2+}$ falls from approximately
+$0.85$ to $0.35$ of $C_{\mathrm{init}}$. Over the same interval,
+\mbox{$\Delta$\texttt{Surf\_aSr+}} increases monotonically while
+\mbox{$\Delta$\texttt{Surf\_aCa+}} becomes progressively more negative,
+quantifying the net replacement of Ca$^{2+}$ by Sr$^{2+}$ on the reactive
+surface. Near-solid cells (\mbox{$\theta \le 10^{-3}$}) are masked from the
+reactive-surface field.
 
 Figure~\ref{fig:3DEstaillades} shows the geometry and 3D volume renders of the
 dissolved and adsorbed fields at $t = 40$~s.
+Figure~\ref{fig:EstailladesTemporal} summarises the corresponding domain-mean
+exchange history.
 
 \begin{figure}[htbp]
     \centering
@@ -347,4 +359,20 @@ dissolved and adsorbed fields at $t = 40$~s.
     (d)~Incremental adsorbed Sr$^{2+}$ (\mbox{$\Delta$\texttt{Surf\_aSr+}},
     log scale), concentrated in the micropore network at the exchange front.}
     \label{fig:3DEstaillades}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig08_estaillades_temporal.png}
+    \caption{Temporal evolution of domain-mean fields for the Estaillades DGR
+    case ($t = 0$--$100$~s, writeInterval $= 20$~s).
+    Left: domain-mean dissolved Ca$^{2+}$ and Sr$^{2+}$ normalised by
+    $C_{\mathrm{init}}$ and $C_{\mathrm{in}}$, respectively.
+    Right: normalised incremental domain-mean surface loading
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}} and \mbox{$\Delta$\texttt{Surf\_aSr+}}),
+    defined relative to their values at $t = 0$.
+    The curves make the chromatographic exchange explicit: Sr$^{2+}$ invades and
+    accumulates on the surface while Ca$^{2+}$ is displaced from both the
+    aqueous and sorbed phases.}
+    \label{fig:EstailladesTemporal}
 \end{figure}

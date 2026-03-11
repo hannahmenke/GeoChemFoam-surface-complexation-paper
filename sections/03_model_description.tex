@@ -8,14 +8,14 @@ a cell-centred porosity field $\epsilon_{\mathrm{num}}$ varies smoothly from
 zero (solid) to unity (open pore). The steady incompressible flow is governed
 by the Darcy--Brinkman equations:
 \begin{align}
-\nabla \cdot \bm{\phi} &= 0,
+\nabla \cdot \bm{u}_D &= 0,
 \label{eq:continuity} \\
 -\nabla p + \nabla \cdot \bigl(\mu_{\mathrm{eff}} \nabla \bm{u}\bigr)
-- \frac{\mu}{K(\epsilon_{\mathrm{num}})}\,\bm{\phi} &= \bm{0},
+- \frac{\mu}{K(\epsilon_{\mathrm{num}})}\,\bm{u}_D &= \bm{0},
 \label{eq:brinkman}
 \end{align}
-where $\bm{\phi} = \epsilon_{\mathrm{num}}\bm{u}$ is the volumetric (Darcy)
-flux, $\mu$ is the fluid viscosity, $\mu_{\mathrm{eff}}$ is an effective
+where $\bm{u}_D = \epsilon_{\mathrm{num}}\bm{u}$ is the Darcy velocity,
+$\mu$ is the fluid viscosity, $\mu_{\mathrm{eff}}$ is an effective
 viscosity that smoothly recovers the Stokes equation in open-pore cells
 \citep{soulaine2016micro}, and $K(\epsilon_{\mathrm{num}})$ is a permeability
 function that enforces a no-slip condition in solid-like cells via a large
@@ -32,8 +32,8 @@ cells. The third is the reactive internal surface area per bulk volume
 $a_{\mathrm{surf}}$ (m$^2$\,m$^{-3}$), which represents surface available for
 adsorption and surface complexation. All aqueous species, together with
 $\theta$, $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the adsorbed
-surface fields, are treated as cell-centred variables. The volumetric flux
-$\bm{\phi}$ is face-centred.
+surface fields, are treated as cell-centred variables. The Darcy velocity
+$\bm{u}_D$ is face-centred.
 
 \subsection{Reactive Surface Area Field}
 \label{sec:aSurf}
@@ -113,6 +113,15 @@ in a microporous cell with small $\theta$, the same bulk surface area density
 is concentrated in a proportionally smaller water volume, yielding a higher
 effective surface-to-water ratio. In a fully open macro-pore cell ($\theta
 \approx 1$) the factor reduces to a simple unit conversion.
+Importantly, the division by $\theta$ is \emph{not} part of the image-based
+construction of $a_{\mathrm{surf}}$ itself. Any surface area estimated from
+nano-CT, micro-CT, FIB-SEM, or other image data must first be expressed on a
+bulk-volume basis (m$^2$\,m$^{-3}_{\mathrm{bulk}}$), consistent with
+Eqs.~\eqref{eq:asurf}--\eqref{eq:asurf_intrinsic}. Only after that bulk-based
+field has been assembled is the factor $1/\theta$ applied to obtain the area
+per unit water volume required by PHREEQC. If an image-derived surface area is
+instead reported per microporous-phase volume or per grain mass, it must be
+converted to the bulk-volume basis before applying Eq.~\eqref{eq:asurf_water}.
 
 Critically, the numerical porosity $\epsilon_{\mathrm{num}}$ does not appear
 in Eq.~\eqref{eq:asurf_water}. Its role is confined to the DBS momentum
@@ -128,10 +137,10 @@ For each aqueous species with concentration $C_i$, the conservative DBS
 transport equation is written as
 \begin{equation}
 \frac{\partial (\theta C_i)}{\partial t}
-+ \nabla \cdot (\phi C_i)
++ \nabla \cdot (\bm{u}_D C_i)
 - \nabla \cdot (\theta D_i \nabla C_i) = 0,
 \end{equation}
-where $\phi$ is the volumetric flux field obtained from a prior
+where $\bm{u}_D$ is the Darcy velocity obtained from a prior
 Darcy--Brinkman--Stokes flow solve, and $D_i$ is the diffusivity assigned to
 species $i$. In fully resolved macro-pore cells ($\theta \approx 1$), $D_i$
 is the free molecular diffusivity. In cells that represent microporous
@@ -152,7 +161,7 @@ For a vector of aqueous species $\bm{C}$, the transport step can be written in
 compact form as
 \begin{equation}
 \frac{\partial (\theta \bm{C})}{\partial t}
-+ \nabla \cdot (\phi \bm{C})
++ \nabla \cdot (\bm{u}_D \bm{C})
 - \nabla \cdot (\theta \bm{D} \nabla \bm{C}) = \bm{0},
 \end{equation}
 which makes the conservative structure explicit before any chemistry update is
@@ -229,7 +238,7 @@ the conservative baseline is fully established.
 
 At the algorithmic level, one timestep of size $\Delta t$ is:
 \begin{align}
-\bm{C}^{n+1/2} &= \mathcal{T}_{\Delta t}(\bm{C}^{n}, \theta, \phi, \bm{D}),\\
+\bm{C}^{n+1/2} &= \mathcal{T}_{\Delta t}(\bm{C}^{n}, \theta, \bm{u}_D, \bm{D}),\\
 (\bm{C}^{n+1}, \bm{\Gamma}^{n+1}) &=
 \mathcal{R}_{\Delta t}(\bm{C}^{n+1/2}, \bm{\Gamma}^{n}, \theta, a_{\mathrm{surf}}),
 \end{align}
@@ -263,7 +272,7 @@ time derivative yields the retarded 1D transport equation
 \left(
 \theta + \frac{a_{\mathrm{surf}}}{\theta}K_{s,\mathrm{field}}
 \right)\frac{\partial C}{\partial t}
-+ \frac{\partial (\phi C)}{\partial x} = 0.
++ \frac{\partial (u_D C)}{\partial x} = 0.
 \end{equation}
 The corresponding retardation factor is
 \begin{equation}
@@ -276,7 +285,7 @@ and $\theta$. Both $a_{\mathrm{surf}}$ and $\theta$ can vary spatially, so
 Eq.~\eqref{eq:retardation} also gives the local retardation at any point in
 a heterogeneous domain. The analytical advection-diffusion profile against
 which the numerical results are compared follows \citet{ogata1961solution},
-with the pore velocity $u/\theta$ replaced by $u/(\theta R_{\mathrm{field}})$
+with the advection velocity $u_D/\theta$ replaced by $u_D/(\theta R_{\mathrm{field}})$
 and the diffusivity replaced by $D/R_{\mathrm{field}}$.
 
 \subsection{Validation Requirements}
