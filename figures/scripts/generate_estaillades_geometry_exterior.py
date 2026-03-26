@@ -7,6 +7,7 @@ from pathlib import Path
 
 from matplotlib.colors import ListedColormap
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 import vtk
 import pyvista.plotting._vtk as _pv_vtk
 
@@ -21,6 +22,43 @@ from generate_3d_volume_render_pyvista import (
 
 
 PHASE_CMAP = ListedColormap(["#fafafa", "#9a9a9a", "#111111"])
+
+
+def add_legend(image_path: Path) -> None:
+    image = Image.open(image_path).convert("RGB")
+    draw = ImageDraw.Draw(image)
+    try:
+        font = ImageFont.truetype("DejaVuSansMono.ttf", 46)
+    except OSError:
+        font = ImageFont.load_default()
+
+    box_x = 82
+    box_size = 44
+    text_x = box_x + box_size + 18
+    entries = [
+        ("#fafafa", "#000000", "Solid"),
+        ("#9a9a9a", "#000000", "Micropore"),
+        ("#111111", "#111111", "Pore"),
+    ]
+    top_y = image.height - 250
+    line_gap = 66
+
+    draw.rounded_rectangle(
+        (50, top_y - 30, 455, top_y + 3 * line_gap + 18),
+        radius=10,
+        fill=(255, 255, 255),
+    )
+    for idx, (fill, outline, label) in enumerate(entries):
+        y = top_y + idx * line_gap
+        draw.rectangle(
+            (box_x, y, box_x + box_size, y + box_size),
+            fill=fill,
+            outline=outline,
+            width=2,
+        )
+        draw.text((text_x, y - 2), label, fill=outline, font=font)
+
+    image.save(image_path)
 
 
 def make_face_mesh(labels_2d: np.ndarray, axis: str, index: int, nx: int, ny: int, nz: int) -> pv.StructuredGrid:
@@ -119,6 +157,7 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     plotter.screenshot(str(args.output))
+    add_legend(args.output)
 
 
 if __name__ == "__main__":

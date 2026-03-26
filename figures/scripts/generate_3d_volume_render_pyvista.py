@@ -636,13 +636,13 @@ def add_interface_surface_panel(
             smooth_shading=False,
             show_edges=False,
             nan_color="#d8d8d8",
-            nan_opacity=0.08,
+            nan_opacity=0.02,
             scalar_bar_args=scalar_bar_args,
         )
         plotter.add_mesh(
             surface_mesh,
             color="#b5b5b5",
-            opacity=0.025,
+            opacity=0.008,
             style="wireframe",
             line_width=0.35,
             smooth_shading=False,

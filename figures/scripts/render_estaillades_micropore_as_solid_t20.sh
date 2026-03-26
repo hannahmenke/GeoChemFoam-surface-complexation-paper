@@ -24,7 +24,7 @@ connectivity_image="$repo_root/images/raw/Est_3phase500cubed4micron.raw.tar.gz"
   --connectivity-remap-from 2 \
   --connectivity-remap-to 3 \
   --surface-render-mode interface_surface \
-  --surface-interface-clip-fraction 0.60 \
+  --surface-interface-clip-fraction 1.00 \
   --surface-log-scale \
   --surface-title "Surf_aSr+" \
   --output "$output_png"
