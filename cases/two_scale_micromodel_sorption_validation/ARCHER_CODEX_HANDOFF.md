@@ -119,7 +119,13 @@ physical times.
    - Add any required `module load ...` commands.
    - Source the GeoChemFoam environment if the submission shell does not
      already do it.
-4. From this directory, submit all production jobs:
+4. Before submitting, check project quota and filesystem capacity. Estimate the
+   scratch and archive requirement for each `(case, Pe)` job, then confirm both
+   filesystems have that much free space below quota. The Slurm script performs
+   a conservative `df`-based preflight and exits before running if either
+   scratch or archive space is below the estimate, but the agent should still
+   inspect quota explicitly on the target system.
+5. From this directory, submit all production jobs:
 
 ```bash
 ./submit_archer_two_scale_all.sh
@@ -168,6 +174,34 @@ Important files there:
 - `<case>/simpleDBSFoamFlow.out`
 - `<case>/processPoroPermFlow.out`
 - selected processor time fields for aqueous and sorbed species
+
+## Disk and Quota Preflight
+
+Before launching production jobs, estimate required storage for each case and
+compare it with both scratch and archive quota. The submitted job writes full
+OpenFOAM processor fields during runtime and then synchronizes selected fields
+for analysis. With ASCII OpenFOAM fields and ten output intervals, a resolved
+case can require hundreds of gigabytes to more than a terabyte of working space
+depending on how many fields are retained.
+
+The Slurm script estimates storage from:
+
+```text
+cells * bytes_per_scalar_ascii * archived_fields * write_count
+```
+
+with additional runtime and safety multipliers. It reports:
+
+```text
+estimated_required
+scratch_available
+archive_available
+```
+
+and exits before copying/running if either filesystem is too small. On ARCHER,
+also run the site quota command for the relevant project/work filesystems
+before submission, because `df` free space does not necessarily mean the project
+quota is available.
 
 ## Post-Run Checks
 

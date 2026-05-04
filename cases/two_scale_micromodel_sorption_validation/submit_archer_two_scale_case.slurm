@@ -18,6 +18,69 @@ archive_dir="${TWO_SCALE_ARCHIVE_DIR:-$submit_dir/results/archer/$case_root_name
 
 mkdir -p "$work_dir" "$archive_dir"
 
+TARGET_CASE="${TARGET_CASE:-resolved-reference}"
+TARGET_PE="${TARGET_PE:-1}"
+RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-10}"
+
+estimate_bytes() {
+  python - <<'PY' "$TARGET_CASE" "$RT_CHECKPOINT_COUNT"
+import sys
+
+case_name = sys.argv[1]
+checkpoint_count = max(1, int(float(sys.argv[2])))
+if case_name == "resolved-reference":
+    cells = 18000 * 6000
+elif case_name == "dbs-upscaled":
+    cells = 3600 * 1200
+else:
+    raise SystemExit(f"unknown TARGET_CASE: {case_name}")
+
+write_count = checkpoint_count + 1  # includes time 0
+bytes_per_scalar_ascii = 22
+archived_fields = 11
+runtime_field_multiplier = 2.0
+safety_factor = 2.5
+estimated = (
+    cells
+    * bytes_per_scalar_ascii
+    * archived_fields
+    * write_count
+    * runtime_field_multiplier
+    * safety_factor
+)
+print(int(estimated))
+PY
+}
+
+available_bytes() {
+  df -PB1 "$1" | awk 'NR==2 {print $4}'
+}
+
+human_bytes() {
+  numfmt --to=iec --suffix=B "$1" 2>/dev/null || echo "${1} B"
+}
+
+required_bytes="${TWO_SCALE_REQUIRED_BYTES:-$(estimate_bytes)}"
+scratch_available="$(available_bytes "$work_dir")"
+archive_available="$(available_bytes "$archive_dir")"
+
+echo "=== Disk/quota preflight ==="
+echo "TARGET_CASE=$TARGET_CASE"
+echo "TARGET_PE=$TARGET_PE"
+echo "RT_CHECKPOINT_COUNT=$RT_CHECKPOINT_COUNT"
+echo "estimated_required=$(human_bytes "$required_bytes")"
+echo "scratch_available=$(human_bytes "$scratch_available") at $work_dir"
+echo "archive_available=$(human_bytes "$archive_available") at $archive_dir"
+
+if [ "$scratch_available" -lt "$required_bytes" ]; then
+  echo "Insufficient scratch space for estimated run output." >&2
+  exit 3
+fi
+if [ "$archive_available" -lt "$required_bytes" ]; then
+  echo "Insufficient archive space for estimated synchronized output." >&2
+  exit 3
+fi
+
 sync_back() {
   rc=$?
   mkdir -p "$archive_dir"
@@ -80,8 +143,8 @@ export OMP_NUM_THREADS=1
 # module load ...
 # source /path/to/GeoChemFoam/etc/bashrc
 
-export TARGET_CASE="${TARGET_CASE:-resolved-reference}"
-export TARGET_PE="${TARGET_PE:-1}"
+export TARGET_CASE
+export TARGET_PE
 
 # 50 ARCHER2 nodes x 128 MPI ranks per node = 6400 ranks. These decompositions
 # keep NPZ=1 because the benchmark is a one-cell-thick 2D extrusion.
@@ -95,7 +158,7 @@ export DBS_NPZ="${DBS_NPZ:-1}"
 export RT_TIMESTEP_REF_PE="${RT_TIMESTEP_REF_PE:-1}"
 export RT_TIMESTEP_REF="${RT_TIMESTEP_REF:-0.01}"
 export RT_TIMESTEP_MAX="${RT_TIMESTEP_MAX:-0.1}"
-export RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-10}"
+export RT_CHECKPOINT_COUNT
 
 echo "=== ARCHER2 two-scale single-case job ==="
 echo "submit_dir=$submit_dir"

@@ -106,3 +106,9 @@ results back to `results/archer/<case>_<Pe>_<jobid>/`. The default 6400-rank
 decomposition is `160 x 40 x 1` for both cases; override `RESOLVED_NPX`,
 `RESOLVED_NPY`, `DBS_NPX`, or `DBS_NPY` at submission time if the site-specific
 performance test suggests a better layout.
+
+Before submitting production jobs, estimate storage for each run and confirm
+that both scratch and archive filesystems have enough free space below quota.
+`submit_archer_two_scale_case.slurm` includes a conservative disk-space
+preflight and exits before running if either filesystem is too small, but the
+ARCHER project quota should still be checked explicitly on the target system.
