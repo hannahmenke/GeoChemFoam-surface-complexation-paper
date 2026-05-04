@@ -48,7 +48,7 @@ def main() -> None:
         },
         "diffusion_m2_per_s": diffusion,
         "domain_length_m": 18.0e-3,
-        "target_front_fraction": 2.0 / 3.0,
+        "target_front_fraction": 1.0,
         "runtime_safety_factor": 1.25,
         "matrix_longitudinal_effective_diffusion_m2_per_s": diffusion
         * longitudinal_dispersion_multiplier(target_pe),

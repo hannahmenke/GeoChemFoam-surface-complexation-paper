@@ -16,6 +16,9 @@ physical domain at multiple Peclet numbers.
     5 micrometre resolution. Vugs are resolved; matrix porosity, intrinsic
     surface area, and longitudinal effective diffusion come from the matrix REV.
 - Pe sweep: `Pe=1 0.3 0.1`.
+- Runtime target: the advective front reaches the outlet (`x/L = 1`) with a
+  safety factor. Lower-Pe jobs therefore run for proportionally longer physical
+  times.
 - Comparison target: aqueous transport, surface area controlled sorption, and
   total/local sorbed inventory differences between resolved and DBS cases.
 
@@ -62,6 +65,28 @@ Pe=0.1  RT_TIMESTEP=0.1
 Use `RT_TIMESTEP_OVERRIDE` only if intentionally forcing a single timestep for
 diagnostics. Do not use a stale `RT_TIMESTEP` environment variable to drive a
 production sweep.
+
+## Runtime Policy
+
+The production run duration is recomputed for each Pe from the Pe-matched pore
+velocity:
+
+```text
+front_time = L / pore_velocity
+RT_TOTAL_TIME = runtime_safety_factor * max(front_time_resolved, front_time_DBS)
+```
+
+The default `runtime_safety_factor` is `1.25`. Approximate timings from the
+current Pe=1 calibration are:
+
+```text
+Pe=1    RT_TOTAL_TIME ~ 204 s
+Pe=0.3  RT_TOTAL_TIME ~ 679 s
+Pe=0.1  RT_TOTAL_TIME ~ 2036 s
+```
+
+These are longer than the earlier exploratory local runs, which targeted only
+partial front penetration.
 
 ## Files To Know
 
@@ -150,6 +175,8 @@ For each completed job:
 4. Confirm the first and final written times exist in processor directories.
 5. For Pe=1, inspect the early checkpoint before trusting the rest of the run:
    the Li front should move consistently with the flow-derived pore velocity.
+6. At the final time, confirm the front has reached or passed the outlet before
+   using the run in the paper figures.
 
 ## Why Jobs Are Split
 
