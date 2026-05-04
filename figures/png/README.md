@@ -29,20 +29,37 @@ Current staged figures:
   - right: log-scale Hfo_sOPb⁺/Hfo_s,total strong-site occupancy at `t = 20000`
   - uses the higher-load Pb case (`C_in = 10^-3 mol m^-3`), showing strong but incomplete retardation by HFO
 - `fig03_3d_kelvin.png`
-  - five-panel Kelvin competition figure, t = 12 s
+  - five-panel Kelvin competition figure, t = 120 s
   - top: segmented geometry
-  - lower 2x2: dissolved Zn²⁺, dissolved Ca²⁺, ΔSurf_aZn⁺, and -ΔSurf_aCa⁺
+  - lower 2x2: dissolved Mn²⁺, dissolved Mg²⁺, ΔHFO-Mn, and displaced HFO-Mg
 - `fig04_3d_estaillades.png`
   - matplotlib 3D slice panels (generate_3d_field_panels.py), t = 40s
   - left: dissolved Sr²⁺ (DGR leachate front advancing through limestone pore structure)
   - right: adsorbed Sr (Surf_aSr⁺) in micropore phase
 - `fig07_kelvin_temporal.png`
-  - two-panel temporal evolution for Kelvin Zn²⁺/Ca²⁺ competitive sorption
-  - left: domain-mean Ca²⁺ and Zn²⁺ / C_in vs time (31 time points)
-  - right: normalised incremental Surf_aCa⁺ and Surf_aZn⁺ domain-mean vs time
+  - two-panel temporal evolution for Kelvin Mn²⁺/Mg²⁺ competitive sorption
+  - left: domain-mean Mg²⁺ excess above background and Mn²⁺/C_in vs time
+  - right: normalised incremental HFO-Mn and displaced HFO-Mg domain-mean vs time
 - `fig08_estaillades_temporal.png`
   - two-panel temporal evolution for Estaillades Sr²⁺/Ca²⁺ chromatographic exchange
   - left: domain-mean Ca²⁺ / C_init and Sr²⁺ / C_in vs time (6 time points)
   - right: normalised incremental Surf_aCa⁺ and Surf_aSr⁺ domain-mean vs time
 
 The LaTeX draft already references these as the expected final PNG outputs.
+
+Repeatable figure commands:
+
+- 1D validation figures:
+  - `../scripts/render_1d_validation_figures.sh`
+- 2D fracture figure:
+  - `../scripts/render_2d_fractures_figure.sh`
+- Kelvin Mn/Mg figures:
+  - `../scripts/render_kelvin_cuzn_figures.sh`
+- Estaillades figures:
+  - `../scripts/render_estaillades_figures.sh`
+- surface-area validation figures:
+  - `../scripts/render_surface_area_validation_figures.sh`
+- two-scale lithium sorption validation:
+  - `../scripts/render_two_scale_lithium_sorption_validation.sh`
+- all core manuscript figures with completed outputs available:
+  - `../scripts/render_core_manuscript_figures.sh`

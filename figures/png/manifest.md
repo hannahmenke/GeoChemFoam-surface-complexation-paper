@@ -11,7 +11,13 @@
   - cell-averaged analytical retarded reference
   - normalized surface-loading profile
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/runAll.sh`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_retardation_plot.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_1d_validation_figures.sh`
 
 ## Figure 2
 
@@ -30,7 +36,13 @@
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh`
 
 ## Figure 3
 
@@ -40,17 +52,21 @@
   - Test Cases / Simple 3D
 - content:
   - top-centred geometry panel
-  - lower 2x2 grid of true 3D volume renders for dissolved Zn²⁺, dissolved Ca²⁺,
-    incremental Surf_aZn⁺, and displaced Surf_aCa⁺
+  - lower 2x2 grid of true 3D volume renders for dissolved Mn²⁺, dissolved Mg²⁺,
+    incremental HFO-Mn, and displaced HFO-Mg
 - chemistry:
-  - Zn²⁺ + Ca²⁺ competing for Surf_a sites; Zn²⁺ log_k −4.0 vs Ca²⁺ log_k −5.85
-  - Ca²⁺ uniform background (1×10⁻⁴ mol/L); Zn²⁺ inlet 1×10⁻⁵ mol/L
+  - Mn²⁺ + Mg²⁺ competing for two-site Dzombak-Morel HFO sites
+  - Mn²⁺ log_k values: Hfo_s −0.40, Hfo_w −3.50
+  - Mg²⁺ log_k value: Hfo_w −4.60
+  - Mg²⁺ uniform background (1×10⁻³ mol/m³); Mn²⁺ inlet 1×10⁻⁵ mol/m³
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_kelvin`
 - reported time:
-  - `t = 12`
+  - `t = 120`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_kelvin_competition_figure.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_kelvin_cuzn_figures.sh`
 
 ## Figure 4
 
@@ -68,11 +84,15 @@
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/runAll.sh`
 - reported time:
   - `t = 40`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh`
 
 ## Figure 5
 
@@ -83,6 +103,8 @@
 - content:
   - schematic of the operator-splitting loop between transport and PHREEQC
 - renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_solver_workflow.py`
+- repeatable command:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_solver_workflow.py`
 
 ## Figure 6
@@ -96,9 +118,13 @@
   - Ogata-Banks analytical reference curves for both cases
   - breakthrough time markers
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/runAll.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_breakthrough_plot.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_1d_validation_figures.sh`
 
 ## Figure 7
 
@@ -107,15 +133,17 @@
 - section:
   - Test Cases / Simple 3D
 - content:
-  - left panel: domain-mean Ca²⁺/C_in and Zn²⁺/C_in vs time (competitive sorption)
-  - right panel: normalised incremental domain-mean Surf_aCa⁺ and Surf_aZn⁺ vs time
-  - 31 time points: t = 0, 4, 8, ..., 120 (writeInterval=4, endTime=120)
+  - left panel: pore-volume weighted Mn²⁺/C_in and pore-volume weighted Mg²⁺ excess above background vs time
+  - right panel: normalised signed surface-area-weighted changes in HFO-Mn and HFO-Mg vs time
+  - 11 plotted time points: t = 0, 12, 24, ..., 120 (sampled from writeInterval=4 output)
 - chemistry:
-  - Ca²⁺ background at inlet and initial; Zn²⁺ inlet only; competing for Surf_a sites
+  - Mg²⁺ background at inlet and initial; Mn²⁺ inlet only; competing for HFO sites
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_kelvin`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_kelvin_temporal_plot.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_kelvin_cuzn_figures.sh`
 
 ## Figure 8
 
@@ -130,6 +158,110 @@
 - chemistry:
   - Sr²⁺ leachate displacing Ca²⁺ from pre-loaded Surf_a sites in Estaillades micropores
 - source case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/runAll.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_estaillades_temporal_plot.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh`
+
+## Figure 9
+
+- target file:
+  - `fig09_sphere_surface_area_validation.png`
+- section:
+  - Validation / Controlled Surface-Area Validation
+- content:
+  - relative error in integrated surface area versus the analytic 3D sphere
+  - relative error in integrated surface area versus the analytic 2D circular post
+  - comparison of `snappyHexMesh`, staircase DBS, and smooth-interface DBS where applicable
+- source assets:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_sphere_surface_area_benchmark/results`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
+  - DBS circular-post metrics generated analytically by the renderer
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_sphere_surface_area_validation.py`
+- repeatable command:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_surface_area_validation_figures.sh`
+
+## Figure 10
+
+- target file:
+  - `fig10_hm12_surface_area_validation.png`
+- section:
+  - Validation / Micromodel Image-Based Surface-Area Validation
+- content:
+  - micromodel three-case panel at `t = 200`
+  - resolved-wall `snappyHexMesh`, DBS `|\nabla \varepsilon|`, and DBS `smoothSurface`
+  - aqueous Sr/C_in fields, cell-wise reactive area, and sorbed inventory fields
+- source asset:
+  - generated directly from the micromodel case outputs once all three comparison cases are available
+- note:
+  - the paper-facing figure is only rendered when the `snappyHexMesh`,
+    `DBS |\nabla \varepsilon|`, and `DBS smoothSurface` outputs all exist
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_surface_area_validation_figures.sh`
+
+## Figure 11
+
+- target file:
+  - `fig11_3d_external_surface_area_validation.png`
+- section:
+  - Validation / 3D External Surface-Area Validation
+- content:
+  - translucent 3D render of the connected Estaillades external pore-grain surface with micropore label remapped to solid
+  - external pore-solid surface area only, excluding intrinsic micropore area
+  - `snappyHexMesh` wall area binned to the image grid, DBS `|\nabla \varepsilon|` area, DBS `smoothSurface` area, projected differences, and axial area profiles at `t = 2.5`
+- source case:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation`
+- note:
+  - snappy wall faces are binned to the Cartesian crop for the projected-area panels; global area and sorbed inventory are computed on each method's native support
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/runAllParallel.sh`
+- case analyzer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/scripts/analyze_external_flow_validation.py`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_3d_external_surface_area_validation.sh`
+
+## Figure 12
+
+- target file:
+  - `fig12_two_scale_lithium_nested_geometries.png`
+- section:
+  - Validation / Two-Scale Micromodel Sorption Benchmark
+- content:
+  - nested geometry hierarchy following the dispersivity-paper benchmark structure
+  - full long two-scale micromodel
+  - full-model resolved REV
+  - resolved matrix REV used to parameterise the upscaled matrix
+- source assets:
+  - `longTSmicromodelDBS.raw.tar.gz`
+  - `TSmicromodel6000.raw.tar.gz`
+- source case:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/runPeSweep.sh`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_two_scale_lithium_sorption_validation.sh`
+
+## Figure 13
+
+- target file:
+  - `fig13_two_scale_lithium_sorption_validation.png`
+- section:
+  - Validation / Two-Scale Micromodel Sorption Benchmark
+- content:
+  - axial aqueous Li inventory distribution
+  - global DBS mismatch versus Peclet number
+  - axial sorbed Li inventory distribution
+- source case:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation`
+- reproducible entry point:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/runPeSweep.sh`
+- analyzer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/scripts/analyze_results.py`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_two_scale_lithium_sorption_validation.sh`
+- note:
+  - missing Pe sweep results are rendered as explicit placeholders until the archived `results/pe_sweep/pe_*` analysis outputs are available
