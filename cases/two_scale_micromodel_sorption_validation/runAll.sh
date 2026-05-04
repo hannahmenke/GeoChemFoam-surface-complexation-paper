@@ -73,7 +73,7 @@ python scripts/compute_matched_pe_flow_rates.py \
 source results/matched_pe_flow_rates.env
 export RT_TOTAL_TIME="${RT_TOTAL_TIME:-$RECOMMENDED_RT_TOTAL_TIME}"
 if [ -z "${RT_WRITE_TIMESTEP:-}" ]; then
-  RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-4}"
+  RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-10}"
   export RT_WRITE_TIMESTEP="$(
     python - <<'PY' "$RT_TOTAL_TIME" "$RT_CHECKPOINT_COUNT"
 import sys

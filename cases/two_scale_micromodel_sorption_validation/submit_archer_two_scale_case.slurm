@@ -95,7 +95,7 @@ export DBS_NPZ="${DBS_NPZ:-1}"
 export RT_TIMESTEP_REF_PE="${RT_TIMESTEP_REF_PE:-1}"
 export RT_TIMESTEP_REF="${RT_TIMESTEP_REF:-0.01}"
 export RT_TIMESTEP_MAX="${RT_TIMESTEP_MAX:-0.1}"
-export RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-4}"
+export RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-10}"
 
 echo "=== ARCHER2 two-scale single-case job ==="
 echo "submit_dir=$submit_dir"

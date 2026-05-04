@@ -88,6 +88,12 @@ Pe=0.1  RT_TOTAL_TIME ~ 2036 s
 These are longer than the earlier exploratory local runs, which targeted only
 partial front penetration.
 
+The default `RT_CHECKPOINT_COUNT` is `10`. The write interval is
+`RT_TOTAL_TIME / RT_CHECKPOINT_COUNT`, so outputs are written at 10%, 20%, ...,
+100% of each run. This keeps the resolved and DBS cases aligned by normalized
+front position for presentation even though lower-Pe cases run for longer
+physical times.
+
 ## Files To Know
 
 - `README.md`: human-facing overview.

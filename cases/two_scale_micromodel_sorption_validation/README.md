@@ -25,12 +25,14 @@ Run the complete benchmark with:
 For a Pe sweep:
 
 ```bash
-PE_SWEEP="1 0.3 0.1" RT_CHECKPOINT_COUNT=4 ./runPeSweep.sh
+PE_SWEEP="1 0.3 0.1" RT_CHECKPOINT_COUNT=10 ./runPeSweep.sh
 ```
 
 `RT_CHECKPOINT_COUNT` controls the number of intermediate
-reactive-transport write times. The default of four writes one checkpoint at
-approximately 25%, 50%, and 75% of the run, plus the final state. Before
+reactive-transport write intervals. The default of ten writes snapshots at
+10%, 20%, ..., 100% of the run. Because each Pe run computes its own total
+runtime from the matched pore velocity, these outputs align by normalized front
+position for presentation. Before
 reactive transport starts, `runAll.sh` writes `results/preflight_summary.md`
 with the calibrated Pe checks, flow rates, estimated front travel times, and
 chosen runtime. The production runtime targets the advective front reaching the
