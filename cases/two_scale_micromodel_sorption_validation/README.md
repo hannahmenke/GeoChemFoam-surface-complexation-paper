@@ -99,13 +99,13 @@ On ARCHER2, edit the account and environment setup in
 ```
 
 This submits `resolved-reference` and `dbs-upscaled` separately for
-`Pe=1 0.3 0.1`. Each job requests 50 nodes with 128 MPI ranks per node
-(6400 ranks total), copies the committed template into a per-job scratch
+`Pe=1 0.3 0.1`. Resolved-reference jobs request 50 nodes
+(`160 x 40 x 1`, 6400 ranks); DBS jobs request 2 nodes (`32 x 8 x 1`,
+256 ranks). Each job copies the committed template into a per-job scratch
 working directory, runs only its assigned Pe/case pair, and synchronizes
-results back to `results/archer/<case>_<Pe>_<jobid>/`. The default 6400-rank
-decomposition is `160 x 40 x 1` for both cases; override `RESOLVED_NPX`,
-`RESOLVED_NPY`, `DBS_NPX`, or `DBS_NPY` at submission time if the site-specific
-performance test suggests a better layout.
+results back to `results/archer/<case>_<Pe>_<jobid>/`. Override
+`RESOLVED_NPX`, `RESOLVED_NPY`, `DBS_NPX`, or `DBS_NPY` at submission time if
+the site-specific performance test suggests a better layout.
 
 Before submitting production jobs, estimate storage for each run and confirm
 that both scratch and archive filesystems have enough free space below quota.

@@ -146,13 +146,14 @@ export OMP_NUM_THREADS=1
 export TARGET_CASE
 export TARGET_PE
 
-# 50 ARCHER2 nodes x 128 MPI ranks per node = 6400 ranks. These decompositions
-# keep NPZ=1 because the benchmark is a one-cell-thick 2D extrusion.
+# The submit-all helper overrides node count by case: resolved jobs use 50
+# nodes and DBS jobs use 2 nodes. Keep NPZ=1 because the benchmark is a
+# one-cell-thick 2D extrusion.
 export RESOLVED_NPX="${RESOLVED_NPX:-160}"
 export RESOLVED_NPY="${RESOLVED_NPY:-40}"
 export RESOLVED_NPZ="${RESOLVED_NPZ:-1}"
-export DBS_NPX="${DBS_NPX:-160}"
-export DBS_NPY="${DBS_NPY:-40}"
+export DBS_NPX="${DBS_NPX:-32}"
+export DBS_NPY="${DBS_NPY:-8}"
 export DBS_NPZ="${DBS_NPZ:-1}"
 
 export RT_TIMESTEP_REF_PE="${RT_TIMESTEP_REF_PE:-1}"

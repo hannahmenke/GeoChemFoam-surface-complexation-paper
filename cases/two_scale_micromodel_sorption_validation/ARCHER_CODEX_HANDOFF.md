@@ -131,13 +131,12 @@ physical times.
 ./submit_archer_two_scale_all.sh
 ```
 
-By default each job requests:
+By default the submit-all helper requests:
 
 ```text
-nodes=50
-ntasks-per-node=128
-total MPI ranks=6400
-decomposition=160 x 40 x 1
+resolved-reference: nodes=50, total MPI ranks=6400, decomposition=160 x 40 x 1
+dbs-upscaled:       nodes=2,  total MPI ranks=256,  decomposition=32 x 8 x 1
+ntasks-per-node=128 for both
 walltime=24:00:00
 ```
 
