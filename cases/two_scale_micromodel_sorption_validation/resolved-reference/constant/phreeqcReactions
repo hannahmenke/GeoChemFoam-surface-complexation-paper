@@ -1,0 +1,57 @@
+TITLE Li-selective sorption from Na-Mg brine
+# Simplified direct-lithium-extraction benchmark. A Li-bearing brine invades
+# initially Li-free brine and competes with major cations for a generic
+# Li-selective sorbent site. Equilibrium constants are illustrative and are
+# used here to create a sorption-controlled transport benchmark, not to
+# represent a specific commercial sorbent.
+
+SURFACE_MASTER_SPECIES
+    Sor_a Sor_aH
+
+SURFACE_SPECIES
+    Sor_aH = Sor_aH
+    Sor_aH = Sor_a- + H+
+        -log_k -8.0
+        -mole_balance Sor_a-
+    Sor_aH + Li+ = Sor_aLi + H+
+        -log_k -5.8
+        -mole_balance Sor_aLi
+    Sor_aH + Na+ = Sor_aNa + H+
+        -log_k -7.2
+        -mole_balance Sor_aNa
+    Sor_aH + K+ = Sor_aK + H+
+        -log_k -7.0
+        -mole_balance Sor_aK
+    Sor_aH + Mg+2 = Sor_aMg+ + H+
+        -log_k -7.4
+        -mole_balance Sor_aMg+
+
+SOLUTION 0 Li-free Na-Mg brine
+    units   mol/L
+    Na      0.10
+    K       0.01
+    Mg      0.01
+    Li      1e-12
+    Cl      0.13
+    pH      7 charge
+
+SOLUTION 1 initial sorbent equilibration brine
+    units   mol/L
+    Na      0.10
+    K       0.01
+    Mg      0.01
+    Li      1e-12
+    Cl      0.13
+    pH      7 charge
+
+SELECTED_OUTPUT
+    -molalities Sor_a- Sor_aLi Sor_aNa Sor_aK Sor_aMg+ Sor_aH
+    -ionic_strength true
+
+USER_PUNCH
+    -headings psi
+    -start
+    10 PUNCH SURF("Sor_a","psi")
+    -end
+
+END
