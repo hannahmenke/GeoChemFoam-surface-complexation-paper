@@ -27,7 +27,7 @@ endTime         TotalTime;
 
 deltaT          runTimestep;
 
-writeControl    adjustableRunTime;
+writeControl    runTime;
 
 writeInterval   WriteTimestep;
 
@@ -35,7 +35,7 @@ purgeWrite      0;
 
 writeFormat     ascii;
 
-writePrecision  8;
+writePrecision  17;
 
 writeCompression off;
 
@@ -52,6 +52,8 @@ surfaceAreaIntrinsicAssembly externalPython;
 surfaceAreaIndicatorField epsNum;
 
 surfaceAreaSource smoothInterface;
+
+phreeqcRestartCheckpoints true;
 
 
 // ************************************************************************* //

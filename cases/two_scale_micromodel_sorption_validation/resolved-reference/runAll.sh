@@ -15,7 +15,7 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
   set -u
 fi
 
-if [ -f "$repo_root/etc/bashrc" ]; then
+if [ -z "${GCFOAM_DIR:-}" ] && [ -f "$repo_root/etc/bashrc" ]; then
   set +e
   set +u
   # shellcheck disable=SC1090

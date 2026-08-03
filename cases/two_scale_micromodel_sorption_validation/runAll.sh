@@ -15,7 +15,7 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
   set -u
 fi
 
-if [ -f "$repo_root/etc/bashrc" ]; then
+if [ -z "${GCFOAM_DIR:-}" ] && [ -f "$repo_root/etc/bashrc" ]; then
   set +e
   set +u
   # shellcheck disable=SC1090
@@ -32,8 +32,10 @@ python scripts/compute_matrix_rev_properties.py \
 
 TARGET_PE="${TARGET_PE:-1}"
 DIFFUSION="${DIFFUSION:-1e-9}"
-RT_TIMESTEP="${RT_TIMESTEP:-0.01}"
-export RT_TIMESTEP
+RT_CFL_TARGET="${RT_CFL_TARGET:-0.8}"
+RT_LOCAL_VELOCITY_FACTOR="${RT_LOCAL_VELOCITY_FACTOR:-0}"
+RT_FACE_VELOCITY_SAFETY="${RT_FACE_VELOCITY_SAFETY:-1.25}"
+RT_TIMESTEP_MAX="${RT_TIMESTEP_MAX:-0}"
 mkdir -p results
 
 for case_dir in resolved-reference dbs-upscaled; do
@@ -71,6 +73,22 @@ python scripts/compute_matched_pe_flow_rates.py \
 
 # shellcheck disable=SC1091
 source results/matched_pe_flow_rates.env
+if [ -n "${RT_TIMESTEP_OVERRIDE:-}" ]; then
+  export RT_TIMESTEP="$RT_TIMESTEP_OVERRIDE"
+elif [ -n "${RT_TIMESTEP:-}" ]; then
+  export RT_TIMESTEP
+else
+  export RT_TIMESTEP="$(
+    python scripts/compute_reactive_timestep.py \
+      "$PWD" \
+      results/matched_pe_flow_rates.json \
+      --target-max-co "$RT_CFL_TARGET" \
+      --local-velocity-factor "$RT_LOCAL_VELOCITY_FACTOR" \
+      --face-velocity-safety "$RT_FACE_VELOCITY_SAFETY" \
+      --max-dt "$RT_TIMESTEP_MAX" \
+      --out-json results/reactive_timestep.json
+  )"
+fi
 export RT_TOTAL_TIME="${RT_TOTAL_TIME:-$RECOMMENDED_RT_TOTAL_TIME}"
 if [ -z "${RT_WRITE_TIMESTEP:-}" ]; then
   RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-10}"
@@ -92,6 +110,10 @@ echo "Reactive transport time: RT_TOTAL_TIME=${RT_TOTAL_TIME}, RT_WRITE_TIMESTEP
   echo "RT_TOTAL_TIME=${RT_TOTAL_TIME}"
   echo "RT_WRITE_TIMESTEP=${RT_WRITE_TIMESTEP}"
   echo "RT_TIMESTEP=${RT_TIMESTEP}"
+  echo "RT_CFL_TARGET=${RT_CFL_TARGET}"
+  echo "RT_LOCAL_VELOCITY_FACTOR=${RT_LOCAL_VELOCITY_FACTOR}"
+  echo "RT_FACE_VELOCITY_SAFETY=${RT_FACE_VELOCITY_SAFETY}"
+  echo "RT_TIMESTEP_MAX=${RT_TIMESTEP_MAX}"
 } > results/current_run_config.env
 
 python scripts/write_preflight_summary.py \
@@ -99,7 +121,8 @@ python scripts/write_preflight_summary.py \
   results/matched_pe_flow_rates.json \
   results/preflight_summary.md \
   "$RT_WRITE_TIMESTEP" \
-  "$RT_TIMESTEP"
+  "$RT_TIMESTEP" \
+  "$RT_TOTAL_TIME"
 
 if [ "${PREFLIGHT_ONLY:-0}" = "1" ]; then
   echo "=== Preflight complete; stopping before reactive transport because PREFLIGHT_ONLY=1 ==="

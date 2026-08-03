@@ -69,11 +69,11 @@ then
     if [[ "${PLATFORM}" == "ARCHER2" ]]; then
         if [[ "$model" == "phases" ]];then
           echo "Calculate micro permeability"
-          srun python $GCFOAM_DIR/applications/utilities/pyTools/createKinvPhases.py $dimension $micro_por $micro_k $NPX $NPY $NPZ
+          srun --ntasks="$NP" python $GCFOAM_DIR/applications/utilities/pyTools/createKinvPhases.py $dimension $micro_por $micro_k $NPX $NPY $NPZ
         fi
 
-        srun python $GCFOAM_DIR/applications/utilities/pyTools/createU.py $dimension $NPX $NPY $NPZ $boundary_type $flowRate
-        srun python $GCFOAM_DIR/applications/utilities/pyTools/createP.py $dimension $NPX $NPY $NPZ $boundary_type $pressureDrop
+        srun --ntasks="$NP" python $GCFOAM_DIR/applications/utilities/pyTools/createU.py $dimension $NPX $NPY $NPZ $boundary_type $flowRate
+        srun --ntasks="$NP" python $GCFOAM_DIR/applications/utilities/pyTools/createP.py $dimension $NPX $NPY $NPZ $boundary_type $pressureDrop
 
     else
         if [[ "$model" == "phases" ]];then

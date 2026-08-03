@@ -5,28 +5,41 @@ set -Eeuo pipefail
 Image_name="dbs_full_upscaled"
 ASurf_image_name="dbs_full_upscaled_phase"
 format="raw"
-x_dim=3600
-y_dim=1200
 z_dim=1
 segmentation="grayscale"
 pores_value=255
 matrix_value=0
 metadata="../shared/metadata.json"
+x_dim="$(python - <<'PY' "$metadata"
+import json, sys
+print(json.load(open(sys.argv[1]))["dbs_full_upscaled"]["shape"][0])
+PY
+)"
+y_dim="$(python - <<'PY' "$metadata"
+import json, sys
+print(json.load(open(sys.argv[1]))["dbs_full_upscaled"]["shape"][1])
+PY
+)"
 matrix_porosity="$(python - <<'PY' "$metadata"
 import json, sys
 print(json.load(open(sys.argv[1]))["dbs_full_upscaled"]["matrix_porosity_from_rev"])
 PY
 )"
 x_min=0
-x_max=3600
+x_max="$x_dim"
 y_min=0
-y_max=1200
+y_max="$y_dim"
 z_min=0
 z_max=1
 padWidth=0
-res=0.000005
-n_x=3600
-n_y=1200
+res="$(python - <<'PY' "$metadata"
+import json, sys
+value = float(json.load(open(sys.argv[1]))["dbs_full_upscaled"]["voxel_size_m"])
+print(f"{value:.12f}")
+PY
+)"
+n_x="$x_dim"
+n_y="$y_dim"
 n_z=1
 localRefinement="false"
 dimension="2D"
@@ -42,12 +55,12 @@ cp ../shared/${ASurf_image_name}.raw constant/triSurface/.
 x_1=0
 y_1=0
 z_1=0
-xSize=$(echo "$x_max - $x_min" | bc)
-ySize=$(echo "$y_max - $y_min" | bc)
-zSize=$(echo "$z_max - $z_min" | bc)
-x_2=$(expr $xSize*$res | bc)
-y_2=$(expr $ySize*$res | bc)
-z_2=$(expr $zSize*$res | bc)
+xSize=$((x_max - x_min))
+ySize=$((y_max - y_min))
+zSize=$((z_max - z_min))
+x_2=$(awk -v n="$xSize" -v dx="$res" 'BEGIN {printf "%.12g", n * dx}')
+y_2=$(awk -v n="$ySize" -v dx="$res" 'BEGIN {printf "%.12g", n * dx}')
+z_2=$(awk -v n="$zSize" -v dx="$res" 'BEGIN {printf "%.12g", n * dx}')
 
 cp system/postProcessDict1 system/postProcessDict
 sed -i "s/x_1/$x_1/g" system/postProcessDict
@@ -65,6 +78,7 @@ echo "$NPZ" > system/NPZ
 echo "$n_x" > system/Nx1
 echo "$n_y" > system/Ny1
 echo "$n_z" > system/Nz1
+printf '%s\n' "$res" > system/cellSize
 
 eps_min=0
 cyclic="no"
@@ -77,7 +91,7 @@ python "$GCFOAM_DIR/applications/utilities/pyTools/writeASurfReconstructionDict.
   $res \
   $ASurf_image_name \
   $pores_value $matrix_value $dimension \
-  occupancyGaussian 0.90 "" "" false
+  signedDistanceGaussian 0.90 "" "" false
 
 if [ "$NP" -gt 1 ]; then
   if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then

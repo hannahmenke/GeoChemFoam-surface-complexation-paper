@@ -4,8 +4,22 @@ set -Eeuo pipefail
 
 Image_name="resolved_full_reference"
 format="raw"
-x_dim=18000
-y_dim=6000
+metadata="../shared/metadata.json"
+x_dim="$(python - <<'PY' "$metadata"
+import json, sys
+print(json.load(open(sys.argv[1]))["resolved_full_reference"]["shape"][0])
+PY
+)"
+y_dim="$(python - <<'PY' "$metadata"
+import json, sys
+print(json.load(open(sys.argv[1]))["resolved_full_reference"]["shape"][1])
+PY
+)"
+res="$(python - <<'PY' "$metadata"
+import json, sys
+print(json.load(open(sys.argv[1]))["resolved_full_reference"]["voxel_size_m"])
+PY
+)"
 z_dim=1
 segmentation="phases"
 pores_value=255
@@ -13,15 +27,14 @@ solid_value=0
 phases=(0,255)
 micro_por=(1e-8,1)
 x_min=0
-x_max=18000
+x_max="$x_dim"
 y_min=0
-y_max=6000
+y_max="$y_dim"
 z_min=0
 z_max=1
 padWidth=0
-res=0.000001
-n_x=18000
-n_y=6000
+n_x="$x_dim"
+n_y="$y_dim"
 n_z=1
 localRefinement="false"
 dimension="2D"
@@ -36,12 +49,12 @@ cp ../shared/${Image_name}.raw constant/triSurface/.
 x_1=0
 y_1=0
 z_1=0
-xSize=$(echo "$x_max - $x_min" | bc)
-ySize=$(echo "$y_max - $y_min" | bc)
-zSize=$(echo "$z_max - $z_min" | bc)
-x_2=$(expr $xSize*$res | bc)
-y_2=$(expr $ySize*$res | bc)
-z_2=$(expr $zSize*$res | bc)
+xSize=$((x_max - x_min))
+ySize=$((y_max - y_min))
+zSize=$((z_max - z_min))
+x_2=$(awk -v n="$xSize" -v dx="$res" 'BEGIN {printf "%.12g", n * dx}')
+y_2=$(awk -v n="$ySize" -v dx="$res" 'BEGIN {printf "%.12g", n * dx}')
+z_2=$(awk -v n="$zSize" -v dx="$res" 'BEGIN {printf "%.12g", n * dx}')
 
 cp system/postProcessDict1 system/postProcessDict
 sed -i "s/x_1/$x_1/g" system/postProcessDict
@@ -59,6 +72,7 @@ echo "$NPZ" > system/NPZ
 echo "$n_x" > system/Nx1
 echo "$n_y" > system/Ny1
 echo "$n_z" > system/Nz1
+printf '%s\n' "$res" > system/cellSize
 
 eps_min=0
 cyclic="no"
@@ -71,7 +85,7 @@ python "$GCFOAM_DIR/applications/utilities/pyTools/writeASurfReconstructionDict.
   $res \
   $Image_name \
   $pores_value $solid_value $dimension \
-  occupancyGaussian 0.90 "" "" false
+  signedDistanceGaussian 0.90 "" "" false
 
 if [ "$NP" -gt 1 ]; then
   if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then

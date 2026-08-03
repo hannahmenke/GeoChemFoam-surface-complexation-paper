@@ -3,7 +3,7 @@
 ###### USERS INPUT ############################################################
 
 ## Define the total number of iterations of the simulation
-TotalTime=300
+TotalTime="${FLOW_TOTAL_TIME:-300}"
 
 #### END OF USER INPUT #######################################################
 
@@ -21,13 +21,16 @@ then
     echo -e "Run simpleDBSFoam in parallel on $NP processors"
     # if PLATFORM is ARCHER2 then use srun, otherwise use serial version
     if [[ "${PLATFORM}" == "ARCHER2" ]]; then
-        srun simpleDBSFoam -parallel  > simpleDBSFoam.out
+        flow_log="simpleDBSFoam.out"
+        srun --ntasks="$NP" simpleDBSFoam -parallel  > "$flow_log"
     else
-        mpirun -np $NP simpleDBSFoam -parallel  > simpleDBSFoamFlow.out
+        flow_log="simpleDBSFoamFlow.out"
+        mpirun -np $NP simpleDBSFoam -parallel  > "$flow_log"
     fi
 else
     echo -e "Run simpleDBSFoam"
-    simpleDBSFoam > simpleDBSFoamFlow.out
+    flow_log="simpleDBSFoamFlow.out"
+    simpleDBSFoam > "$flow_log"
 fi 
 
-echo -e "Note: Please check the last line of simpleDBSFoamFlow.out to confirm the flow field has converged. If it has not, change TotalTime and/or the p tolerance  in system/fvSolution and re-run the script" 
+python ../scripts/check_flow_convergence.py "$flow_log"

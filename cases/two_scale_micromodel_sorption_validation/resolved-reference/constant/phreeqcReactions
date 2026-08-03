@@ -45,13 +45,14 @@ SOLUTION 1 initial sorbent equilibration brine
     pH      7 charge
 
 SELECTED_OUTPUT
-    -molalities Sor_a- Sor_aLi Sor_aNa Sor_aK Sor_aMg+ Sor_aH
     -ionic_strength true
 
 USER_PUNCH
-    -headings psi
+    -headings Sor_a- Sor_aLi Sor_aNa Sor_aK Sor_aMg+ Sor_aH psi ionic_strength
     -start
-    10 PUNCH SURF("Sor_a","psi")
+    10 PUNCH MOL("Sor_a-"), MOL("Sor_aLi"), MOL("Sor_aNa")
+    20 PUNCH MOL("Sor_aK"), MOL("Sor_aMg+"), MOL("Sor_aH")
+    30 PUNCH SURF("Sor_a","psi"), MU
     -end
 
 END

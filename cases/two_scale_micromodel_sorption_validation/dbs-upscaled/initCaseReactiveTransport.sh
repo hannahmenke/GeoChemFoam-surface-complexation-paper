@@ -14,7 +14,7 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
     set -u
 fi
 
-if [ -f "$repo_root/etc/bashrc" ]; then
+if [ -z "${GCFOAM_DIR:-}" ] && [ -f "$repo_root/etc/bashrc" ]; then
     set +e
     set +u
     # shellcheck disable=SC1090
@@ -74,7 +74,7 @@ if [ -d "processor0" ]
 then
     export NP="$(find processor* -maxdepth 0 -type d -print | wc -l)"
     if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then
-        srun python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 2D "$NPX" "$NPY" "$NPZ" 0 1 zeroGradient zeroGradient
+        srun --ntasks="$NP" python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 2D "$NPX" "$NPY" "$NPZ" 0 1 zeroGradient zeroGradient
     else
         mpirun -np "$NP" python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 2D "$NPX" "$NPY" "$NPZ" 0 1 zeroGradient zeroGradient
     fi
@@ -111,6 +111,7 @@ python - <<'PY'
 import os
 import re
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 
@@ -242,8 +243,8 @@ def write_species(
     dims: str,
     internal: str,
     inlet_mode: str,
-    inlet_value: str | None,
-    inlet_values: list[float] | None = None,
+    inlet_value: Optional[str],
+    inlet_values: Optional[list[float]] = None,
 ) -> None:
     text = template_path.read_text()
     text = replace_object(text, name)

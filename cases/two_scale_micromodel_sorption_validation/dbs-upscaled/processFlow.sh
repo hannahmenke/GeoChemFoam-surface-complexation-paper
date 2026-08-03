@@ -10,11 +10,11 @@ then
 
     # if PLATFORM is ARCHER2 then use srun, otherwise use serial version
     if [[ "${PLATFORM}" == "ARCHER2" ]]; then
-        srun python $GCFOAM_DIR/applications/utilities/pyTools/moveResultTo0.py "U" "p" "phi" 
+        srun --ntasks="$NP" python $GCFOAM_DIR/applications/utilities/pyTools/moveResultTo0.py "U" "p" "phi"
 
         # Run simpleFoam in parallel
         echo -e "Run processPoroPerm in parallel on $NP processors"
-        srun processPoroPerm -parallel  > processPoroPermFlow.out
+        srun --ntasks="$NP" processPoroPerm -parallel  > processPoroPermFlow.out
 
     else
         mpirun -np $NP python $GCFOAM_DIR/applications/utilities/pyTools/moveResultTo0.py "U" "p" "phi"
@@ -29,7 +29,6 @@ else
     echo -e "Run processPoroPerm"
     processPoroPerm > processPoroPermFlow.out
 fi
-
 
 
 

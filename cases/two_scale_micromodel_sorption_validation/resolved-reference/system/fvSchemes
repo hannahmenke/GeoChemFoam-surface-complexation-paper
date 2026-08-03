@@ -31,7 +31,7 @@ divSchemes
     div(phi,U)      bounded Gauss linearUpwindV grad(U);
     div((nuEff*dev2(T(grad(U))))) Gauss linear;
     div(phi,Yi)     bounded Gauss upwind;
-    div(phi,T)      bounded Gauss upwind; 
+    div(phi,T)      bounded Gauss upwind;
 }
 
 laplacianSchemes

@@ -24,8 +24,9 @@ physical domain at multiple Peclet numbers.
 
 ## Important Rules
 
-- Do not trust restarted reactive-transport results. If transport setup is
-  wrong, delete generated transport output and rerun from time zero.
+- Restart only from a written time containing `phreeqcDBS.dmp`; run
+  `RT_RESTART=1 RT_TOTAL_TIME=<new-absolute-end-time>
+  ./runCaseReactiveTransport.sh` inside the case directory.
 - Do not trust stored `phi` from earlier flow/transport attempts. The committed
   scripts delete `0/phi` and `processor*/0/phi` before reactive transport so
   `reactiveScalarTransportDBSFoam` rebuilds flux from the current `U`.
@@ -33,38 +34,34 @@ physical domain at multiple Peclet numbers.
   job must copy the committed template into a separate scratch directory.
 - Do not commit generated raw domains, `processor*`, `0`, logs, `.out` files,
   or `results`. The local `.gitignore` is set up for this.
-- The runs are not currently restartable within a 24 hour wall-time workflow;
-  submit each Pe/case as an independent production job.
+- Complete PHREEQC checkpoints are restartable but storage-heavy. Preserve the
+  full scratch case, or use full archive mode, when a later Slurm continuation
+  will be required.
 
 ## Timestep/CFL Policy
 
-The benchmark targets mean CFL of order one, not strict maximum CFL below one.
-The sweep scripts scale timestep with Pe because Pe is changed through flow
-rate:
+The production scripts calculate timestep from the calibrated maximum
+cell-centre velocity, the 1.25 face-velocity safety factor, and a target CFL:
 
 ```text
-RT_TIMESTEP = min(RT_TIMESTEP_REF * RT_TIMESTEP_REF_PE / Pe, RT_TIMESTEP_MAX)
+deltaT = RT_CFL_TARGET * dx / measuredDesignVelocity
 ```
 
 Default values:
 
 ```text
-RT_TIMESTEP_REF_PE=1
-RT_TIMESTEP_REF=0.01
-RT_TIMESTEP_MAX=0.1
-```
-
-This gives:
-
-```text
-Pe=1    RT_TIMESTEP=0.01
-Pe=0.3  RT_TIMESTEP=0.0333333333333
-Pe=0.1  RT_TIMESTEP=0.1
+RT_CFL_TARGET=0.5
+RT_FACE_VELOCITY_SAFETY=1.25
+RT_LOCAL_VELOCITY_FACTOR=0
+RT_TIMESTEP_MAX=0
 ```
 
 Use `RT_TIMESTEP_OVERRIDE` only if intentionally forcing a single timestep for
 diagnostics. Do not use a stale `RT_TIMESTEP` environment variable to drive a
-production sweep.
+production sweep. Full 5 um resolved jobs `14586522`--`14586524` compared CFL
+0.25, 0.5, and 0.7 over 140/70/50 real chemistry steps. CFL 0.5 changed the Li
+field L2 norm by 0.232% and total Li inventory by -0.080% relative to 0.25, so
+0.5 is the selected conservative production default.
 
 ## Runtime Policy
 
@@ -134,7 +131,7 @@ physical times.
 By default the submit-all helper requests:
 
 ```text
-resolved-reference: nodes=50, total MPI ranks=6400, decomposition=160 x 40 x 1
+resolved-reference: nodes=128, total MPI ranks=16384, decomposition=256 x 64 x 1
 dbs-upscaled:       nodes=2,  total MPI ranks=256,  decomposition=32 x 8 x 1
 ntasks-per-node=128 for both
 walltime=24:00:00

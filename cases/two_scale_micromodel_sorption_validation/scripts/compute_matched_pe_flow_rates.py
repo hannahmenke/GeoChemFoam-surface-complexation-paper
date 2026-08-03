@@ -13,6 +13,23 @@ def read_poro_perm(case_dir: Path) -> dict[str, float]:
     return {key: float(value) for key, value in row.items()}
 
 
+def read_geometry_specs(root: Path) -> dict[str, dict[str, float]]:
+    metadata = json.loads((root / "shared" / "metadata.json").read_text())
+    case_to_key = {
+        "resolved-reference": "resolved_full_reference",
+        "dbs-upscaled": "dbs_full_upscaled",
+    }
+    specs = {}
+    for case_name, metadata_key in case_to_key.items():
+        physical_size = metadata[metadata_key]["physical_size_m"]
+        specs[case_name] = {
+            "domain_length_m": float(physical_size[0]),
+            "height_m": float(physical_size[1]),
+            "depth_m": float(physical_size[2]),
+        }
+    return specs
+
+
 def longitudinal_dispersion_multiplier(pe: float) -> float:
     if pe < 1.0:
         return 0.5995 * (1.0 + 0.228 * pe**1.1187)
@@ -22,20 +39,21 @@ def longitudinal_dispersion_multiplier(pe: float) -> float:
 
 
 def main() -> None:
-    if len(sys.argv) != 5:
+    if len(sys.argv) < 5:
         raise SystemExit(
-            "Usage: compute_matched_pe_flow_rates.py ROOT_DIR TARGET_PE DIFFUSION OUT_JSON"
+            "Usage: compute_matched_pe_flow_rates.py ROOT_DIR TARGET_PE DIFFUSION OUT_JSON [CASE ...]"
         )
 
     root = Path(sys.argv[1])
     target_pe = float(sys.argv[2])
     diffusion = float(sys.argv[3])
     out_path = Path(sys.argv[4])
+    selected_cases = sys.argv[5:] or ["resolved-reference", "dbs-upscaled"]
 
-    specs = {
-        "resolved-reference": {"height_m": 6.0e-3, "depth_m": 1.0e-6},
-        "dbs-upscaled": {"height_m": 6.0e-3, "depth_m": 5.0e-6},
-    }
+    specs = read_geometry_specs(root)
+    unknown_cases = sorted(set(selected_cases) - set(specs))
+    if unknown_cases:
+        raise SystemExit(f"unknown case(s): {', '.join(unknown_cases)}")
 
     result = {
         "target_pe": target_pe,
@@ -47,7 +65,6 @@ def main() -> None:
             "porosity": "case porosity from processPoroPerm",
         },
         "diffusion_m2_per_s": diffusion,
-        "domain_length_m": 18.0e-3,
         "target_front_fraction": 1.0,
         "runtime_safety_factor": 1.25,
         "matrix_longitudinal_effective_diffusion_m2_per_s": diffusion
@@ -69,7 +86,11 @@ def main() -> None:
         f"{result['matrix_longitudinal_effective_diffusion_m2_per_s']:.12g}",
     ]
 
-    for case_name, geometry in specs.items():
+    selected_lengths = [specs[case_name]["domain_length_m"] for case_name in selected_cases]
+    result["domain_length_m"] = max(selected_lengths)
+
+    for case_name in selected_cases:
+        geometry = specs[case_name]
         metrics = read_poro_perm(root / case_name)
         porosity = metrics["poro"]
         lpore = metrics["Lpore"]
@@ -78,10 +99,15 @@ def main() -> None:
         area = geometry["height_m"] * geometry["depth_m"]
         flow_rate = darcy_velocity * area
         achieved_pe = darcy_velocity * lpore / (diffusion * porosity)
-        front_time = result["target_front_fraction"] * result["domain_length_m"] / pore_velocity
+        front_time = (
+            result["target_front_fraction"]
+            * geometry["domain_length_m"]
+            / pore_velocity
+        )
 
         result["cases"][case_name] = {
             "calibration": metrics,
+            "domain_length_m": geometry["domain_length_m"],
             "height_m": geometry["height_m"],
             "depth_m": geometry["depth_m"],
             "inlet_area_m2": area,

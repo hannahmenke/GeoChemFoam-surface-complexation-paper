@@ -50,15 +50,21 @@ field-level surface area. The factor $1/\theta$ therefore enters only in the
 conversion from the bulk-based field $a_{\mathrm{surf}}$ to the water-volume
 basis required by PHREEQC; it is not part of the geometric or image-based
 estimation of $a_{\mathrm{surf}}$ itself.
+The OpenFOAM dictionary stores $s_k$ in kmol\,m$^{-2}$, following the native
+OpenFOAM amount unit; it is therefore multiplied numerically by $10^3$ when
+interpreted as mol\,m$^{-2}$. PhreeqcRM surface units are explicitly set to
+mol per litre of water, so its representative-volume conversion multiplies
+the template amount by the cell porosity exactly once.
 
 The $a_{\mathrm{surf}}$ field is computed from the segmented image before the
 simulation begins (Section~\ref{sec:aSurf}) and is held constant throughout
 the reactive-transport calculation; it is not updated by the flow or chemistry
-solvers. At each timestep, the current $a_{\mathrm{surf}}$ and $\theta$ are
-used to pass the area per unit water volume to PhreeqcRM via
-\texttt{setSurfaceAreaScale}, ensuring that the surface capacity seen by
-PHREEQC remains consistent with the finite-volume fields even as $\theta$ may
-vary spatially. The surface mode is optional and reduces exactly to
+solvers. The area and site capacity are transferred when the per-cell
+PHREEQC surface templates are created and remain internal to PhreeqcRM during
+the time loop. Consequently, the present implementation supports spatially
+heterogeneous but time-independent $\theta$ and $a_{\mathrm{surf}}$; changing
+either field during reactive transport would require rebuilding the PHREEQC
+surface state. The surface mode is optional and reduces exactly to
 aqueous-only mode when $a_{\mathrm{surf}} = 0$ everywhere.
 
 Cells with negligible mobile-water fraction ($\theta < \theta_{\min}$, where

@@ -72,6 +72,9 @@ def assemble_field(case_dir: Path, time_name: str, field_name: str, fallback_tim
 
 
 def read_resolution(case_dir: Path) -> float:
+    cell_size = case_dir / "system" / "cellSize"
+    if cell_size.exists():
+        return float(cell_size.read_text().strip())
     text = (case_dir / "createMesh.sh").read_text()
     match = re.search(r"^res=([0-9.eE+-]+)", text, re.M)
     if not match:
