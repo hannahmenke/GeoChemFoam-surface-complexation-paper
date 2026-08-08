@@ -27,9 +27,10 @@ physical domain at multiple Peclet numbers.
 - Restart only from a written time containing `phreeqcDBS.dmp`; run
   `RT_RESTART=1 RT_TOTAL_TIME=<new-absolute-end-time>
   ./runCaseReactiveTransport.sh` inside the case directory.
-- Do not trust stored `phi` from earlier flow/transport attempts. The committed
-  scripts delete `0/phi` and `processor*/0/phi` before reactive transport so
-  `reactiveScalarTransportDBSFoam` rebuilds flux from the current `U`.
+- Preserve the pressure-corrected `phi` produced by the completed flow solve.
+  Never delete it or reconstruct it from cell-centred `U`; that path caused a
+  cumulative resolved-case mass error. Fresh reactive launches now require
+  `0/phi` (or every `processor*/0/phi`) and use `rebuildPhiFromU false`.
 - Do not run multiple Pe/case jobs in the same working directory. Each ARCHER
   job must copy the committed template into a separate scratch directory.
 - Do not commit generated raw domains, `processor*`, `0`, logs, `.out` files,
@@ -37,6 +38,13 @@ physical domain at multiple Peclet numbers.
 - Complete PHREEQC checkpoints are restartable but storage-heavy. Preserve the
   full scratch case, or use full archive mode, when a later Slurm continuation
   will be required.
+- Restart submissions align their write interval to the requested final time,
+  and completed reactive jobs are rejected unless the final Li field, PHREEQC
+  dump, and completion marker exist on every partition. This prevents a clean
+  solver exit without a scientifically usable endpoint.
+- Prepare the remaining matched 5 um `Pe=0.3` and `Pe=0.1` pairs with
+  `./prepare_archer_other_pe.sh`. It is preview-only unless
+  `CONFIRM_OTHER_PE_SUBMIT=1` is set.
 
 ## Timestep/CFL Policy
 
@@ -211,7 +219,10 @@ For each completed job:
 4. Confirm the first and final written times exist in processor directories.
 5. For Pe=1, inspect the early checkpoint before trusting the rest of the run:
    the Li front should move consistently with the flow-derived pore velocity.
-6. At the final time, confirm the front has reached or passed the outlet before
+6. Confirm the solver reports `Using pressure-corrected phi read by createPhi`.
+   In a matched 90-step inert/reactive smoke test, require total-Li agreement
+   within 0.1% after adding the PHREEQC dump surface inventory.
+7. At the final time, confirm the front has reached or passed the outlet before
    using the run in the paper figures.
 
 ## Why Jobs Are Split

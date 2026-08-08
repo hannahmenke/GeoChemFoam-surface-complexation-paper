@@ -17,6 +17,8 @@ FoamFile
 
 application     reactiveScalarTransportDBSFoam;
 
+rebuildPhiFromU false;
+
 startFrom       startTime;
 
 startTime       0;

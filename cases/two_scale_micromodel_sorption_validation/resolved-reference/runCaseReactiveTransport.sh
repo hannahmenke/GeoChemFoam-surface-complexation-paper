@@ -91,9 +91,18 @@ if [ "${RT_RESTART:-0}" = "1" ]; then
     sed -i -E "s/^startTime[[:space:]]+[^;]+;/startTime       $latest_time;/" system/controlDict
     echo "Restarting reactive transport from time $latest_time"
 else
-    # Do not trust a stored time-zero flux from an earlier flow attempt.
-    rm -f 0/phi processor*/0/phi
-    echo "Removed stored phi fields; reactive transport will rebuild phi from U."
+    if [ -d processor0 ]; then
+        expected_phi="$(find processor* -maxdepth 0 -type d | wc -l)"
+        actual_phi="$(find processor* -maxdepth 2 -path '*/0/phi' -type f | wc -l)"
+        if [ "$actual_phi" -ne "$expected_phi" ]; then
+            echo "Fresh reactive transport requires flow-produced processor*/0/phi ($actual_phi/$expected_phi present)." >&2
+            exit 6
+        fi
+    elif [ ! -f 0/phi ]; then
+        echo "Fresh reactive transport requires the flow-produced 0/phi field." >&2
+        exit 6
+    fi
+    echo "Preserving the pressure-corrected time-zero phi from the flow solve."
 fi
 echo "Reactive transport controls: endTime=${TotalTime}, writeInterval=${WriteTimestep}, deltaT=${runTimestep}"
 
@@ -113,4 +122,36 @@ then
     fi
 else
     reactiveScalarTransportDBSFoam "${solver_args[@]}" > reactiveScalarTransportDBSFoamRT.out
+fi
+
+if [ "${RT_DRY_RUN_ONLY:-0}" != "1" ] && [ "${RT_REQUIRE_FINAL_CHECKPOINT:-1}" = "1" ]; then
+    if [ -d processor0 ]; then
+        final_time="$(find processor0 -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -gr | head -1)"
+        expected="$NP"
+        fields="$(find processor* -path "*/$final_time/Li+" -type f | wc -l)"
+        dumps="$(find processor* -path "*/$final_time/phreeqcDBS.dmp" -type f | wc -l)"
+        markers="$(find processor* -path "*/$final_time/phreeqcDBS.complete" -type f | wc -l)"
+    else
+        final_time="$(foamListTimes | sort -gr | head -1)"
+        expected=1
+        fields="$([ -f "$final_time/Li+" ] && echo 1 || echo 0)"
+        dumps="$([ -f "$final_time/phreeqcDBS.dmp" ] && echo 1 || echo 0)"
+        markers="$([ -f "$final_time/phreeqcDBS.complete" ] && echo 1 || echo 0)"
+    fi
+    python3 - <<'PY' "$final_time" "$TotalTime" "$runTimestep"
+import math
+import sys
+
+actual, requested, timestep = map(float, sys.argv[1:])
+if not math.isclose(actual, requested, rel_tol=1e-12, abs_tol=1.01 * timestep):
+    raise SystemExit(
+        f"Final written time {actual:.17g} is not within one timestep "
+        f"({timestep:.17g}) of requested endTime {requested:.17g}"
+    )
+PY
+    if [ "$fields" -ne "$expected" ] || [ "$dumps" -ne "$expected" ] || [ "$markers" -ne "$expected" ]; then
+        echo "Final checkpoint $final_time is incomplete: Li+=$fields dumps=$dumps markers=$markers expected=$expected" >&2
+        exit 7
+    fi
+    echo "Verified complete final checkpoint at time $final_time on $expected partition(s)."
 fi

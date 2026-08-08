@@ -1,0 +1,21 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermoPhysicalProperties;
+}
+
+solutionSpecies
+{
+    Li+   { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+    Na+   { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+    K+    { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+    Mg+2  { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+    Cl-   { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+    H+    { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+    OH-   { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
+}
+
+thetaChemistryMin 1e-3;

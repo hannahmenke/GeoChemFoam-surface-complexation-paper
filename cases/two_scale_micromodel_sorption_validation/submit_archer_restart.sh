@@ -13,6 +13,7 @@ the duration of this allocation.
 
 Optional environment:
   RT_RESTART_TIME=<complete checkpoint time>
+  RT_ALIGN_FINAL_WRITE=1
   GCFOAM_SLURM_ACCOUNT=n03-hw
   GCFOAM_SLURM_QOS=standard
   GCFOAM_SLURM_TIME=24:00:00
@@ -76,18 +77,59 @@ if [ "$nodes" -lt "$inferred_nodes" ]; then
 fi
 
 restart_time="${RT_RESTART_TIME:-}"
-if [ -n "$restart_time" ]; then
+if [ -z "$restart_time" ]; then
     if [ "$expected" -gt 1 ]; then
-        dumps="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqcDBS.dmp" -type f | wc -l)"
-        markers="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqcDBS.complete" -type f | wc -l)"
+        while read -r candidate; do
+            [ -n "$candidate" ] || continue
+            dumps="$(find "$work_case_dir"/processor* -path "*/$candidate/phreeqcDBS.dmp" -type f | wc -l)"
+            markers="$(find "$work_case_dir"/processor* -path "*/$candidate/phreeqcDBS.complete" -type f | wc -l)"
+            if [ "$dumps" -eq "$expected" ] && [ "$markers" -eq "$expected" ]; then
+                restart_time="$candidate"
+                break
+            fi
+        done < <(find "$work_case_dir/processor0" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -gr)
     else
-        dumps="$([ -f "$work_case_dir/$restart_time/phreeqcDBS.dmp" ] && echo 1 || echo 0)"
-        markers="$([ -f "$work_case_dir/$restart_time/phreeqcDBS.complete" ] && echo 1 || echo 0)"
+        while read -r candidate; do
+            if [ -f "$work_case_dir/$candidate/phreeqcDBS.dmp" ] \
+                && [ -f "$work_case_dir/$candidate/phreeqcDBS.complete" ]; then
+                restart_time="$candidate"
+                break
+            fi
+        done < <(find "$work_case_dir" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -gr)
     fi
-    if [ "$dumps" -ne "$expected" ] || [ "$markers" -ne "$expected" ]; then
-        echo "Requested restart checkpoint $restart_time is incomplete: dumps=$dumps markers=$markers expected=$expected" >&2
-        exit 5
-    fi
+fi
+[ -n "$restart_time" ] || {
+    echo "No complete PHREEQC checkpoint is available in $work_case_dir" >&2
+    exit 5
+}
+if [ "$expected" -gt 1 ]; then
+    dumps="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqcDBS.dmp" -type f | wc -l)"
+    markers="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqcDBS.complete" -type f | wc -l)"
+else
+    dumps="$([ -f "$work_case_dir/$restart_time/phreeqcDBS.dmp" ] && echo 1 || echo 0)"
+    markers="$([ -f "$work_case_dir/$restart_time/phreeqcDBS.complete" ] && echo 1 || echo 0)"
+fi
+if [ "$dumps" -ne "$expected" ] || [ "$markers" -ne "$expected" ]; then
+    echo "Requested restart checkpoint $restart_time is incomplete: dumps=$dumps markers=$markers expected=$expected" >&2
+    exit 5
+fi
+
+restart_write_timestep="$RT_WRITE_TIMESTEP"
+if [ "${RT_ALIGN_FINAL_WRITE:-1}" = "1" ]; then
+    restart_write_timestep="$(python3 - <<'PY' "$restart_time" "$final_end_time" "$RT_WRITE_TIMESTEP"
+import math
+import sys
+
+start, end, preferred = map(float, sys.argv[1:])
+remaining = end - start
+if remaining <= 0:
+    raise SystemExit(f"Final end time {end:.17g} must be later than restart time {start:.17g}")
+if preferred <= 0:
+    raise SystemExit(f"Saved write interval must be positive, got {preferred:.17g}")
+count = max(1, math.ceil(remaining / preferred - 1e-12))
+print(f"{remaining / count:.17g}")
+PY
+)"
 fi
 
 account="${GCFOAM_SLURM_ACCOUNT:-n03-hw}"
@@ -100,14 +142,11 @@ env_file="$repo_root/.archer2-tools/gcfoam-env.sh"
     exit 2
 }
 
-export_values="ALL,PLATFORM=ARCHER2,RT_RESTART=1,RT_TOTAL_TIME=$final_end_time,RT_WRITE_TIMESTEP=$RT_WRITE_TIMESTEP,RT_TIMESTEP=$RT_TIMESTEP"
-if [ -n "$restart_time" ]; then
-    export_values="$export_values,RT_RESTART_TIME=$restart_time"
-fi
+export_values="ALL,PLATFORM=ARCHER2,RT_RESTART=1,RT_RESTART_TIME=$restart_time,RT_TOTAL_TIME=$final_end_time,RT_WRITE_TIMESTEP=$restart_write_timestep,RT_TIMESTEP=$RT_TIMESTEP,RT_REQUIRE_FINAL_CHECKPOINT=1"
 
 echo "Submitting restart: case=$case_name ranks=$expected nodes=$nodes final_end_time=$final_end_time"
 echo "work_case_dir=$work_case_dir"
-echo "RT_TIMESTEP=$RT_TIMESTEP RT_WRITE_TIMESTEP=$RT_WRITE_TIMESTEP"
+echo "RT_TIMESTEP=$RT_TIMESTEP saved_write_interval=$RT_WRITE_TIMESTEP aligned_write_interval=$restart_write_timestep"
 
 sbatch_args=(
     --job-name="ts_${case_name//-/_}_restart" \
