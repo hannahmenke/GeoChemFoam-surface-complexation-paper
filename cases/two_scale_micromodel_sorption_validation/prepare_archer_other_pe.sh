@@ -3,19 +3,19 @@
 set -Eeuo pipefail
 cd "$(dirname "$0")"
 
-# This launcher intentionally previews by default. The lower-Pe production
+# This launcher intentionally previews by default. Each non-baseline production
 # pair is expensive, and resolved-reference must stay pinned to the selected
 # binary 5 um geometry rather than the native 1 um default.
 export PE_SWEEP="${OTHER_PE_SWEEP:-0.3 0.1}"
 case " $PE_SWEEP " in
     *" 1 "*)
-        echo "prepare_archer_other_pe.sh is restricted to Pe=0.3 and Pe=0.1." >&2
+        echo "Pe=1 is the completed baseline; select a non-baseline Pe." >&2
         exit 2
         ;;
 esac
 for pe in $PE_SWEEP; do
     case "$pe" in
-        0.3|0.1) ;;
+        0.3|0.1|3|10) ;;
         *) echo "Unsupported OTHER_PE_SWEEP value: $pe" >&2; exit 2 ;;
     esac
 done

@@ -15,7 +15,7 @@ physical domain at multiple Peclet numbers.
   - `dbs-upscaled`: equal physical domain, 3600 x 1200 x 1 cells at
     5 micrometre resolution. Vugs are resolved; matrix porosity, intrinsic
     surface area, and longitudinal effective diffusion come from the matrix REV.
-- Pe sweep: `Pe=1 0.3 0.1`.
+- Figure sweep: `Pe=0.1 1 3 10`; `Pe=0.3` remains a supported optional case.
 - Runtime target: the advective front reaches the outlet (`x/L = 1`) with a
   safety factor. Lower-Pe jobs therefore run for proportionally longer physical
   times.
@@ -42,9 +42,12 @@ physical domain at multiple Peclet numbers.
   and completed reactive jobs are rejected unless the final Li field, PHREEQC
   dump, and completion marker exist on every partition. This prevents a clean
   solver exit without a scientifically usable endpoint.
-- Prepare the remaining matched 5 um `Pe=0.3` and `Pe=0.1` pairs with
-  `./prepare_archer_other_pe.sh`. It is preview-only unless
-  `CONFIRM_OTHER_PE_SUBMIT=1` is set.
+- Prepare matched non-baseline 5 um pairs with
+  `OTHER_PE_SWEEP=<value> ./prepare_archer_other_pe.sh`; supported values are
+  `0.1`, `0.3`, `3`, and `10`. It is preview-only unless
+  `CONFIRM_OTHER_PE_SUBMIT=1` is set. Test Pe=3 before Pe=10: Pe=10 is exactly
+  the DBS longitudinal-dispersion closure branch transition, so failure there
+  alone would be ambiguous.
 
 ## Timestep/CFL Policy
 
@@ -86,6 +89,8 @@ current Pe=1 calibration are:
 
 ```text
 Pe=1    RT_TOTAL_TIME ~ 204 s
+Pe=3    RT_TOTAL_TIME ~ 68 s
+Pe=10   RT_TOTAL_TIME ~ 20 s
 Pe=0.3  RT_TOTAL_TIME ~ 679 s
 Pe=0.1  RT_TOTAL_TIME ~ 2036 s
 ```
@@ -107,8 +112,12 @@ physical times.
 - `runSingleCase.sh`: one `(TARGET_CASE, TARGET_PE)` run. This is the cluster
   production entry point.
 - `submit_archer_two_scale_case.slurm`: one ARCHER job for one case and one Pe.
-- `submit_archer_two_scale_all.sh`: submits six ARCHER jobs:
-  `resolved-reference` and `dbs-upscaled` for `Pe=1 0.3 0.1`.
+- `submit_archer_two_scale_all.sh`: guarded multi-job launcher. Its safe default
+  submits DBS only for `Pe=1 0.3 0.1`; request resolved jobs explicitly.
+- `prepare_archer_other_pe.sh`: preview-first matched 5 um launcher for
+  non-baseline `Pe=0.1`, `0.3`, `3`, and `10` pairs.
+- `paper_validation_runs.json`: exact valid output paths and matched times used
+  by `scripts/reproduce_paper_validation.py` for the current paper figures.
 - `submit_archer_resolved_scaling.slurm`: short scaling/timing harness for the
   resolved reference.
 - `shared/source/*.raw.tar.gz`: committed source images. Derived `.raw` domains
@@ -116,25 +125,25 @@ physical times.
 
 ## ARCHER Submission Workflow
 
-1. Start from a clean checkout containing commit `d4f84fdc` or later.
+1. Start from a clean checkout of this branch.
 2. Build/source GeoChemFoam on ARCHER so `GCFOAM_DIR`, OpenFOAM, PHREEQC, and
    the custom solvers are available.
-3. Edit `submit_archer_two_scale_case.slurm`:
-   - Replace `YOUR_BUDGET_CODE`.
-   - Add any required `module load ...` commands.
-   - Source the GeoChemFoam environment if the submission shell does not
-     already do it.
+3. Override `GCFOAM_SLURM_ACCOUNT` or `GCFOAM_SLURM_QOS` if the target
+   allocation differs from the committed ARCHER2 defaults. Source the
+   GeoChemFoam environment if the submission shell does not already do it.
 4. Before submitting, check project quota and filesystem capacity. Estimate the
    scratch and archive requirement for each `(case, Pe)` job, then confirm both
    filesystems have that much free space below quota. The Slurm script performs
    a conservative `df`-based preflight and exits before running if either
    scratch or archive space is below the estimate, but the agent should still
    inspect quota explicitly on the target system.
-5. From this directory, submit all production jobs:
+5. From this directory, preview a matched non-baseline pair:
 
 ```bash
-./submit_archer_two_scale_all.sh
+OTHER_PE_SWEEP=3 ./prepare_archer_other_pe.sh
 ```
+
+Set `CONFIRM_OTHER_PE_SUBMIT=1` only after reviewing the preview.
 
 By default the submit-all helper requests:
 
@@ -153,14 +162,15 @@ TARGET_CASE=resolved-reference TARGET_PE=1 ./runSingleCase.sh
 TARGET_CASE=dbs-upscaled TARGET_PE=1 ./runSingleCase.sh
 ```
 
-The submit-all helper generates the equivalent six submissions.
+The guarded non-baseline helper pins the validated 5 um resolved geometry and
+generates one resolved and one DBS submission per requested Pe.
 
 ## Output Locations
 
 During the run, each job uses a scratch directory:
 
 ```text
-${SCRATCH:-${TMPDIR:-$SLURM_SUBMIT_DIR/archer_work}}/two_scale_<case>_pe_<Pe>_<jobid>
+${SCRATCH:-$SLURM_SUBMIT_DIR/archer_work}/two_scale_<case>_pe_<Pe>_<jobid>
 ```
 
 At exit, the Slurm script synchronizes selected outputs back to:
@@ -228,13 +238,17 @@ For each completed job:
 ## Why Jobs Are Split
 
 The resolved reference has 108 million cells and reactive transport is
-expensive. Running the six simulations sequentially would exceed local and
+expensive. Running the sweep sequentially would exceed local and
 likely cluster wall-time limits. Splitting by `(case, Pe)` also prevents jobs
 from overwriting each other because OpenFOAM writes into fixed case directories
 such as `resolved-reference/processor*`.
 
-## Local Run State
+## Reproducing the paper plots
 
-A local 32-rank sweep may be running in this checkout. It is only exploratory
-and should not be used as the ARCHER production workflow. The committed scripts
-and source images are sufficient to reproduce the benchmark on another machine.
+Completed decomposed fields remain ignored because of their size. The exact
+valid pressure-corrected-flux sources and times are recorded in
+`paper_validation_runs.json`. After those outputs are present, create the
+Python environment documented in `README.md` and run
+`python3 scripts/reproduce_paper_validation.py`. The driver regenerates the
+metrics, asserts the Pe=1 front thresholds, and publishes the final PNGs under
+the paper-standard `../../figures/png` directory.

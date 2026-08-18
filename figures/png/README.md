@@ -15,6 +15,8 @@ Planned figure targets:
 - `fig03_3d_kelvin.png`
 - `fig04_3d_estaillades.png`
 - `fig08_estaillades_temporal.png`
+- `fig09_two_scale_error_vs_peclet.png`
+- `fig10_two_scale_pe1_fields.png`
 
 Current staged figures:
 
@@ -44,5 +46,11 @@ Current staged figures:
   - two-panel temporal evolution for Estaillades Sr²⁺/Ca²⁺ chromatographic exchange
   - left: domain-mean Ca²⁺ / C_init and Sr²⁺ / C_in vs time (6 time points)
   - right: normalised incremental Surf_aCa⁺ and Surf_aSr⁺ domain-mean vs time
+- `fig09_two_scale_error_vs_peclet.png`
+  - fully resolved versus DBS-upscaled inventory, placement, and map errors at
+    matched `x/L = 0.125` for Pe=0.1, 1, 3, and 10
+- `fig10_two_scale_pe1_fields.png`
+  - native 5 micrometre Pe=1 aqueous and sorbed Li fields at `x/L = 0.625`
+  - resolved grains are masked and no display averaging is applied
 
-The LaTeX draft already references these as the expected final PNG outputs.
+The companion manifest records each staged PNG's source case and renderer.

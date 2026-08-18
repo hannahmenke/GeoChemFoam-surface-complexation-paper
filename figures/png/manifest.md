@@ -133,3 +133,33 @@
   - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_estaillades_temporal_plot.py`
+
+## Figure 9
+
+- target file:
+  - `fig09_two_scale_error_vs_peclet.png`
+- section:
+  - Two-Scale Upscaling Validation
+- content:
+  - DBS-minus-resolved aqueous and sorbed Li inventory differences
+  - normalized streamwise-profile L1 errors
+  - native-domain map dissimilarity at matched `x/L = 0.125`
+- source case:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/scripts/reproduce_paper_validation.py`
+
+## Figure 10
+
+- target file:
+  - `fig10_two_scale_pe1_fields.png`
+- section:
+  - Two-Scale Upscaling Validation
+- content:
+  - fully resolved and DBS-upscaled aqueous Li fields at Pe=1 and `x/L = 0.625`
+  - corresponding sorbed Li fields on a shared logarithmic scale
+  - native-grid zooms with resolved grains masked and no spatial averaging
+- source case:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation`
+- renderer:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/scripts/reproduce_paper_validation.py`

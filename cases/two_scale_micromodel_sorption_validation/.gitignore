@@ -34,5 +34,6 @@ results/
 *.status
 
 # Python caches.
+.venv/
 __pycache__/
 */__pycache__/

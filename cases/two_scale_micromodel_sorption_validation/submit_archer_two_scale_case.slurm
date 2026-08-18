@@ -211,9 +211,20 @@ cd "$work_dir"
 export PLATFORM=ARCHER2
 export OMP_NUM_THREADS=1
 
-module purge
-# shellcheck disable=SC1091
-source /mnt/lustre/a2fs-work3/work/n03/n03/gcfoam_n03/GeoChemFoam-v-dev/.archer2-tools/gcfoam-env.sh
+repo_root="$(git -C "$submit_dir" rev-parse --show-toplevel 2>/dev/null || true)"
+env_file="${GCFOAM_ENV_FILE:-${repo_root:+$repo_root/.archer2-tools/gcfoam-env.sh}}"
+if [ -n "$env_file" ] && [ -f "$env_file" ]; then
+  module purge
+  # shellcheck disable=SC1090
+  source "$env_file"
+elif ! command -v reactiveScalarTransportDBSFoam >/dev/null 2>&1 || \
+     [ -z "${WM_PROJECT_DIR:-}" ]; then
+  echo "GeoChemFoam/OpenFOAM environment is not loaded." >&2
+  echo "Load it before sbatch or set GCFOAM_ENV_FILE to a site environment helper." >&2
+  exit 2
+else
+  echo "Using the inherited GeoChemFoam/OpenFOAM environment."
+fi
 
 export TARGET_CASE
 export TARGET_PE

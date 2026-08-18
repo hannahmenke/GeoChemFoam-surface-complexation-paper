@@ -10,7 +10,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import LogNorm
 
 from plot_latest_concentration_field import stitch_field
 
@@ -37,6 +36,8 @@ def main() -> None:
     parser.add_argument("--labels", nargs=3, default=["beginning", "middle", "end"])
     parser.add_argument("--stride", type=int, default=5)
     parser.add_argument("--li-inlet", type=float, default=1.0e-3)
+    parser.add_argument("--peclet", type=float, default=1.0)
+    parser.add_argument("--case-label", default="Fully resolved 5 µm")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -72,6 +73,8 @@ def main() -> None:
     sor_vmax = float(np.percentile(all_positive, 99.9))
     if sor_vmax <= sor_vmin:
         raise RuntimeError("Sorbed-Li range is insufficient for a shared log scale.")
+    sor_log_vmin = float(np.log10(sor_vmin))
+    sor_log_vmax = float(np.log10(sor_vmax))
 
     fig, axes = plt.subplots(2, 3, figsize=(16.0, 6.8), constrained_layout=True)
     extent = (0.0, 18.0, 0.0, 6.0)
@@ -88,13 +91,16 @@ def main() -> None:
             vmax=1.0,
             aspect="equal",
         )
+        sorbed_log = np.full(sorbed[column].shape, np.nan, dtype=np.float32)
+        np.log10(sorbed[column], out=sorbed_log, where=sorbed[column] > 0)
         sorbed_image = axes[1, column].imshow(
-            sorbed[column],
+            sorbed_log,
             origin="lower",
             extent=extent,
             cmap="magma",
             interpolation="nearest",
-            norm=LogNorm(vmin=sor_vmin, vmax=sor_vmax),
+            vmin=sor_log_vmin,
+            vmax=sor_log_vmax,
             aspect="equal",
         )
         axes[0, column].set_title(f"{label.capitalize()} — t = {float(time_name):.3f} s")
@@ -113,10 +119,9 @@ def main() -> None:
     sorbed_bar = fig.colorbar(
         sorbed_image, ax=axes[1, :], orientation="horizontal", fraction=0.08, pad=0.12
     )
-    sorbed_bar.set_label("Area-weighted sorbed Li [mol m$^{-2}$], logarithmic scale")
+    sorbed_bar.set_label("log10(area-weighted sorbed Li [mol m$^{-2}$])")
     fig.suptitle(
-        "Fully resolved 5 µm Pe=1 production run: aqueous and sorbed lithium progression\n"
-        f"Display uses {args.stride}×{args.stride} conservative blocks; source fields retain the full 5 µm grid",
+        f"{args.case_label} Pe={args.peclet:g} production run: aqueous and sorbed lithium progression",
         fontsize=14,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)

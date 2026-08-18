@@ -43,3 +43,19 @@ The manuscript uses the following case ladder.
   - larger Estaillades-style multi-scale demonstration case
 - manuscript note:
   - `cases/3d_estaillades/README.md`
+
+## Two-Scale Upscaling Validation
+
+- tracked case:
+  - `cases/two_scale_micromodel_sorption_validation`
+- source assets:
+  - compressed binary micromodel images under
+    `cases/two_scale_micromodel_sorption_validation/shared/source`
+- role:
+  - matched fully resolved and DBS-upscaled lithium sorption benchmark at
+    Pe=0.1, 1, 3, and 10
+- publication figures:
+  - `figures/png/fig09_two_scale_error_vs_peclet.png`
+  - `figures/png/fig10_two_scale_pe1_fields.png`
+- reproduction manifest:
+  - `cases/two_scale_micromodel_sorption_validation/paper_validation_runs.json`

@@ -40,6 +40,63 @@ connectivity and matches the native porosity closely. The tested 10 and
 15 micrometre categorical images lose streamwise pore connectivity and are not
 valid transport meshes.
 
+## Reproducing the runs and paper figures
+
+The committed templates, compressed input images, and launch scripts are the
+complete run inputs. Generated meshes, decomposed fields, logs, and results are
+deliberately ignored. From a clean checkout, preview a matched production pair
+before submitting it:
+
+```bash
+OTHER_PE_SWEEP=3 ./prepare_archer_other_pe.sh
+CONFIRM_OTHER_PE_SUBMIT=1 OTHER_PE_SWEEP=3 ./prepare_archer_other_pe.sh
+```
+
+Repeat with `OTHER_PE_SWEEP=0.1` and `10`; submit the Pe=1 baseline with
+
+```bash
+CASE_SWEEP="resolved-reference dbs-upscaled" RESOLVED_COARSEN_FACTOR=5 \
+  PE_SWEEP=1 ./submit_archer_two_scale_all.sh
+```
+
+The launchers record the full configuration under each generated run's
+`results` directory.
+
+`paper_validation_runs.json` records the exact pressure-corrected-flux output
+directories and matched times used in the current figures. After copying those
+outputs to the listed paths—or updating the paths to equivalent reruns—run:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 scripts/reproduce_paper_validation.py
+```
+
+In the established ARCHER2 workspace, the site-local `.archer2-tools/gcfoam-env.sh`
+helper may be sourced instead of creating a virtual environment; that helper is
+machine-specific and is intentionally not part of the committed case.
+
+This regenerates the Pe=0.1, 1, 3, and 10 comparison metrics, asserts the
+front-sensitive Pe=1 thresholds, and enforces the shaded acceptance limits for
+both aqueous and sorbed Li: 5% inventory error, 10% normalized profile L1, and
+0.1 map dissimilarity. It writes all intermediate artifacts under ignored
+`results/paper_figures` and publishes the two final PNGs to the paper-standard
+`../../figures/png` directory. The field figure is rendered on the native
+5 micrometre grid: resolved grains are masked, and no averaging or intermediate
+microporous phase is introduced.
+
+For ARCHER submission on a different installation, either load a complete
+GeoChemFoam/OpenFOAM environment before calling the launchers or point them to
+a site helper:
+
+```bash
+export GCFOAM_ENV_FILE=/absolute/path/to/gcfoam-env.sh
+```
+
+The helper path is forwarded to each Slurm job; no checkout-specific path is
+embedded in the committed production runner.
+
 Run the complete benchmark with:
 
 ```bash
@@ -191,9 +248,9 @@ CASE_SWEEP=resolved-reference RESOLVED_COARSEN_FACTOR=5 \
   ./submit_archer_two_scale_all.sh
 ```
 
-The remaining matched `Pe=0.3` and `Pe=0.1` resolved/DBS cases have a guarded
-launcher that pins this 5 micrometre configuration. It previews all four
-`sbatch` commands by default and submits nothing:
+Non-baseline matched resolved/DBS cases have a guarded launcher that pins this
+5 micrometre configuration. Its default `Pe=0.3 0.1` sweep previews all four
+`sbatch` commands and submits nothing:
 
 ```bash
 ./prepare_archer_other_pe.sh
@@ -201,8 +258,16 @@ launcher that pins this 5 micrometre configuration. It previews all four
 
 After reviewing the preview, submit exactly those four jobs with
 `CONFIRM_OTHER_PE_SUBMIT=1 ./prepare_archer_other_pe.sh`.
-To select just one lower Pe pair, set `OTHER_PE_SWEEP=0.3` or
-`OTHER_PE_SWEEP=0.1`.
+Select one matched pair with, for example,
+`OTHER_PE_SWEEP=3 ./prepare_archer_other_pe.sh`. Supported non-baseline values
+are `0.1`, `0.3`, `3`, and `10`.
+
+For the high-Pe failure search, run `Pe=3` before `Pe=10`. Pe=3 is a clean
+stress test within the same longitudinal-dispersion closure branch as Pe=1.
+Pe=10 is exactly the branch transition: the DBS longitudinal multiplier jumps
+from about 2.396 immediately below 10 to 2.695 at 10. A mismatch observed only
+at Pe=10 therefore cannot by itself distinguish loss of upscaling accuracy
+from sensitivity to that closure transition.
 
 Native 1 micrometre resolved-reference jobs request 128 nodes
 (`256 x 64 x 1`, 16384 ranks). Coarsened resolved jobs default to the measured

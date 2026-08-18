@@ -92,10 +92,13 @@ def main() -> None:
     parser.add_argument("--resolved-time", required=True)
     parser.add_argument("--dbs", type=Path, required=True)
     parser.add_argument("--dbs-time", required=True)
+    parser.add_argument("--peclet", type=float, default=1.0)
     parser.add_argument("--stride", type=int, default=20, help="5 um cells per macro display block")
     parser.add_argument("--transits", type=float, default=1.25, help="Matched advective distance x/L")
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
+    pe_label = f"{args.peclet:g}"
+    pe_slug = pe_label.replace(".", "p")
 
     resolved = load(args.resolved, args.resolved_time)
     dbs = load(args.dbs, args.dbs_time)
@@ -114,7 +117,9 @@ def main() -> None:
     dbs_sor_x50 = x50(dbs["sorbed_density"])
     summary = {
         "alignment": {
-            "basis": f"Pe=1 and x/L={args.transits:g} advective transits",
+            "basis": f"Pe={pe_label} and x/L={args.transits:g} advective transits",
+            "resolved_case_dir": str(args.resolved),
+            "dbs_case_dir": str(args.dbs),
             "resolved_time_s": float(args.resolved_time),
             "dbs_time_s": float(args.dbs_time),
             "macro_block_um": args.stride * 5,
@@ -150,7 +155,7 @@ def main() -> None:
     }
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "resolved_vs_dbs_pe1_metrics.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (args.output_dir / f"resolved_vs_dbs_pe{pe_slug}_metrics.json").write_text(json.dumps(summary, indent=2) + "\n")
 
     fig, axes = plt.subplots(3, 2, figsize=(12.5, 8.5), constrained_layout=True)
     extent = (0.0, 18.0, 0.0, 6.0)
@@ -175,8 +180,8 @@ def main() -> None:
         ax.set_aspect("equal")
     fig.colorbar(aq0, ax=axes[1, :], label="100 µm pore-volume-weighted Li / inlet Li", shrink=0.8)
     fig.colorbar(sor0, ax=axes[2, :], label="100 µm area-weighted sorbed Li [mol m$^{-2}$], linear", shrink=0.8)
-    fig.suptitle(f"Pe=1 endpoint comparison at matched x/L={args.transits:g}")
-    fig.savefig(args.output_dir / "resolved_vs_dbs_pe1_fields.png", dpi=220)
+    fig.suptitle(f"Pe={pe_label} endpoint comparison at matched x/L={args.transits:g}")
+    fig.savefig(args.output_dir / f"resolved_vs_dbs_pe{pe_slug}_fields.png", dpi=220)
     plt.close(fig)
 
     x = (np.arange(100) + 0.5) * 18.0 / 100
@@ -192,7 +197,7 @@ def main() -> None:
     axes[0].legend()
     axes[1].legend()
     fig.suptitle("Resolved versus DBS streamwise profiles")
-    fig.savefig(args.output_dir / "resolved_vs_dbs_pe1_profiles.png", dpi=220)
+    fig.savefig(args.output_dir / f"resolved_vs_dbs_pe{pe_slug}_profiles.png", dpi=220)
     plt.close(fig)
     print(json.dumps(summary, indent=2))
 

@@ -136,13 +136,22 @@ account="${GCFOAM_SLURM_ACCOUNT:-n03-hw}"
 qos="${GCFOAM_SLURM_QOS:-standard}"
 wall_time="${GCFOAM_SLURM_TIME:-24:00:00}"
 repo_root="$(cd "$(dirname "$0")/../../../.." && pwd -P)"
-env_file="$repo_root/.archer2-tools/gcfoam-env.sh"
-[ -f "$env_file" ] || {
-    echo "Missing ARCHER2 environment helper: $env_file" >&2
+env_file="${GCFOAM_ENV_FILE:-$repo_root/.archer2-tools/gcfoam-env.sh}"
+if [ -f "$env_file" ]; then
+    environment_export=",GCFOAM_ENV_FILE=$env_file"
+    run_prefix="source '$env_file' && "
+elif command -v reactiveScalarTransportDBSFoam >/dev/null 2>&1 && \
+     [ -n "${WM_PROJECT_DIR:-}" ]; then
+    environment_export=""
+    run_prefix=""
+    echo "Using the inherited GeoChemFoam/OpenFOAM environment."
+else
+    echo "Missing environment helper: $env_file" >&2
+    echo "Load GeoChemFoam/OpenFOAM or set GCFOAM_ENV_FILE to a site helper." >&2
     exit 2
-}
+fi
 
-export_values="ALL,PLATFORM=ARCHER2,RT_RESTART=1,RT_RESTART_TIME=$restart_time,RT_TOTAL_TIME=$final_end_time,RT_WRITE_TIMESTEP=$restart_write_timestep,RT_TIMESTEP=$RT_TIMESTEP,RT_REQUIRE_FINAL_CHECKPOINT=1"
+export_values="ALL${environment_export},PLATFORM=ARCHER2,RT_RESTART=1,RT_RESTART_TIME=$restart_time,RT_TOTAL_TIME=$final_end_time,RT_WRITE_TIMESTEP=$restart_write_timestep,RT_TIMESTEP=$RT_TIMESTEP,RT_REQUIRE_FINAL_CHECKPOINT=1"
 
 echo "Submitting restart: case=$case_name ranks=$expected nodes=$nodes final_end_time=$final_end_time"
 echo "work_case_dir=$work_case_dir"
@@ -161,7 +170,7 @@ sbatch_args=(
     --chdir="$work_case_dir" \
     --output="$work_case_dir/slurm-restart-%j.out" \
     --export="$export_values" \
-    --wrap="source '$env_file' && ./runCaseReactiveTransport.sh"
+    --wrap="${run_prefix}./runCaseReactiveTransport.sh"
 )
 
 if [ "${SUBMIT_DRY_RUN:-0}" = "1" ]; then
