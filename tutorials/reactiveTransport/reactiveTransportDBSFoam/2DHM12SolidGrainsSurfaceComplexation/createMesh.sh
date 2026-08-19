@@ -56,8 +56,8 @@ res=0.00003
 
 # number of cells of initial mesh
 ## They need to be a factor of the number of voxels in the padded image
-n_x=300
-n_y=300
+n_x=600
+n_y=600
 n_z=1
 
 #Mesh refinement level
@@ -74,7 +74,7 @@ direction=0
 
 # Number of processors in each direction
 NPX=4
-NPY=2
+NPY=4
 NPZ=1
 
 #### END OF USER INPUT #######################################################

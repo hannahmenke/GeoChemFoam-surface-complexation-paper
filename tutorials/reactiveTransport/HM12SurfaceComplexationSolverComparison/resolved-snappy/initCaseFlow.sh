@@ -5,7 +5,7 @@ set -Eeuo pipefail
 ###### USERS INPUT ############################################################
 
 ## Define the inlet pressure drop (Pa)
-pressureDrop=5.55610948588e-05
+pressureDrop=4.44352627098e-05
 
 ## Define the kinematic viscocity of the fluid (m^2/s)
 ##(e.g for water this is 1e-6, for air this would be 1.478e-5)

@@ -211,16 +211,15 @@ integrated reactive area, its spatial distribution, the aqueous transport
 profile, and the resulting sorbed inventory.
 
 For the resolved-wall \texttt{snappyHexMesh} reference, the integrated
-reactive area is $2.05 \times 10^{-5}$~m$^2$, compared with
-$1.67 \times 10^{-5}$~m$^2$ for DBS \texttt{smoothSurface}. The DBS area is
-$18.3\%$ lower than the resolved-wall value. Despite this geometric
-difference, the dissolved inventory differs by only $-0.44\%$ and the
-streamwise aqueous-profile L1 error is $1.04\%$. The sorbed inventory is
-$50.2\%$ lower in DBS, showing that adsorption remains sensitive to both the
-integrated area and its cell-wise overlap with the advancing aqueous front.
-The benchmark therefore separates the close bulk-transport agreement from the
-larger uncertainty introduced when a body-fitted reactive boundary is
-represented as a cell-supported interface.
+reactive area is $1.65 \times 10^{-5}$~m$^2$, compared with
+$1.67 \times 10^{-5}$~m$^2$ for DBS \texttt{smoothSurface}, an error of
+$+1.48\%$. The separately calibrated pressure drops give inlet volumetric
+fluxes that agree within $0.004\%$. At $t=200$~s, the dissolved inventory
+differs by $-0.04\%$ and the streamwise aqueous-profile L1 error is $0.51\%$.
+The DBS sorbed inventory is nevertheless $35.7\%$ lower. Thus agreement in
+integrated area and bulk aqueous transport does not by itself ensure equal
+sorption: the local overlap between reactive area and the geometry-dependent
+flow paths remains important.
 
 \begin{figure}[htbp]
     \centering
@@ -236,8 +235,9 @@ represented as a cell-supported interface.
     in the \texttt{snappyHexMesh} case, each wall face contributes its area to
     its adjacent cell. The area row reports both the integrated area and its
     spatial distribution, which controls the surface-complexation inventory.
-    DBS \texttt{smoothSurface} retains the same interface topology on a
-    coarser cell-based support.}
+    The two representations use the same nominal image resolution but place
+    the reconstructed interface and its adjacent flow paths on different
+    numerical supports.}
     \label{fig:hm12SurfaceValidation}
 \end{figure}
 
@@ -256,7 +256,7 @@ streamwise concentration profiles averaged across the transverse direction.
         \toprule
         Method & \shortstack{Dissolved\\inventory [\%]} & \shortstack{Surface\\area [\%]} & \shortstack{Sorbed\\inventory [\%]} & \shortstack{Aqueous\\profile\\L1 norm [\%]} \\
         \midrule
-        DBS \texttt{smoothSurface} & $-0.44$ & $-18.33$ & $-50.21$ & $1.04$ \\
+        DBS \texttt{smoothSurface} & $-0.04$ & $+1.48$ & $-35.73$ & $0.51$ \\
         \bottomrule
     \end{tabular}
 \end{table}

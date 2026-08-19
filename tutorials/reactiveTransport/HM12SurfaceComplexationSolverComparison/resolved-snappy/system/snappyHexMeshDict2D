@@ -17,7 +17,7 @@ FoamFile
 
 // Which of the steps to run
 castellatedMesh true;
-snap           false;
+snap           true;
 addLayers      false;
 
 
@@ -254,16 +254,17 @@ addLayersControls
 meshQualityControls
 {
     //- Maximum non-orthogonality allowed. Set to 180 to disable.
-    maxNonOrtho 30;
+    maxNonOrtho 180;
 
     //- Max skewness allowed. Set to <0 to disable.
-    maxBoundarySkewness 2;
-    maxInternalSkewness 2;
+    maxBoundarySkewness 3;
+    maxInternalSkewness 3;
+    maxSkewness 3;
 
     //- Max concaveness allowed. Is angle (in degrees) below which concavity
     //  is allowed. 0 is straight face, <0 would be convex face.
     //  Set to 180 to disable.
-    maxConcave 30;
+    maxConcave 180;
 
 
     //- Minimum pyramid volume. Is absolute volume of cell pyramid.
@@ -279,7 +280,7 @@ meshQualityControls
     //     <0 = inside out tet,
     //      0 = flat tet
     //      1 = regular tet
-    minTetQuality 0;
+    minTetQuality -1E30;
 
     //- Minimum face area. Set to <0 to disable.
     minArea -1;
@@ -293,13 +294,13 @@ meshQualityControls
     minDeterminant 0.01;
 
     //- minFaceWeight (0 -> 0.5)
-    minFaceWeight 0.1;
+    minFaceWeight 0.05;
 
     //- minVolRatio (0 -> 1)
     minVolRatio 0.1;
 
     //must be >0 for Fluent compatibility
-    minTriangleTwist -1;
+    minTriangleTwist 0.01;
 
 
     // Advanced
@@ -307,7 +308,7 @@ meshQualityControls
     //- Number of error distribution iterations
     nSmoothScale 4;
     //- Amount to scale back displacement at error points
-    errorReduction 0.75;
+    errorReduction 0.5;
 
 }
 

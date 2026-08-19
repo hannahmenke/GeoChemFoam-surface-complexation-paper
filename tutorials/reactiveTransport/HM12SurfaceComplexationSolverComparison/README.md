@@ -5,19 +5,20 @@ This benchmark compares two representations of the same HM12 crop using
 
 Cases:
 
-- `resolved-snappy`: body-fitted `snappyHexMesh`; wall-face area is mapped to
-  adjacent chemistry cells as an explicit `aSurf` field.
+- `resolved-snappy`: body-fitted `snappyHexMesh` with surface snapping enabled;
+  wall-face area is mapped to adjacent chemistry cells as an explicit `aSurf`
+  field.
 - `../reactiveTransportDBSFoam/2DHM12SolidGrainsSurfaceComplexation`: Cartesian
   DBS mesh with an explicit smooth-interface `aSurf` field.
 
 Frozen comparison settings:
 - HM12 crop: `x=700:1300`, `y=700:1300`, `z=1:2`
 - Connected pore mask: `HM12_2_4_thr120_conn`
-- Resolved mesh: `600 x 600 x 1`
-- DBS mesh: `300 x 300 x 1`
+- Resolved mesh: `600 x 600 x 1`, with `snap true`
+- DBS mesh: `600 x 600 x 1`
 - Pressure-driven flow with pressure drops calibrated to the same inlet flux
 - Reactive end time: `t = 200 s`
-- Reactive timesteps: `0.1 s` (resolved) and `0.25 s` (DBS)
+- Reactive timesteps: `0.1 s` (resolved) and `0.05 s` (DBS)
 - Chemistry cutoff: `epsChemistryMin = 1e-3`
 
 How to run:

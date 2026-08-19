@@ -28,7 +28,7 @@ fi
 
 TotalTime="${TOTAL_TIME:-200}"
 WriteTimestep="${WRITE_TIMESTEP:-200}"
-runTimestep="${RUN_TIMESTEP:-0.25}"
+runTimestep="${RUN_TIMESTEP:-0.05}"
 
 cp system/controlDict1 system/controlDict
 sed -i "s/TotalTime/$TotalTime/g" system/controlDict

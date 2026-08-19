@@ -101,7 +101,12 @@
 - section:
   - Numerical Implementation
 - content:
-  - schematic of the operator-splitting loop between transport and PHREEQC
+  - source-traced operator-splitting loop between aqueous transport and PHREEQCRM
+  - initialization, `speciesMixture.correct()` push/run/pull sequence, and matched checkpoint ordering
+- source implementation:
+  - GeoChemFoam commit `c51d4e34`
+  - `applications/solvers/reactiveTransport/reactiveTransportDBSFoam/{reactiveTransportDBSFoam.C,createFields.H,YiEqn.H}`
+  - `src/thermophysicalModels/reactionThermo/mixtures/phreeqcMixture/phreeqcMixture.C`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_solver_workflow.py`
 - repeatable command:

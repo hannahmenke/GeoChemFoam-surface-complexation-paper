@@ -35,8 +35,8 @@ The PHREEQC coupling is selected with
 \texttt{mixtureType phreeqcMixture} in
 \texttt{constant/thermoPhysicalProperties}. This mixture wraps the PhreeqcRM
 interface \citep{parkhurst2015phreeqcrm}. At
-initialisation, each computational cell is registered as a separate PHREEQC
-solution. When surface complexation is active, a PHREEQC \texttt{SURFACE}
+initialisation, each active computational cell is registered as a separate
+PHREEQC solution. When surface complexation is active, a PHREEQC \texttt{SURFACE}
 block is also created for each reactive cell. For surface master $k$, its
 capacity per representative bulk volume is
 \begin{equation}
@@ -66,7 +66,8 @@ surface state. The surface mode is optional and reduces exactly to
 aqueous-only mode when $a_{\mathrm{surf}} = 0$ everywhere.
 For the image-based cases in this paper, a smooth sub-voxel reconstruction is
 applied to the segmented occupancy field and the reconstructed
-interface back into the CFD cells as volumetric $a_{\mathrm{surf}}$. In three
+interface is mapped back into the CFD cells as volumetric
+$a_{\mathrm{surf}}$. In three
 dimensions, \texttt{smoothSurface} extracts an isosurface and deposits the
 resulting triangle areas into the cells that carry the reactive surface. In
 quasi-two-dimensional image cases, it extracts an isoline on the image plane,
@@ -79,25 +80,29 @@ Cells with negligible mobile-water fraction
 ($\epsilon < \texttt{epsChemistryMin}$) are excluded from the fixed
 finite-volume-to-PhreeqcRM mapping and do not contribute to chemistry.
 
-The cell-local nature of the chemistry step means that all PHREEQC calls are
-embarrassingly parallel across cells. PhreeqcRM distributes the cell
-chemistry over available threads using OpenMP, so the chemistry cost scales
-with the number of cores used for the transport solve.
+The chemistry update is local to each mapped cell. In the present
+implementation, each solver process constructs PhreeqcRM with one worker
+thread, and OpenFOAM domain decomposition provides process-level parallelism.
+The \texttt{runCells()} call advances the chemistry cells held by that process.
 
 \subsection{Per-Timestep Algorithm}
 
 At startup, \texttt{reactiveTransportDBSFoam} reads the fixed porosity,
 velocity, pressure, species, and explicit total surface-area fields. The
 \texttt{phreeqcMixture} constructor then establishes a fixed mapping between
-active finite-volume cells and PhreeqcRM cells. At each timestep, each aqueous
-transport equation is advanced in conservative DBS form using the implicit
-Euler--upwind discretization described above. The updated aqueous
-concentrations and surface states are then pushed into PhreeqcRM, the local
-equilibrium chemistry is evaluated for all active cells, and the updated
-aqueous and surface concentrations are returned to the finite-volume fields.
+active finite-volume cells and PhreeqcRM cells, caches the surface-area and
+site-capacity data, and initialises or restores the PHREEQCRM state. At each
+timestep, each aqueous transport equation is advanced in conservative DBS form
+using the implicit Euler--upwind discretization described above. A single call
+to \texttt{speciesMixture.correct()} then copies the aqueous and surface fields
+into PHREEQCRM, refreshes the fixed porosity values, clips negative aqueous
+inputs subject to the configured mass-error limit, executes
+\texttt{runCells()}, and copies the updated aqueous and surface species back to
+the finite-volume fields.
 The porosity and flow fields are not advanced in this PHREEQC mode. At
-configured output times, OpenFOAM fields and a matching PhreeqcRM checkpoint
-pair are written for chemically consistent restarts. Conservation is assessed
+configured output times, the PHREEQCRM dump is prepared before the OpenFOAM
+field write and marked complete only after that write succeeds, yielding a
+matched restart pair. Conservation is assessed
 from the written fields using the domain-integrated bulk inventory
 $M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
 \left( \theta C + a_{\mathrm{surf}}\Gamma \right)$
@@ -114,17 +119,15 @@ composite implicit source term.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.96\linewidth]{figures/png/fig05_solver_workflow.png}
-    \caption{Full solution procedure for
-    \texttt{reactiveTransportDBSFoam}. The solver reads the current
-    finite-volume state, initializes or updates the cell-based PHREEQC
-    coupling through \texttt{phreeqcMixture}, advances all aqueous species
-    in conservative DBS form, executes the local cellwise chemistry update,
-    and then writes the updated aqueous and surface states back to the
-    finite-volume fields. The workflow is intentionally operator-split:
-    transport is solved first, followed by local PHREEQC chemistry, so the two
-    operators remain independently testable and the conservative structure of
-    the aqueous transport step is never hidden inside an implicit composite
-    source term.}
+    \caption{Source-traced solution procedure for
+    \texttt{reactiveTransportDBSFoam} with \texttt{phreeqcMixture}. The
+    constructor establishes the active-cell mapping and initial PHREEQCRM
+    state. Each timestep advances all aqueous species in conservative DBS
+    form, after which \texttt{speciesMixture.correct()} transfers the aqueous
+    and surface state to PHREEQCRM, executes \texttt{runCells()}, and returns
+    the updated species fields. At output times, the PHREEQCRM dump is written
+    before the OpenFOAM fields and marked complete only after the field write
+    succeeds.}
     \label{fig:dbsWorkflow}
 \end{figure}
 

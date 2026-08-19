@@ -8,7 +8,7 @@ boundary_type="pressure_drop"
 #Enter value (m^3/s) if boundary_type is flow_rate, otherwise put 0
 flowRate=0 #4.2e-9
 #Enter value (Pa) if boundary_type is pressure-drop, otherwise put 0 
-pressureDrop=4.41149960538e-5
+pressureDrop=5.27650792623e-5
 #fluid kinematic viscosity (m2/s)
 Visc=1e-6
 

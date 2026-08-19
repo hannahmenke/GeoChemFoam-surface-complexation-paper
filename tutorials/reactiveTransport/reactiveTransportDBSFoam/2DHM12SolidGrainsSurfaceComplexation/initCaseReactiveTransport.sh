@@ -103,7 +103,7 @@ COARSE_NZ="$(tail -n 1 system/Nz1)"
 python "$repo_root/scripts/createASurfMarchingCubes.py" \
     2000 2000 10 \
     700 1300 700 1300 1 2 \
-    300 300 1 \
+    600 600 1 \
     3e-5 \
     HM12_2_4_thr120_conn \
     255 0 2D aSurf occupancyGaussian 0.75 "" "" false 0 > createASurfReactive.out

@@ -17,7 +17,7 @@ FoamFile
 
 mixtureType phreeqcMixture;
 epsChemistryMin 1e-3;
-maxRelativeClippedMass 1e-8;
+maxRelativeClippedMass 2e-8;
 
 kineticPhases
 {

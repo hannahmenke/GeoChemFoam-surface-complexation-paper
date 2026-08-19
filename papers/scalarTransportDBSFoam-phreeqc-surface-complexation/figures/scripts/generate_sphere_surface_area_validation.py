@@ -13,7 +13,6 @@ import numpy as np
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Circle
 from matplotlib.ticker import FuncFormatter
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -236,7 +235,6 @@ def plot_error_series(
     xlabel: str,
     ylabel: str,
     ylim: tuple[float, float],
-    zoom_ylim: tuple[float, float] | None = None,
 ) -> None:
     ax.axhline(0.0, color="#666666", lw=1.0, ls="--", zorder=0)
     for method in method_order:
@@ -267,42 +265,6 @@ def plot_error_series(
     ax.grid(False, axis="x")
     ax.set_title(title, fontsize=12, fontweight="bold")
 
-    if zoom_ylim is None:
-        return
-
-    detail_ax = inset_axes(ax, width="47%", height="43%", loc="center right", borderpad=1.15)
-    detail_ax.axhline(0.0, color="#666666", lw=0.8, ls="--", zorder=0)
-    for method in method_order:
-        if method not in series:
-            continue
-        values = series[method]
-        style = METHOD_STYLE[method]
-        xs = [item[0] for item in values]
-        ys = [item[1] for item in values]
-        detail_ax.plot(
-            xs,
-            ys,
-            color=style["color"],
-            marker=style["marker"],
-            linestyle=style["linestyle"],
-            lw=1.45,
-            ms=4.5,
-        )
-
-    detail_ax.set_xscale("log", base=2)
-    detail_ax.set_xticks([8, 16, 32, 64], labels=["8", "16", "32", "64"])
-    detail_ax.set_ylim(*zoom_ylim)
-    detail_ax.yaxis.set_major_formatter(FuncFormatter(percent_fmt_decimal))
-    detail_ax.tick_params(axis="both", labelsize=7, length=2.5, pad=1)
-    detail_ax.grid(True, axis="y", color="#e4e4e4", lw=0.6)
-    detail_ax.grid(False, axis="x")
-    detail_ax.set_title("near-zero detail", fontsize=8, pad=2)
-    detail_ax.set_facecolor("white")
-    for spine in detail_ax.spines.values():
-        spine.set_edgecolor("#999999")
-        spine.set_linewidth(0.8)
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", type=Path, required=True)
@@ -315,7 +277,13 @@ def main() -> None:
     circle_series = circular_post_series(snappy_csv=args.circular_post_snappy_csv)
 
     fig = plt.figure(figsize=(13.4, 10.0), constrained_layout=True)
-    grid = GridSpec(2, 3, figure=fig, width_ratios=[1.0, 1.0, 1.7])
+    grid = GridSpec(
+        3,
+        3,
+        figure=fig,
+        width_ratios=[1.0, 1.0, 1.7],
+        height_ratios=[1.0, 1.0, 0.08],
+    )
 
     post_grid = grid[0, 0:2].subgridspec(1, 2, wspace=0.08)
     for col, radius in enumerate((8, 16)):
@@ -340,7 +308,6 @@ def main() -> None:
         r"Post resolution $R / \Delta x$",
         "Relative error",
         (-0.01, 0.01),
-        zoom_ylim=(-0.004, 0.004),
     )
 
     sphere_error_ax = fig.add_subplot(grid[1, 2])
@@ -352,13 +319,12 @@ def main() -> None:
         r"Sphere resolution $R / \Delta x$",
         "Relative error",
         (-0.04, 0.03),
-        zoom_ylim=(-0.035, 0.02),
     )
 
-    legend = sphere_error_ax.legend(loc="center left", frameon=True)
-    legend.get_frame().set_edgecolor("#cccccc")
-    legend.get_frame().set_alpha(0.95)
-    legend = circle_error_ax.legend(loc="center left", frameon=True)
+    legend_ax = fig.add_subplot(grid[2, :])
+    legend_ax.set_axis_off()
+    handles, labels = circle_error_ax.get_legend_handles_labels()
+    legend = legend_ax.legend(handles, labels, loc="center", ncol=len(labels), frameon=True)
     legend.get_frame().set_edgecolor("#cccccc")
     legend.get_frame().set_alpha(0.95)
 

@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -Eeo pipefail
 
 repo_root="$(cd "$(dirname "$0")"/../../../.. && pwd)"
 

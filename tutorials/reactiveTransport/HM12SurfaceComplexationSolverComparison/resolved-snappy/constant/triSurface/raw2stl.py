@@ -1,13 +1,34 @@
-#script to raw image and create an stl mesh for DNS
-import matplotlib.pyplot as plt
+# Script to convert a raw image into an STL mesh for DNS.
+import argparse
 import numpy as np
 import skimage
-from skimage import data
-from skimage.measure import marching_cubes
-from stl import mesh
-import argparse
 from scipy import ndimage
-import os
+
+
+def write_binary_stl(path, vertices, faces):
+    """Write a binary STL without requiring the external numpy-stl package."""
+    triangles = np.asarray(vertices[faces], dtype="<f4")
+    normals = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
+    magnitudes = np.linalg.norm(normals, axis=1)
+    nonzero = magnitudes > 0.0
+    normals[nonzero] /= magnitudes[nonzero, None]
+
+    records = np.zeros(
+        faces.shape[0],
+        dtype=np.dtype(
+            [
+                ("normal", "<f4", (3,)),
+                ("vertices", "<f4", (3, 3)),
+                ("attribute", "<u2"),
+            ]
+        ),
+    )
+    records["normal"] = normals
+    records["vertices"] = triangles
+    with open(path, "wb") as stream:
+        stream.write(b"GeoChemFoam raw2stl".ljust(80, b"\0"))
+        stream.write(np.asarray([faces.shape[0]], dtype="<u4").tobytes())
+        records.tofile(stream)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--x_min', required=True, type=int, help='minimum crop x')
@@ -81,13 +102,5 @@ with open("./pore_indz", "w") as f:
 
 verts, faces, normals, values = skimage.measure.marching_cubes(img_padded, (pores_value+solid_value)/2, step_size=1, allow_degenerate=1)
 
-# Create the mesh
-imagemesh = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
-for i, f in enumerate(faces):
-    for j in range(3):
-        imagemesh.vectors[i][j] = verts[f[j],:]
-
-# Write the mesh to file "cube.stl"
-imagemesh.save(output_direc+'Image_meshed.stl')
-imagemesh.save(output_direc+'Image_meshed_python.stl')
-
+write_binary_stl(output_direc + 'Image_meshed.stl', verts, faces)
+write_binary_stl(output_direc + 'Image_meshed_python.stl', verts, faces)

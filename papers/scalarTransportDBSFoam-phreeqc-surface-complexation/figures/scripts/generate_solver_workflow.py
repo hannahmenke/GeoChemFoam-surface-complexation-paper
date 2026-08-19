@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the solver-workflow figure for the paper."""
+"""Generate the source-traced solver-workflow figure for the paper.
+
+The sequence is traced against GeoChemFoam commit c51d4e34 using
+reactiveTransportDBSFoam.C, createFields.H, YiEqn.H, and
+phreeqcMixture.C.  In particular, YiEqn.H calls speciesMixture.correct()
+once after all aqueous transport solves, and phreeqcMixture::correct()
+owns the PHREEQCRM push/runCells/pull sequence and checkpoint preparation.
+"""
 
 from __future__ import annotations
 
@@ -69,18 +76,18 @@ def main() -> None:
     #  b0 – read case
     b0_y = 0.855; b0_h = 0.11
     add_box(ax, (mid_x, b0_y), w, b0_h,
-            "Read case, mesh, fields\n"
-            r"$\varepsilon$, $a_{\mathrm{surf}}$," + "\n"
-            r"$\phi$, aqueous and surface states",
-            fc="#d9e8fb", fontsize=10)
+            "Read mesh and OpenFOAM fields\n"
+            r"$p$, $\mathbf{U}$, $\varepsilon$, $a_{\mathrm{surf}}$," + "\n"
+            "aqueous and surface species; construct " + r"$\phi$",
+            fc="#d9e8fb", fontsize=9)
 
     #  b1 – initialise PHREEQC
     b1_y = 0.685; b1_h = 0.11
     add_box(ax, (mid_x, b1_y), w, b1_h,
-            "Initialise phreeqcMixture\n"
-            "Load database, map components,\n"
-            "set porosity and surface mode",
-            fc="#d9e8fb", fontsize=10)
+            "Construct phreeqcMixture\n"
+            "Map active cells; cache surface data\n"
+            "Load inputs; initialise or restore PHREEQCRM",
+            fc="#d9e8fb", fontsize=9)
 
     add_arrow(ax, (cx, b0_y), (cx, b1_y + b1_h))   # b0 bottom → b1 top
 
@@ -89,7 +96,7 @@ def main() -> None:
 
     add_arrow(ax, (cx, b1_y), (cx, b2_y + b2_h))   # b1 bottom → b2 top
     add_box(ax, (mid_x, b2_y), w, b2_h,
-            "Start timestep loop\n(current time < end time)",
+            "Advance time and enter timestep\n(current time < end time)",
             fc="#e8e8e8", fontsize=10)
 
     # ── main loop: three columns ──────────────────────────────────────────────
@@ -103,17 +110,16 @@ def main() -> None:
             fc="#dff3df", fontsize=9)
 
     add_box(ax, (mid_x,   col_y), w, h3,
-            u"② Assemble chemistry state\n"
-            r"Push updated aqueous fields," + "\n"
-            r"$\varepsilon$ and $a_{\mathrm{surf}}$ into" + "\n"
-            "phreeqcMixture",
-            fc="#fff1cc", fontsize=9)
+            u"② Prepare PHREEQCRM input\n"
+            "Copy aqueous and surface fields;\n"
+            r"refresh fixed $\varepsilon$; clip negative" + "\n"
+            "aqueous values; push state",
+            fc="#fff1cc", fontsize=8.5)
 
     add_box(ax, (right_x, col_y), w, h3,
-            u"③ Local PHREEQC step\n"
-            "Cellwise equilibrium chemistry\n"
-            "and surface complexation\n"
-            "(OpenMP parallel)",
+            u"③ PHREEQCRM runCells()\n"
+            "Cell-local aqueous speciation\n"
+            "and surface complexation",
             fc="#ffd9cc", fontsize=9)
 
     col_cy = col_y + h3 / 2   # vertical centre of the three boxes
@@ -136,17 +142,18 @@ def main() -> None:
 
     # ── pull-back box ─────────────────────────────────────────────────────────
     add_box(ax, (mid_x, b6_y), w, b6_h,
-            u"④ Pull back updated state\n"
-            "Aqueous species, surface species,\n"
-            "and ionic strength",
+            u"④ Return PHREEQCRM results\n"
+            "Copy updated aqueous and surface\n"
+            "species to OpenFOAM fields",
             fc="#fff1cc", fontsize=9)
 
     # ── write / advance box ───────────────────────────────────────────────────
     b7_y = 0.018; b7_h = 0.072
     add_box(ax, (mid_x, b7_y), w, b7_h,
-            u"⑤ Write fields and PHREEQC checkpoints\n"
-            "Advance time and repeat",
-            fc="#e8e8e8", fontsize=10)
+            u"⑤ At output times\n"
+            "PHREEQCRM dump → OpenFOAM fields\n"
+            "→ completion marker",
+            fc="#e8e8e8", fontsize=8.5)
 
     add_arrow(ax, (cx, b6_y), (cx, b7_y + b7_h))   # ④ → ⑤
 
