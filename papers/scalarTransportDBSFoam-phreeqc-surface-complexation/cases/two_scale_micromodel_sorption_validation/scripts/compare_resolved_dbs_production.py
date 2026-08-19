@@ -27,7 +27,7 @@ def field_with_fallback(case_dir: Path, time: str, field: str) -> np.ndarray:
 
 def load(case_dir: Path, time: str) -> dict[str, np.ndarray]:
     li = stitch_field(case_dir, time, "Li+").astype(np.float64)
-    theta = stitch_field(case_dir, time, "theta").astype(np.float64)
+    theta = stitch_field(case_dir, time, "eps").astype(np.float64)
     sor = stitch_field(case_dir, time, "Sor_aLi").astype(np.float64)
     asurf = stitch_field(case_dir, time, "aSurf").astype(np.float64)
     # The solver assembles intrinsic matrix area into the written aSurf field
@@ -36,7 +36,7 @@ def load(case_dir: Path, time: str) -> dict[str, np.ndarray]:
     area = asurf
     return {
         "li": li,
-        "theta": theta,
+        "eps": theta,
         "sor": sor,
         "area": area,
         "aqueous_density": li * theta,
@@ -106,8 +106,8 @@ def main() -> None:
         if resolved[key].shape != dbs[key].shape:
             raise ValueError(f"Shape mismatch for {key}: {resolved[key].shape} vs {dbs[key].shape}")
 
-    resolved_aq_macro = weighted_blocks(resolved["li"], resolved["theta"], args.stride)
-    dbs_aq_macro = weighted_blocks(dbs["li"], dbs["theta"], args.stride)
+    resolved_aq_macro = weighted_blocks(resolved["li"], resolved["eps"], args.stride)
+    dbs_aq_macro = weighted_blocks(dbs["li"], dbs["eps"], args.stride)
     resolved_sor_macro = weighted_blocks(resolved["sor"], resolved["area"], args.stride) * 1000.0
     dbs_sor_macro = weighted_blocks(dbs["sor"], dbs["area"], args.stride) * 1000.0
 
@@ -125,7 +125,7 @@ def main() -> None:
             "macro_block_um": args.stride * 5,
         },
         "resolved": {
-            "porosity": float(np.mean(resolved["theta"])),
+            "porosity": float(np.mean(resolved["eps"])),
             "reactive_area_density_m-1": float(np.mean(resolved["area"])),
             "aqueous_li_inventory_density": float(np.mean(resolved["aqueous_density"])),
             "sorbed_li_inventory_density": float(np.mean(resolved["sorbed_density"])),
@@ -133,7 +133,7 @@ def main() -> None:
             "sorbed_x50_m": resolved_sor_x50,
         },
         "dbs": {
-            "porosity": float(np.mean(dbs["theta"])),
+            "porosity": float(np.mean(dbs["eps"])),
             "reactive_area_density_m-1": float(np.mean(dbs["area"])),
             "aqueous_li_inventory_density": float(np.mean(dbs["aqueous_density"])),
             "sorbed_li_inventory_density": float(np.mean(dbs["sorbed_density"])),
@@ -141,7 +141,7 @@ def main() -> None:
             "sorbed_x50_m": dbs_sor_x50,
         },
         "dbs_vs_resolved": {
-            "porosity_relative_difference": rel(float(np.mean(dbs["theta"])), float(np.mean(resolved["theta"]))),
+            "porosity_relative_difference": rel(float(np.mean(dbs["eps"])), float(np.mean(resolved["eps"]))),
             "reactive_area_density_relative_difference": rel(float(np.mean(dbs["area"])), float(np.mean(resolved["area"]))),
             "aqueous_li_inventory_density_relative_difference": rel(float(np.mean(dbs["aqueous_density"])), float(np.mean(resolved["aqueous_density"]))),
             "sorbed_li_inventory_density_relative_difference": rel(float(np.mean(dbs["sorbed_density"])), float(np.mean(resolved["sorbed_density"]))),
@@ -159,8 +159,8 @@ def main() -> None:
 
     fig, axes = plt.subplots(3, 2, figsize=(12.5, 8.5), constrained_layout=True)
     extent = (0.0, 18.0, 0.0, 6.0)
-    resolved_phase = (resolved["theta"] > 0.5).astype(float)
-    dbs_phase = (dbs["theta"] > 0.999).astype(float)
+    resolved_phase = (resolved["eps"] > 0.5).astype(float)
+    dbs_phase = (dbs["eps"] > 0.999).astype(float)
     phase_cmap = ListedColormap(["black", "white"])
     axes[0, 0].imshow(resolved_phase, origin="lower", extent=extent, cmap=phase_cmap, vmin=0, vmax=1, interpolation="nearest")
     axes[0, 1].imshow(dbs_phase, origin="lower", extent=extent, cmap=phase_cmap, vmin=0, vmax=1, interpolation="nearest")

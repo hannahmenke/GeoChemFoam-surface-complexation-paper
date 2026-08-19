@@ -2,22 +2,14 @@
 
 \subsection{Formulation Choices and Conservative Structure}
 
-The central modeling choice in this work is the use of the physical
-mobile-water fraction $\theta$ as the chemistry accumulation variable rather
-than the numerical DBS porosity $\epsilon_{\mathrm{num}}$. This distinction
-is not merely notational. In the DBS micro-continuum approach, the numerical
-porosity is retained at a finite minimum value throughout the solid skeleton
-to regularize the Brinkman drag term and stabilize transport in nearly solid
-voxels. Using $\epsilon_{\mathrm{num}}$ directly as a chemical storage term
-would therefore dilute aqueous concentrations into artificial near-solid
-control volumes introduced only for numerical regularization, and would inflate
-the apparent retardation. The formulation presented here avoids this by
-defining the mobile-water fraction separately from the
-numerical porosity and by using $\theta$ consistently in both the transport
-accumulation term and the PHREEQC input. This separation is the core modeling
-decision of the paper: flow regularization is allowed to remain a DBS device,
-while chemistry is tied only to physically mobile water and to the local
-cell-based surface inventory.
+The central modeling choice in this work is to use one fixed porosity field,
+$\varepsilon$, consistently in the finite-volume transport equation and in
+the PHREEQC cell volumes. In the continuous notation of Section~\ref{sec:model},
+the mobile-water fraction is therefore $\theta=\varepsilon$. This shared field
+keeps aqueous accumulation, transport, and equilibrium chemistry on the same
+volumetric basis. The reactive surface is supplied independently through the
+explicit cell field $a_{\mathrm{surf}}$, so the chemical storage volume and
+the amount of reactive surface remain separately defined material properties.
 
 This approach extends earlier micro-continuum reactive transport formulations
 to the case where the reactive surface area is an unresolved cell property
@@ -36,7 +28,7 @@ and coupled to PHREEQC as a cell-level property.
 
 A consequence of this design is that the conservation structure is enforced at
 the cell level rather than through a face flux. The surface inventory
-$M = \theta C + (a_{\mathrm{surf}}/\theta)\,\Gamma_{\mathrm{field}}$ is
+$M = \varepsilon C + a_{\mathrm{surf}}\Gamma$ is
 updated locally by PHREEQC at each timestep, and the aqueous transport step is
 conservative in the standard finite-volume sense. There is no explicit
 surface-flux term on the cell face that could introduce an additional
@@ -71,23 +63,15 @@ resolves the local connectivity.
 
 \subsection{Computational Cost and Scaling}
 
-The chemistry fraction of 36--55\% observed in the 1D benchmark sensitivity
-study reflects the fact that PHREEQC is called once per cell per timestep, with
-a full speciation and surface equilibration for each cell. This is the expected
-cost model for a PHREEQC-coupled operator-split solver: the chemistry overhead
-depends primarily on the number of active cells, the complexity of the
-geochemical system, and the frequency of the chemistry call. For the simple
-calcium surface-complexation system used here, the per-cell chemistry time is
-small relative to transport, but it accumulates over the full cell count.
-
-In the Estaillades case, the total wall-clock time to $t = 50$ is approximately
-$25$~s on eight MPI ranks, of which $\approx 7$~s is attributed to chemistry.
-This is already a tractable cost for a $50^3$ coarse grid. For larger grids or
-more complex geochemical systems, cell masking (as applied here for
-$\theta \le 10^{-3}$) is an important mechanism for reducing the chemistry cost
-by eliminating near-solid cells that carry no physical aqueous inventory. The
-present paper keeps that threshold fixed across all examples for consistency;
-its influence on accuracy and cost deserves a dedicated sensitivity study.
+PHREEQC is called once per active cell per timestep, with a full speciation
+and surface-equilibration calculation for each cell. The chemistry overhead
+therefore depends primarily on the number of active cells, the geochemical
+system, and the frequency of the chemistry call. For larger grids or more
+complex geochemical systems, cell masking (as applied here for
+$\varepsilon \le 10^{-3}$) is an important mechanism for reducing the chemistry cost
+by eliminating near-solid cells from the PhreeqcRM mapping. The present paper
+keeps that threshold fixed across all examples for consistency; its influence
+on accuracy and cost deserves a dedicated sensitivity study.
 
 \subsection{Limitations and Future Work}
 

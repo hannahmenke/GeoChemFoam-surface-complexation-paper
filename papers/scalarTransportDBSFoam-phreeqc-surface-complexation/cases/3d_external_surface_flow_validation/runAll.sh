@@ -37,7 +37,6 @@ mkdir -p results
 python scripts/prepare_external_crop.py
 
 run_case snappy
-run_case dbs-gradeps
 run_case dbs-smoothsurface
 
 python scripts/analyze_external_flow_validation.py \

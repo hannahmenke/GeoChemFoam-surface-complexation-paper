@@ -15,7 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     reactiveScalarTransportDBSFoam;
+application     reactiveTransportDBSFoam;
 
 rebuildPhiFromU false;
 

@@ -43,7 +43,6 @@ for case_dir in resolved-reference dbs-upscaled; do
          "$case_dir"/processor* \
          "$case_dir"/constant/polyMesh \
          "$case_dir"/constant/triSurface \
-         "$case_dir"/constant/aSurfReconstructionDict \
          "$case_dir"/system/NPX \
          "$case_dir"/system/NPY \
          "$case_dir"/system/NPZ \

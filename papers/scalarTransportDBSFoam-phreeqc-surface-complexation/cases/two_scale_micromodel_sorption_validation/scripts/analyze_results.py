@@ -124,7 +124,7 @@ def case_metrics(case_dir: Path, time_name: str, n_profile_bins: int) -> dict[st
 
     li = assemble_field(case_dir, time_name, "Li+")
     na = assemble_field(case_dir, time_name, "Na+")
-    theta = assemble_field(case_dir, time_name, "theta")
+    theta = assemble_field(case_dir, time_name, "eps")
     asurf = assemble_field(case_dir, time_name, "aSurf", fallback_time="0")
     try:
         asurf_intrinsic = assemble_field(case_dir, time_name, "aSurfIntrinsic", fallback_time="0")

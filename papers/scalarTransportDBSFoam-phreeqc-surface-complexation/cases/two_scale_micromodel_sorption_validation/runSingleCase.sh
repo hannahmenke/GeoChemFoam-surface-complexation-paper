@@ -46,7 +46,6 @@ for case_dir in resolved-reference dbs-upscaled; do
          "$case_dir"/processor* \
          "$case_dir"/constant/polyMesh \
          "$case_dir"/constant/triSurface \
-         "$case_dir"/constant/aSurfReconstructionDict \
          "$case_dir"/system/NPX \
          "$case_dir"/system/NPY \
          "$case_dir"/system/NPZ \
@@ -255,7 +254,7 @@ cp "$TARGET_CASE"/poroPerm.csv "$out_dir/" 2>/dev/null || true
 cp "$TARGET_CASE"/simpleDBSFoam.out "$out_dir/" 2>/dev/null || true
 cp "$TARGET_CASE"/simpleDBSFoamFlow.out "$out_dir/" 2>/dev/null || true
 cp "$TARGET_CASE"/processPoroPermFlow.out "$out_dir/" 2>/dev/null || true
-cp "$TARGET_CASE"/reactiveScalarTransportDBSFoamRT.out "$out_dir/" 2>/dev/null || true
+cp "$TARGET_CASE"/reactiveTransportDBSFoamRT.out "$out_dir/" 2>/dev/null || true
 cp "$TARGET_CASE"/system/controlDict "$out_dir/controlDict.reactive" 2>/dev/null || true
 
 echo "=== Completed: ${TARGET_CASE} at Pe=${TARGET_PE} ==="

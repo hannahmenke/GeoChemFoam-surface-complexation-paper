@@ -124,7 +124,7 @@ def main() -> None:
         t_value = float(args.time)
 
     print(f"Reading {case_dir} at t={t_name} with stride={args.stride}")
-    theta = stitch_downsampled(case_dir, t_name, "theta", args.stride)
+    theta = stitch_downsampled(case_dir, t_name, "eps", args.stride)
     li = stitch_downsampled(case_dir, t_name, "Li+", args.stride)
     sor_li = stitch_downsampled(case_dir, t_name, "Sor_aLi", args.stride)
     asurf = stitch_downsampled(case_dir, t_name, "aSurf", args.stride)

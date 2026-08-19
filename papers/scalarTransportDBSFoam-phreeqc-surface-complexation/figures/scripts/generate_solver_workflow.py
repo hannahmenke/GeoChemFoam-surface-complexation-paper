@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the solver-workflow figure for the paper.
-
-Changes from previous version:
-  - Title removed; the caption provides all context.
-  - Side annotation boxes removed (operator-split note is in the caption;
-    cell-centred state is in §4.1).
-  - epsilon_num removed from the "Read case" box (not used in chemistry).
-  - Timestep-loop boxes numbered ①–⑤ to match §4.3 prose.
-  - b5→b6 arrow re-routed as a clean L-shape (vertical then horizontal)
-    instead of a diagonal.
-  - Loop-back arrow labelled "next Δt".
-  - OpenMP note added to the PHREEQC box.
-  - Section labels ("Initialisation" / "Per-timestep loop") added as
-    small italic text with a thin separator line.
-"""
+"""Generate the solver-workflow figure for the paper."""
 
 from __future__ import annotations
 
@@ -84,14 +70,14 @@ def main() -> None:
     b0_y = 0.855; b0_h = 0.11
     add_box(ax, (mid_x, b0_y), w, b0_h,
             "Read case, mesh, fields\n"
-            r"$\theta$, $a_{\mathrm{surf}}$," + "\n"
+            r"$\varepsilon$, $a_{\mathrm{surf}}$," + "\n"
             r"$\phi$, aqueous and surface states",
             fc="#d9e8fb", fontsize=10)
 
     #  b1 – initialise PHREEQC
     b1_y = 0.685; b1_h = 0.11
     add_box(ax, (mid_x, b1_y), w, b1_h,
-            "Initialise phreeqcDBSMixture\n"
+            "Initialise phreeqcMixture\n"
             "Load database, map components,\n"
             "set porosity and surface mode",
             fc="#d9e8fb", fontsize=10)
@@ -112,15 +98,15 @@ def main() -> None:
 
     add_box(ax, (left_x,  col_y), w, h3,
             u"① Conservative DBS\ntransport\n"
-            r"$\partial_t(\theta C_i)+\nabla\!\cdot(\phi C_i)$" + "\n"
-            r"$-\nabla\!\cdot(\theta D_i\nabla C_i)=0$",
+            r"$\partial_t(\varepsilon C_i)+\nabla\!\cdot(\phi C_i)$" + "\n"
+            r"$-\nabla\!\cdot(\varepsilon D_i\nabla C_i)=0$",
             fc="#dff3df", fontsize=9)
 
     add_box(ax, (mid_x,   col_y), w, h3,
             u"② Assemble chemistry state\n"
             r"Push updated aqueous fields," + "\n"
-            r"$\theta$ and $a_{\mathrm{surf}}$ into" + "\n"
-            "phreeqcDBSMixture",
+            r"$\varepsilon$ and $a_{\mathrm{surf}}$ into" + "\n"
+            "phreeqcMixture",
             fc="#fff1cc", fontsize=9)
 
     add_box(ax, (right_x, col_y), w, h3,
@@ -152,14 +138,13 @@ def main() -> None:
     add_box(ax, (mid_x, b6_y), w, b6_h,
             u"④ Pull back updated state\n"
             "Aqueous species, surface species,\n"
-            "ionic strength,\n"
-            "and inventory diagnostics",
+            "and ionic strength",
             fc="#fff1cc", fontsize=9)
 
     # ── write / advance box ───────────────────────────────────────────────────
     b7_y = 0.018; b7_h = 0.072
     add_box(ax, (mid_x, b7_y), w, b7_h,
-            u"⑤ Write fields and diagnostics\n"
+            u"⑤ Write fields and PHREEQC checkpoints\n"
             "Advance time and repeat",
             fc="#e8e8e8", fontsize=10)
 

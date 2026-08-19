@@ -759,7 +759,7 @@ def main() -> None:
         default="volume",
     )
     parser.add_argument("--surface-field", default="Surf_aCa+")
-    parser.add_argument("--geometry-field", default="theta")
+    parser.add_argument("--geometry-field", default="eps")
     parser.add_argument("--surface-baseline-time")
     parser.add_argument("--surface-mask-field", default=None)
     parser.add_argument("--connectivity-image", type=Path, default=None)

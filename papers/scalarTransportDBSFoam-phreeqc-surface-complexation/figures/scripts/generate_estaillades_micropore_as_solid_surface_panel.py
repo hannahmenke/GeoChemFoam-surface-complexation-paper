@@ -27,7 +27,7 @@ def main() -> None:
     parser.add_argument("--case-dir", type=Path, required=True)
     parser.add_argument("--time-name", required=True)
     parser.add_argument("--surface-field", default="Surf_aSr+")
-    parser.add_argument("--geometry-field", default="theta")
+    parser.add_argument("--geometry-field", default="eps")
     parser.add_argument("--surface-mask-field", default="aSurf")
     parser.add_argument("--surface-floor", type=float, default=0.0)
     parser.add_argument("--surface-log-scale", action="store_true")

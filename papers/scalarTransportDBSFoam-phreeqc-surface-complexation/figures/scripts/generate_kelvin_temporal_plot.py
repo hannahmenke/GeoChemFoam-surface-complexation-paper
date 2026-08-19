@@ -132,7 +132,7 @@ def main() -> None:
     parser.add_argument("--background-field", default="Mg+2")
     parser.add_argument("--surf-target-fields", default="Hfo_sOMn+,Hfo_wOMn+")
     parser.add_argument("--surf-background-fields", default="Hfo_wOMg+")
-    parser.add_argument("--aqueous-weight-field", default="theta")
+    parser.add_argument("--aqueous-weight-field", default="eps")
     parser.add_argument("--surface-weight-field", default="aSurf")
     parser.add_argument("--target-label", default="Mn$^{2+}$")
     parser.add_argument("--background-label", default="Mg$^{2+}$")

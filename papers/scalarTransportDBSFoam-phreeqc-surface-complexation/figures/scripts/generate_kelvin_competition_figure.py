@@ -243,7 +243,7 @@ def main() -> None:
     parser.add_argument("--case-dir", type=Path, required=True)
     parser.add_argument("--time-name", required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--geometry-field", default="theta")
+    parser.add_argument("--geometry-field", default="eps")
     parser.add_argument("--target-field", default="Mn+2")
     parser.add_argument("--background-field", default="Mg+2")
     parser.add_argument("--surf-target-fields", default="Hfo_sOMn+,Hfo_wOMn+")

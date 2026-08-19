@@ -17,7 +17,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-PYTOOLS = REPO_ROOT / "applications" / "utilities" / "pyTools"
+PYTOOLS = REPO_ROOT / "scripts"
 if str(PYTOOLS) not in sys.path:
     sys.path.insert(0, str(PYTOOLS))
 
@@ -25,12 +25,6 @@ from createASurfMarchingCubes import contour_total_length, contours_for_pair
 
 
 METHOD_STYLE = {
-    "dbs-file": {
-        "label": r"DBS $|\nabla \varepsilon|$",
-        "color": "#8f2d2d",
-        "marker": "s",
-        "linestyle": "-",
-    },
     "dbs-smoothed-mc": {
         "label": "DBS smoothSurface",
         "color": "#1b6b73",
@@ -112,15 +106,6 @@ def make_circle_image(radius_over_dx: float, sigma_vox: float = 1.5) -> tuple[np
     return solid, {"n": float(n), "center": center, "radius_over_dx": float(radius_over_dx)}
 
 
-def staircase_perimeter(solid_mask: np.ndarray) -> float:
-    pore_mask = ~solid_mask
-    vertical = np.count_nonzero(pore_mask[:, :-1] & solid_mask[:, 1:])
-    vertical += np.count_nonzero(solid_mask[:, :-1] & pore_mask[:, 1:])
-    horizontal = np.count_nonzero(pore_mask[:-1, :] & solid_mask[1:, :])
-    horizontal += np.count_nonzero(solid_mask[:-1, :] & pore_mask[1:, :])
-    return float(vertical + horizontal)
-
-
 def smooth_circle_perimeter(solid_mask: np.ndarray, sigma_vox: float) -> float:
     image = np.where(solid_mask[np.newaxis, :, :], 0, 255).astype(np.uint8)
     owner_mask = image == 255
@@ -134,11 +119,10 @@ def circular_post_series(
     sigma_vox: float = 1.5,
     snappy_csv: Path | None = None,
 ) -> dict[str, list[tuple[float, float]]]:
-    series: dict[str, list[tuple[float, float]]] = {"dbs-file": [], "dbs-smoothed-mc": []}
+    series: dict[str, list[tuple[float, float]]] = {"dbs-smoothed-mc": []}
     for radius in radii:
         solid_mask, _ = make_circle_image(radius, sigma_vox)
         analytic = 2.0 * np.pi * radius
-        series["dbs-file"].append((float(radius), (staircase_perimeter(solid_mask) - analytic) / analytic))
         smooth_length = smooth_circle_perimeter(solid_mask, sigma_vox)
         series["dbs-smoothed-mc"].append((float(radius), (smooth_length - analytic) / analytic))
     if snappy_csv is not None and snappy_csv.exists():
@@ -277,7 +261,7 @@ def plot_error_series(
     ax.set_xticks([8, 16, 32, 64], labels=["8", "16", "32", "64"])
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.yaxis.set_major_formatter(FuncFormatter(percent_fmt))
+    ax.yaxis.set_major_formatter(FuncFormatter(percent_fmt_decimal))
     ax.set_ylim(*ylim)
     ax.grid(True, axis="y", color="#dddddd", lw=0.8)
     ax.grid(False, axis="x")
@@ -351,11 +335,11 @@ def main() -> None:
     plot_error_series(
         circle_error_ax,
         circle_series,
-        ["snappy", "dbs-smoothed-mc", "dbs-file"],
+        ["snappy", "dbs-smoothed-mc"],
         "2D circular-post area error",
         r"Post resolution $R / \Delta x$",
         "Relative error",
-        (-0.04, 0.32),
+        (-0.01, 0.01),
         zoom_ylim=(-0.004, 0.004),
     )
 
@@ -363,11 +347,11 @@ def main() -> None:
     plot_error_series(
         sphere_error_ax,
         series,
-        ["snappy", "dbs-smoothed-mc", "dbs-file"],
+        ["snappy", "dbs-smoothed-mc"],
         "3D sphere area error",
         r"Sphere resolution $R / \Delta x$",
         "Relative error",
-        (-0.06, 0.56),
+        (-0.04, 0.03),
         zoom_ylim=(-0.035, 0.02),
     )
 

@@ -4,7 +4,7 @@
 
 This note records the first successful corrected production run for:
 
-- `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+- `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DEstailladesSurfaceComplexation`
 
 ## What Changed Before The Run
 
@@ -30,7 +30,7 @@ on:
 
 The solver log is:
 
-- `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation/reactiveScalarTransportDBSFoamRT.out`
+- `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DEstailladesSurfaceComplexation/reactiveTransportDBSFoamRT.out`
 
 ## Measured Results
 

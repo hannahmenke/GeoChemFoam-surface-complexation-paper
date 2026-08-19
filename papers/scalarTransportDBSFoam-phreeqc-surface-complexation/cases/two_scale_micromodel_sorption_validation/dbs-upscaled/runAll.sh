@@ -45,7 +45,6 @@ run_task initCaseFlow.sh
 run_task runCaseFlow.sh
 run_task processFlow.sh
 run_task initCaseReactiveTransport.sh
-rm -f 0/aSurf processor*/0/aSurf
 run_task runCaseReactiveTransport.sh
 run_task processReactiveTransport.sh
 echo "=== Completed: Micromodel DBS smoothInterface case ==="

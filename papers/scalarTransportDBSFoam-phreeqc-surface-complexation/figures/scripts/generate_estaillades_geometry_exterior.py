@@ -115,7 +115,7 @@ def main() -> None:
     )
     parser.add_argument("--case-dir", type=Path, required=True)
     parser.add_argument("--time-name", default="0")
-    parser.add_argument("--geometry-field", default="theta")
+    parser.add_argument("--geometry-field", default="eps")
     parser.add_argument("--solid-threshold", type=float, default=1.0e-3)
     parser.add_argument("--pore-threshold", type=float, default=0.9)
     parser.add_argument("--output", type=Path, required=True)

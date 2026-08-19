@@ -80,7 +80,7 @@ def main() -> None:
     parser.add_argument("--c-in", type=float, default=2e-9)
     parser.add_argument("--theta", type=float, default=0.5)
     parser.add_argument("--asurf", type=float, default=1e5)
-    parser.add_argument("--k-s-field", type=float, default=4.2412187733863601e-06)
+    parser.add_argument("--k-s", type=float, default=4.2526322996538045e-06)
     parser.add_argument("--diffusion", type=float, default=1e-11)
     parser.add_argument("--length", type=float, default=4e-5)
     parser.add_argument("--time", type=float, default=10.0)
@@ -97,16 +97,16 @@ def main() -> None:
     x_right = [(i + 1.0) * dx for i in range(n)]
     x_um = [1.0e6 * value for value in x]
 
-    r_field = 1.0 + args.asurf * args.k_s_field / (args.theta * args.theta)
-    v_surface = args.u / (args.theta * r_field)
-    d_surface = args.diffusion / r_field
+    r_factor = 1.0 + args.asurf * args.k_s / args.theta
+    v_surface = args.u / (args.theta * r_factor)
+    d_surface = args.diffusion / r_factor
     analytical_surface = [
         cell_average_ogata_banks(
             args.c_in, v_surface, d_surface, args.time, xl, xr
         )
         for xl, xr in zip(x_left, x_right)
     ]
-    analytical_surface_loading = [args.k_s_field * value for value in analytical_surface]
+    analytical_surface_loading = [args.k_s * value for value in analytical_surface]
     numerical_surface_loading = surface_loading_values
     analytical_aqueous = None
     if aqueous_values is not None:
@@ -199,7 +199,7 @@ def main() -> None:
     ax2.grid(True, alpha=0.25)
 
     annotation_lines = [
-        f"$R_{{field}}={r_field:.3f}$",
+        f"$R={r_factor:.3f}$",
         f"surface L1 = {100.0 * l1_surface:.2f}%",
         f"surface $L_\\infty$ = {100.0 * linf_surface:.2f}%",
     ]

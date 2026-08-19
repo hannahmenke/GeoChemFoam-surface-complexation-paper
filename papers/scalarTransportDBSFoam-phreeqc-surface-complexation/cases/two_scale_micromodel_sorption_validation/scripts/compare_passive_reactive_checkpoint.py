@@ -35,7 +35,7 @@ def cosine(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def case_metrics(reactive: Path, passive: Path, time: str) -> tuple[dict[str, float], dict[str, np.ndarray]]:
-    theta = stitch_field(reactive, time, "theta").astype(np.float64)
+    theta = stitch_field(reactive, time, "eps").astype(np.float64)
     area = stitch_field(reactive, time, "aSurf").astype(np.float64)
     reactive_li = stitch_field(reactive, time, "Li+").astype(np.float64)
     passive_li = stitch_field(passive, time, "Li+").astype(np.float64)
@@ -63,7 +63,7 @@ def case_metrics(reactive: Path, passive: Path, time: str) -> tuple[dict[str, fl
         "reactive_vs_passive_aqueous_map_cosine": cosine(reactive_aq, passive_aq),
     }
     fields = {
-        "theta": theta,
+        "eps": theta,
         "passive_li": passive_li,
         "reactive_li": reactive_li,
         "reactive_sor_mol_m2": sor * 1000.0,

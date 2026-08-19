@@ -34,15 +34,16 @@ OUTPUT = (
 )
 METRICS_JSON = CASE_ROOT / "results" / "fig11_3d_external_surface_area_validation_metrics.json"
 
-PYTOOLS = REPO_ROOT / "applications" / "utilities" / "pyTools"
 SCRIPTS = REPO_ROOT / "scripts"
-if str(PYTOOLS) not in sys.path:
-    sys.path.insert(0, str(PYTOOLS))
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from analyze_sphere_area_benchmark import parse_boundary, parse_faces, parse_points, polygon_area
 from createASurfMarchingCubes import build_field, marching_cubes_for_pair
+from createWallCellASurf import polygon_area, read_faces as parse_faces, read_points as parse_points
+
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hm12_case_tools import parse_boundary_metadata
 
 try:
     import vtk
@@ -63,7 +64,6 @@ VOXEL_SIZE = 4e-6
 SIGMA_VOX = 0.74
 NX = NY = NZ = 128
 SNAPPY_COLOR = "#d98f00"
-GRADEPS_COLOR = "#8f2d2d"
 SMOOTH_COLOR = "#1b6b73"
 
 
@@ -89,29 +89,6 @@ def load_crop() -> np.ndarray:
     if raw.size != expected:
         raise RuntimeError(f"Unexpected crop size: {raw.size} != {expected}")
     return raw.reshape((NZ, NY, NX))
-
-
-def staircase_area_field(image: np.ndarray) -> np.ndarray:
-    pore = image == PORE_LABEL
-    solid = image == SOLID_LABEL
-    counts = np.zeros(image.shape, dtype=np.float64)
-
-    contacts = pore[:, :, :-1] & solid[:, :, 1:]
-    counts[:, :, :-1] += contacts
-    contacts = solid[:, :, :-1] & pore[:, :, 1:]
-    counts[:, :, 1:] += contacts
-
-    contacts = pore[:, :-1, :] & solid[:, 1:, :]
-    counts[:, :-1, :] += contacts
-    contacts = solid[:, :-1, :] & pore[:, 1:, :]
-    counts[:, 1:, :] += contacts
-
-    contacts = pore[:-1, :, :] & solid[1:, :, :]
-    counts[:-1, :, :] += contacts
-    contacts = solid[:-1, :, :] & pore[1:, :, :]
-    counts[1:, :, :] += contacts
-
-    return counts * VOXEL_SIZE**2
 
 
 def smooth_area_field(image: np.ndarray) -> tuple[np.ndarray, int]:
@@ -144,7 +121,7 @@ def snappy_area_field() -> tuple[np.ndarray, int]:
     poly_mesh = CASE_ROOT / "snappy" / "constant" / "polyMesh"
     points = parse_points(poly_mesh / "points")
     faces = parse_faces(poly_mesh / "faces")
-    boundary = parse_boundary(poly_mesh / "boundary")
+    boundary = parse_boundary_metadata(poly_mesh / "boundary")
     patch = boundary["solidwalls"]
     start = patch["startFace"]
     end = start + patch["nFaces"]
@@ -318,125 +295,70 @@ def main() -> None:
     image = load_crop()
     summary = read_summary()
     snappy_field, snappy_faces = snappy_area_field()
-    gradeps_field = staircase_area_field(image)
     smooth_field, smooth_triangles = smooth_area_field(image)
 
-    fields = {
-        "snappy": snappy_field,
-        "gradeps": gradeps_field,
-        "smooth": smooth_field,
-    }
+    fields = {"snappy": snappy_field, "smooth": smooth_field}
     projections = {key: projection(value) for key, value in fields.items()}
     profiles = {key: profile_x(value) for key, value in fields.items()}
 
     positive = np.concatenate([value[value > 0.0] for value in projections.values()])
     vmin = max(float(np.percentile(positive, 2.0)), VOXEL_SIZE**2 * 0.05)
     vmax = float(np.percentile(positive, 99.2))
-    diff_values = np.concatenate(
-        [
-            (projections["gradeps"] - projections["snappy"]).ravel(),
-            (projections["smooth"] - projections["snappy"]).ravel(),
-        ]
-    )
-    diff_lim = float(np.percentile(np.abs(diff_values), 99.0))
-    if diff_lim <= 0.0:
-        diff_lim = VOXEL_SIZE**2
+    difference = projections["smooth"] - projections["snappy"]
+    diff_lim = max(float(np.percentile(np.abs(difference), 99.0)), VOXEL_SIZE**2)
 
     area_cmap = colormaps["magma"].copy()
     area_cmap.set_bad("#e5e5e5")
     diff_cmap = colormaps["coolwarm"].copy()
-    diff_cmap.set_bad("#e5e5e5")
 
-    fig = plt.figure(figsize=(11.2, 5.35), constrained_layout=False)
-    grid = fig.add_gridspec(
-        2,
-        5,
-        height_ratios=[1.0, 1.0],
-        width_ratios=[1.25, 1, 1, 1, 0.055],
-        left=0.085,
-        right=0.94,
-        bottom=0.105,
-        top=0.93,
-        wspace=0.38,
-        hspace=0.58,
-    )
-
+    fig = plt.figure(figsize=(10.8, 7.0), constrained_layout=True)
+    grid = fig.add_gridspec(2, 4, width_ratios=[1.1, 1, 1, 0.06])
     add_geometry_render(fig, grid[0, 0], image)
 
     extent_um = (0, NX * VOXEL_SIZE * 1e6, 0, NY * VOXEL_SIZE * 1e6)
-    map_axes = [
-        fig.add_subplot(grid[0, 1]),
-        fig.add_subplot(grid[0, 2]),
-        fig.add_subplot(grid[0, 3]),
-    ]
-    map_data = [
-        ("b", "snappyHexMesh\nbinned wall area", projections["snappy"]),
-        ("c", r"DBS $|\nabla \varepsilon|$", projections["gradeps"]),
-        ("d", "DBS smoothSurface", projections["smooth"]),
-    ]
-    image_handle = None
-    for ax, (label, title, data) in zip(map_axes, map_data):
-        image_handle = ax.imshow(
+    area_handle = None
+    for spec, label, title, data in (
+        (grid[0, 1], "b", "snappyHexMesh binned wall area", projections["snappy"]),
+        (grid[0, 2], "c", "DBS smooth interface", projections["smooth"]),
+    ):
+        ax = fig.add_subplot(spec)
+        area_handle = ax.imshow(
             np.ma.masked_less_equal(data, 0.0),
             origin="lower",
             extent=extent_um,
             norm=LogNorm(vmin=vmin, vmax=vmax),
             cmap=area_cmap,
         )
-        ax.set_title(title, fontsize=9, pad=3)
-        ax.set_xlabel(r"$x$ [$\mu$m]", fontsize=8)
-        ax.set_yticks([])
-        ax.tick_params(labelsize=7, length=2)
+        ax.set_title(title, fontsize=9)
+        ax.set_xlabel(r"$x$ [$\mu$m]")
+        ax.set_ylabel(r"$y$ [$\mu$m]")
         panel_label(ax, label)
-    map_axes[0].set_ylabel(r"$y$ [$\mu$m]", fontsize=8)
-    cbar = fig.colorbar(image_handle, cax=fig.add_subplot(grid[0, 4]))
-    cbar.set_label(r"projected external area [m$^2$]", fontsize=8)
-    cbar.ax.tick_params(labelsize=7)
+    cbar = fig.colorbar(area_handle, cax=fig.add_subplot(grid[0, 3]))
+    cbar.set_label(r"projected external area [m$^2$]")
 
-    diff_axes = [fig.add_subplot(grid[1, 0]), fig.add_subplot(grid[1, 1])]
-    diff_specs = [
-        ("e", r"DBS $|\nabla \varepsilon|$ $-$ snappy", projections["gradeps"] - projections["snappy"]),
-        ("f", "DBS smoothSurface $-$ snappy", projections["smooth"] - projections["snappy"]),
-    ]
-    diff_handle = None
-    for ax, (label, title, data) in zip(diff_axes, diff_specs):
-        diff_handle = ax.imshow(
-            data,
-            origin="lower",
-            extent=extent_um,
-            norm=TwoSlopeNorm(vmin=-diff_lim, vcenter=0.0, vmax=diff_lim),
-            cmap=diff_cmap,
-        )
-        ax.set_title(title, fontsize=9, pad=3)
-        ax.set_xlabel(r"$x$ [$\mu$m]", fontsize=8)
-        ax.set_ylabel(r"$y$ [$\mu$m]", fontsize=8)
-        ax.tick_params(labelsize=7, length=2)
-        panel_label(ax, label)
-    cbar_diff = fig.colorbar(diff_handle, cax=fig.add_subplot(grid[1, 4]))
-    cbar_diff.set_label(r"projected area difference [m$^2$]", fontsize=8)
-    cbar_diff.ax.tick_params(labelsize=7)
+    ax_diff = fig.add_subplot(grid[1, 0:2])
+    diff_handle = ax_diff.imshow(
+        difference,
+        origin="lower",
+        extent=extent_um,
+        norm=TwoSlopeNorm(vmin=-diff_lim, vcenter=0.0, vmax=diff_lim),
+        cmap=diff_cmap,
+    )
+    ax_diff.set_title("DBS smooth interface $-$ snappyHexMesh")
+    ax_diff.set_xlabel(r"$x$ [$\mu$m]")
+    ax_diff.set_ylabel(r"$y$ [$\mu$m]")
+    panel_label(ax_diff, "d")
+    fig.colorbar(diff_handle, ax=ax_diff, label=r"projected area difference [m$^2$]")
 
     ax_profile = fig.add_subplot(grid[1, 2:4])
     x_um = (np.arange(NX) + 0.5) * VOXEL_SIZE * 1e6
     ax_profile.plot(x_um, profiles["snappy"], color=SNAPPY_COLOR, lw=2.0, label="snappyHexMesh")
-    ax_profile.plot(x_um, profiles["gradeps"], color=GRADEPS_COLOR, lw=2.0, label=r"DBS $|\nabla \varepsilon|$")
-    ax_profile.plot(x_um, profiles["smooth"], color=SMOOTH_COLOR, lw=2.0, label="DBS smoothSurface")
-    ax_profile.set_xlabel(r"$x$ [$\mu$m]", fontsize=8)
-    ax_profile.set_ylabel(r"area per $x$ slice [m$^2$]", fontsize=8)
+    ax_profile.plot(x_um, profiles["smooth"], color=SMOOTH_COLOR, lw=2.0, label="DBS smooth interface")
+    ax_profile.set_xlabel(r"$x$ [$\mu$m]")
+    ax_profile.set_ylabel(r"area per $x$ slice [m$^2$]")
     ax_profile.grid(True, axis="y", color="#dddddd", lw=0.8)
-    ax_profile.legend(frameon=False, loc="upper right", fontsize=7)
-    ax_profile.tick_params(labelsize=7)
-    panel_label(ax_profile, "g")
-
-    ax_profile.text(
-        0.99,
-        0.04,
-        rf"$\sigma_{{\mathrm{{vox}}}}={SIGMA_VOX}$; $t=2.5$ s",
-        transform=ax_profile.transAxes,
-        ha="right",
-        va="bottom",
-        fontsize=8,
-    )
+    ax_profile.legend(frameon=False, fontsize=8)
+    panel_label(ax_profile, "e")
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUTPUT, dpi=360)
@@ -450,7 +372,7 @@ def main() -> None:
         "snappy_wall_faces": snappy_faces,
         "smooth_triangles": smooth_triangles,
         "areas_from_fields": {key: float(np.sum(value)) for key, value in fields.items()},
-        "summary": summary,
+        "summary": {key: value for key, value in summary.items() if key in {"snappy", "dbs-smoothsurface"}},
     }
     METRICS_JSON.write_text(json.dumps(metrics, indent=2))
     print(json.dumps(metrics, indent=2))

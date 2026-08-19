@@ -41,7 +41,7 @@ def field_with_fallback(case_dir: Path, time: str, field: str) -> np.ndarray:
 
 def load_case(label: str, cell_um: int, directory: Path, time: str) -> Case:
     li = stitch_field(directory, time, "Li+").astype(np.float64)
-    theta = stitch_field(directory, time, "theta").astype(np.float64)
+    theta = stitch_field(directory, time, "eps").astype(np.float64)
     sor_li = stitch_field(directory, time, "Sor_aLi").astype(np.float64)
     asurf = stitch_field(directory, time, "aSurf").astype(np.float64)
     asurf_intrinsic = field_with_fallback(directory, time, "aSurfIntrinsic").astype(np.float64)

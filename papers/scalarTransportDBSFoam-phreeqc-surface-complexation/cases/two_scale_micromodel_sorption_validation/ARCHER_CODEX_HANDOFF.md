@@ -184,7 +184,7 @@ Important files there:
 - `results/current_run_config.env`
 - `results/preflight_summary.md`
 - `results/matched_pe_flow_rates.json`
-- `<case>/reactiveScalarTransportDBSFoamRT.out`
+- `<case>/reactiveTransportDBSFoamRT.out`
 - `<case>/simpleDBSFoamFlow.out`
 - `<case>/processPoroPermFlow.out`
 - selected processor time fields for aqueous and sorbed species
@@ -222,7 +222,7 @@ quota is available.
 For each completed job:
 
 1. Check `slurm_exit_code.txt` is `0`.
-2. Inspect `reactiveScalarTransportDBSFoamRT.out` for `FOAM FATAL`,
+2. Inspect `reactiveTransportDBSFoamRT.out` for `FOAM FATAL`,
    `PHREEQC error`, solver stalls, or missing final time.
 3. Confirm `results/current_run_config.env` has the expected `TARGET_CASE`,
    `TARGET_PE`, `RT_TIMESTEP`, `RT_TOTAL_TIME`, and decomposition.

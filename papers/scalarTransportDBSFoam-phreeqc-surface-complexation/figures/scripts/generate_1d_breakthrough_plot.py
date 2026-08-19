@@ -191,18 +191,18 @@ def main() -> None:
     parser.add_argument("--surface-dir", type=Path, required=True)
     parser.add_argument("--aqueous-dir", type=Path, required=True)
     parser.add_argument("--k-s", type=float, required=True,
-                        help="Calibrated K_s_field value")
+                        help="Calibrated surface Henry coefficient K_s")
     parser.add_argument("--ca-in", type=float, default=2.0e-9,
                         help="Inlet Ca2+ concentration C_in (mol/m3)")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     # Effective velocities and diffusivities
-    r_field = 1.0 + BASE_ASURF * args.k_s / (BASE_THETA ** 2)
+    r_factor = 1.0 + BASE_ASURF * args.k_s / BASE_THETA
     v_aq    = BASE_U / BASE_THETA
     D_aq    = BASE_D
-    v_surf  = BASE_U / (BASE_THETA * r_field)
-    D_surf  = BASE_D / r_field
+    v_surf  = BASE_U / (BASE_THETA * r_factor)
+    D_surf  = BASE_D / r_factor
 
     # Analytical breakthrough times (for vertical markers)
     t_bt_aq   = DOMAIN_LENGTH / v_aq
@@ -286,7 +286,7 @@ def main() -> None:
     ax.grid(True, alpha=0.25)
 
     annotation_lines = [
-        f"$R_{{\\mathrm{{field}}}}$ = {r_field:.3f}",
+        f"$R$ = {r_factor:.3f}",
         f"$t_{{\\mathrm{{BT,aq}}}}$ = {t_bt_aq:.1f} s",
         f"$t_{{\\mathrm{{BT,surf}}}}$ = {t_bt_surf:.1f} s",
     ]

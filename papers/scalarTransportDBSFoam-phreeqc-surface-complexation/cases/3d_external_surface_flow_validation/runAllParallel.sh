@@ -42,7 +42,7 @@ mkdir -p results/parallel-logs
 
 python scripts/prepare_external_crop.py
 
-cases=(snappy dbs-gradeps dbs-smoothsurface)
+cases=(snappy dbs-smoothsurface)
 for case_dir in "${cases[@]}"; do
   run_case_async "$case_dir" "results/parallel-logs"
 done

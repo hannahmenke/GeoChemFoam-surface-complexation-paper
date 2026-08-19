@@ -1,0 +1,15 @@
+# OpenFOAM run products; case inputs and 0_orig templates remain tracked.
+**/processor*/
+**/[0-9]/
+**/[0-9].[0-9]*/
+**/[1-9][0-9]*/
+**/constant/polyMesh/
+**/constant/triSurface/*.raw
+**/constant/triSurface/*.stl
+**/constant/triSurface/pore_ind*
+**/poroPerm.csv
+**/error.inp
+**/*.out
+**/*.log
+**/*.pid
+**/*.status

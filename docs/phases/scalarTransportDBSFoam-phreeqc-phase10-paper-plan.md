@@ -61,7 +61,7 @@ Accepted source assets in this repo:
 
 The 1D analytical benchmark remains the tracked:
 
-- `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation`
+- `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
 
 ## Detailed Step-By-Step Task List
 
@@ -94,7 +94,7 @@ The 1D analytical benchmark remains the tracked:
    - `reactiveScalarTransportFoam`
    - `multiScalarTransportDBSFoam`
    - `phreeqcDBSMixture`
-   - `reactiveScalarTransportDBSFoam`
+   - `reactiveTransportDBSFoam`
 2. Document which validation solvers remain in-tree and why.
 3. Document the benchmark harnesses used for verification.
 4. Document the meaning of:

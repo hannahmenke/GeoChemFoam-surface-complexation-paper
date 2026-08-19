@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Explicit-aSurf, fixed-eps cases do not use the solver's auxiliary normalized gradient.
+export FOAM_SIGFPE="${FOAM_SIGFPE:-false}"
+
 repo_root="$(cd "$(dirname "$0")"/../../../../.. && pwd)"
 
 if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
@@ -114,14 +117,14 @@ fi
 if [ -d "processor0" ]
 then
     export NP="$(find processor* -maxdepth 0 -type d -print | wc -l)"
-    echo -e "Run reactiveScalarTransportDBSFoam in parallel on $NP processors"
+    echo -e "Run reactiveTransportDBSFoam in parallel on $NP processors"
     if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then
-        srun --ntasks="$NP" reactiveScalarTransportDBSFoam -parallel "${solver_args[@]}" > reactiveScalarTransportDBSFoamRT.out
+        srun --ntasks="$NP" reactiveTransportDBSFoam -parallel "${solver_args[@]}" > reactiveTransportDBSFoamRT.out
     else
-        mpirun -np "$NP" reactiveScalarTransportDBSFoam -parallel "${solver_args[@]}" > reactiveScalarTransportDBSFoamRT.out
+        mpirun -np "$NP" reactiveTransportDBSFoam -parallel "${solver_args[@]}" > reactiveTransportDBSFoamRT.out
     fi
 else
-    reactiveScalarTransportDBSFoam "${solver_args[@]}" > reactiveScalarTransportDBSFoamRT.out
+    reactiveTransportDBSFoam "${solver_args[@]}" > reactiveTransportDBSFoamRT.out
 fi
 
 if [ "${RT_DRY_RUN_ONLY:-0}" != "1" ] && [ "${RT_REQUIRE_FINAL_CHECKPOINT:-1}" = "1" ]; then

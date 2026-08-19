@@ -116,7 +116,7 @@ def diagnose_case(label: str, tag: str, root: Path, out_dir: Path, block: int) -
             local_nx = x_sizes[ipx]
             expected = local_nx * local_ny
             proc = case_dir / f"processor{rank}"
-            theta = read_scalar(proc / "0" / "theta", expected).reshape((local_ny, local_nx))
+            theta = read_scalar(proc / "0" / "eps", expected).reshape((local_ny, local_nx))
             pore = theta > 0.5
             if not np.any(pore):
                 continue

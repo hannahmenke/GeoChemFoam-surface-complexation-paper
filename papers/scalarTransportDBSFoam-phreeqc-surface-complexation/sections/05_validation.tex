@@ -36,41 +36,41 @@ multiscale images.
 The 1D linear-retardation benchmark tests the surface-chemistry coupling on a
 uniform domain where the retardation factor has an exact analytical form.
 With uniform porosity $\theta$ and surface-area density $a_{\mathrm{surf}}$,
-the field-level retardation coefficient is
-$R_{\mathrm{field}} = 1 + a_{\mathrm{surf}} K_{s,\mathrm{field}} / \theta^2$,
+the retardation coefficient is
+$R = 1 + a_{\mathrm{surf}} K_s / \theta$,
 and the retarded concentration front satisfies the standard advection--diffusion
-equation with effective velocity $u / (\theta R_{\mathrm{field}})$ and effective
-diffusivity $D / R_{\mathrm{field}}$.
+equation with effective velocity $u / (\theta R)$ and effective
+diffusivity $D / R$.
 This configuration therefore isolates three coupled components of the
-implementation: the batch calibration used to extract $K_{s,\mathrm{field}}$
+implementation: the batch calibration used to extract $K_s$
 from two equilibrium states, the
 field-level averaging of the surface-capacity term, and the advective--diffusive
 transport step. The benchmark compares a surface-enabled transport case, a
 matched aqueous-only case (\mbox{$a_{\mathrm{surf}} = 0$}), and a dilute batch
-pair used to estimate $K_{s,\mathrm{field}}$ via the secant method.
+pair used to estimate $K_s$ via the secant method.
 
 For the validated benchmark reported here,
-$K_{s,\mathrm{field}} = 4.241 \times 10^{-6}$ and
-$R_{\mathrm{field}} = 2.696$, so the surface-enabled front travels at
-$1/R_{\mathrm{field}} \approx 37\%$ of the aqueous-only front velocity.
+$K_s = 4.253 \times 10^{-6}$ and
+$R = 1.851$, so the surface-enabled front travels at
+$1/R \approx 54\%$ of the aqueous-only front velocity.
 The mesh contains $80 \times 1 \times 1$ cells and uses a species diffusion
 coefficient of $10^{-11}\ \mathrm{m^2\,s^{-1}}$.
 The surface-enabled profile matches the retarded advection--diffusion reference
-with a relative L1-norm error of $1.43\%$ and $L_{\infty}$ error of $3.67\%$.
+with a relative L1-norm error of $1.35\%$ and $L_{\infty}$ error of $2.74\%$.
 The aqueous-only profile matches its unretarded reference with L1-norm and
 $L_{\infty}$ errors of $1.08\%$ and $5.97\%$, respectively.
 The field-level total-equivalent inventory---the domain integral of the combined
-aqueous and adsorbed mass---differs from the analytical limit by $1.57\%$ for
+aqueous and adsorbed mass---differs from the analytical limit by $1.19\%$ for
 the surface-enabled run and by $0.58\%$ for the aqueous-only run.
 
-The solver therefore reproduces the dilute field-level retardation limit of the
-DBS formulation at sub-percent bulk inventory accuracy. Because the domain
+The solver therefore reproduces the dilute retardation limit of the
+DBS formulation at near-percent bulk inventory accuracy. Because the domain
 geometry is uniform, any residual error reflects inaccuracies in the
 surface-chemistry coupling and the batch-secant estimation procedure rather than
 mesh or geometry artefacts. Figure~\ref{fig:1DRetardation} shows the spatial
 profiles at $t = 10$, and Figure~\ref{fig:1DBreakthrough} shows the
 outlet breakthrough curves over the full run to $t = 80$~s.
-The surface-enabled breakthrough arrives at $1/R_{\mathrm{field}} \approx 37\%$
+The surface-enabled breakthrough arrives at $1/R \approx 54\%$
 of the aqueous-only breakthrough time, in agreement with the analytical prediction.
 The classical semi-infinite Ogata--Banks solution~\citep{ogata1961solution} is also
 shown for comparison and predicts systematically later breakthrough: because the
@@ -89,7 +89,7 @@ agreement shown.
     surface-enabled runs, compared against their matching cell-averaged
     advection-diffusion analytical solutions. Right: normalized adsorbed amount
     compared against the cell-averaged linear-equilibrium analytical limit
-    constructed from the calibrated field-level $K_{s,\mathrm{field}}$.}
+    constructed from the calibrated $K_s$.}
     \label{fig:1DRetardation}
 \end{figure}
 
@@ -103,7 +103,7 @@ agreement shown.
     the semi-infinite Ogata--Banks solution~\citep{ogata1961solution}.
     Vertical dotted lines mark the advective breakthrough times
     $t_{\mathrm{BT}} = L\theta/U$ (aqueous-only) and
-    $t_{\mathrm{BT}} = L\theta R_{\mathrm{field}}/U$ (surface-enabled).}
+    $t_{\mathrm{BT}} = L\theta R/U$ (surface-enabled).}
     \label{fig:1DBreakthrough}
 \end{figure}
 
@@ -125,29 +125,25 @@ surface-area density as in the 1D transport benchmark.
 In the linear dilute limit, Eq.~\eqref{eq:closedBalance} gives the equilibrium
 partition
 \begin{equation}
-    C_{\mathrm{eq}} = \frac{\theta\,C_0}{\theta + a_{\mathrm{surf}}\,K_{s,\mathrm{field}}},
+    C_{\mathrm{eq}} = \frac{\theta\,C_0}{\theta + a_{\mathrm{surf}}\,K_s},
     \label{eq:batchEquil}
 \end{equation}
-which is equivalent to $C_0 / (1 + a_{\mathrm{surf}}\,K_{s,\mathrm{field}}/\theta)$.
+which is equivalent to $C_0 / (1 + a_{\mathrm{surf}}\,K_s/\theta)$.
 
-Two tests are run on the 80\,\texttimes\,1\,\texttimes\,1 mesh with
+Two dilute initial concentrations are tested on the
+80\,\texttimes\,1\,\texttimes\,1 mesh with
 $\theta = 0.5$ and $a_{\mathrm{surf}} = 10^5\,\mathrm{m^{-1}}$ using the same
 Ca$^{2+}$--\texttt{Surf\_a} surface chemistry as in Section~\ref{sec:1D}.
-In the \emph{adsorption} test the domain is initialised with a fully aqueous
-inventory ($\theta\,C_0 = 4.49 \times 10^{-4}\,\mathrm{mol\,m^{-3}}$,
-$\Gamma_0 \approx 0$) and the batch-equilibration solver brings the system to
-equilibrium in a single PHREEQC call; Ca$^{2+}$ partitions from the pore
-fluid onto the surface.
-In the \emph{desorption} test the inventory is loaded entirely onto the
-surface ($\Gamma_0 > 0$, $C_0 \approx 0$) and equilibrium is re-established;
-Ca$^{2+}$ desorbs back into the pore fluid.
+The domains are initialised at $C_0=10^{-9}$ and
+$2\times10^{-9}$~mol\,m$^{-3}$ with the surface equilibrated against the
+specified initial solution. A single PHREEQC call then partitions Ca$^{2+}$
+between the pore fluid and surface.
 The relative inventory drift
 $|\mathcal{M}_{\mathrm{end}} - \mathcal{M}_{\mathrm{start}}| / \mathcal{M}_{\mathrm{start}}$
-is $1.2 \times 10^{-7}$ for adsorption and $7.2 \times 10^{-7}$ for
-desorption, both well below the \mbox{$10^{-6}$} tolerance.
+is $8.9 \times 10^{-10}$ and $1.1 \times 10^{-10}$, respectively.
 This confirms that the chemistry--transport interface conserves the total
-field-level Ca$^{2+}$ inventory to the PHREEQC convergence level in both
-the adsorption and desorption directions.
+field-level Ca$^{2+}$ inventory to the PHREEQC convergence level over the
+tested dilute range.
 
 \subsection{Controlled Surface-Area Validation}
 
@@ -160,17 +156,13 @@ circular post with reference area $2\pi R h$, where $h$ is the out-of-plane
 thickness. These benchmarks ask a narrow question: which image-based
 surface-area construction is closest to the intended smooth interface?
 
-The comparison distinguishes the staircase-based route, which measures the
-exposed voxel surface, from the smooth-interface reconstruction, which recovers
-a sub-voxel interface before mapping the resulting area back into the DBS
-cells. The result is consistent in both dimensions. For the 3D sphere, DBS
-$|\nabla \varepsilon|$ overestimates the smooth-sphere area by about $48.6\%$
-at $R/\Delta x = 16$ and $49.8\%$ at $R/\Delta x = 64$. By contrast, the 3D
+The smooth-interface reconstruction recovers a sub-voxel interface before
+mapping its area back into the DBS cells. For the 3D sphere, the
 \texttt{smoothSurface} reconstruction gives errors of $-0.06\%$ and
 $+0.87\%$ at the same resolutions, comparable to the body-fitted
 \texttt{snappyHexMesh} reference ($-0.65\%$ and $-0.50\%$, respectively).
-For the 2D circular post, the staircase perimeter is $27.3\%$ high, whereas
-the \texttt{smoothSurface} contour-length construction remains within
+For the 2D circular post, the \texttt{smoothSurface} contour-length
+construction remains within
 $0.2\%$ of the analytic value across the tested resolutions. The corresponding
 \texttt{snappyHexMesh} circular-cylinder reference is also sub-percent, with
 the largest error below $0.1\%$. The controlled benchmarks therefore show that
@@ -186,9 +178,8 @@ route used in the micromodel validation.
     slices at $R/\Delta x = 8$ and 16, with the analytic interface overlaid in
     red. Right: relative integrated surface-area error for the 2D circular post
     ($A_{\mathrm{ref}} = 2 \pi R h$) and 3D sphere
-    ($A_{\mathrm{ref}} = 4 \pi R^2$). The staircase DBS construction remains
-    tied to the voxelized surface and retains a large positive bias in both
-    geometries. The \texttt{smoothSurface} reconstruction and body-fitted
+    ($A_{\mathrm{ref}} = 4 \pi R^2$). The \texttt{smoothSurface}
+    reconstruction and body-fitted
     \texttt{snappyHexMesh} references both track the analytic interface area
     closely for the tested 3D and quasi-2D geometries.}
     \label{fig:sphereSurfaceValidation}
@@ -201,53 +192,52 @@ route used in the micromodel validation.
 The second geometric validation step moves from the ideal sphere and circular
 post to an image-based reactive benchmark while retaining the focus on the
 interface-area construction. The solid-grain micromodel benchmark compares
-three representations of the same segmented geometry: the resolved-wall
-\texttt{snappyHexMesh} reference, DBS $|\nabla \varepsilon|$, and DBS
-\texttt{smoothSurface}. This comparison tests whether the improved geometric
+two representations of the same segmented geometry: the resolved-wall
+\texttt{snappyHexMesh} reference and DBS \texttt{smoothSurface}. This
+comparison tests whether the cell-based geometric
 surface-area reconstruction also improves reactive-transport predictions on a
 real image-based domain.
 
 The resolved-wall and DBS results represent the image-derived geometry with
-different numerical objects. In \texttt{snappyHexMesh}, the reactive surface is a
-body-fitted wall boundary. In DBS, the same interface is represented by a
-cell-supported surface-area density, and surface complexation samples the
-product of this local area density and the local aqueous concentration. The
-appropriate comparison is therefore not exact wall placement, but the
+different numerical objects. In the \texttt{snappyHexMesh} case, the geometry
+is a body-fitted wall and its face area is mapped to the adjacent chemistry
+cells as an explicit surface-area density. In DBS, the same area is obtained
+from the image-based smooth-interface reconstruction. Surface complexation in
+both cases therefore samples a cell-supported area density together with the
+local aqueous concentration. The pressure drops were calibrated separately to
+match the inlet volumetric flux. The appropriate comparison is not exact wall
+placement, but the
 integrated reactive area, its spatial distribution, the aqueous transport
 profile, and the resulting sorbed inventory.
 
 For the resolved-wall \texttt{snappyHexMesh} reference, the integrated
-reactive area is $1.69 \times 10^{-5}$~m$^2$, compared with
-$2.10 \times 10^{-5}$~m$^2$ for DBS $|\nabla \varepsilon|$ and
-$1.62 \times 10^{-5}$~m$^2$ for DBS \texttt{smoothSurface}. Thus DBS
-$|\nabla \varepsilon|$ overestimates the surface area by $24.1\%$, whereas
-DBS \texttt{smoothSurface} is $4.2\%$ lower than the resolved-wall reference.
-The corresponding sorbed inventory error decreases from $54.1\%$ for DBS
-$|\nabla \varepsilon|$ to $17.1\%$ for DBS \texttt{smoothSurface}, while the
-dissolved Sr$^{2+}$ inventory error remains similar for the two DBS cases.
-The micromodel benchmark therefore supports the same geometric conclusion as
-the analytic tests: the smooth-interface DBS route substantially reduces the
-staircase surface-area bias and gives the closest DBS representation of the
-image-based reactive geometry, even though it is not a cell-wise reproduction
-of the body-fitted mesh.
+reactive area is $2.05 \times 10^{-5}$~m$^2$, compared with
+$1.67 \times 10^{-5}$~m$^2$ for DBS \texttt{smoothSurface}. The DBS area is
+$18.3\%$ lower than the resolved-wall value. Despite this geometric
+difference, the dissolved inventory differs by only $-0.44\%$ and the
+streamwise aqueous-profile L1 error is $1.04\%$. The sorbed inventory is
+$50.2\%$ lower in DBS, showing that adsorption remains sensitive to both the
+integrated area and its cell-wise overlap with the advancing aqueous front.
+The benchmark therefore separates the close bulk-transport agreement from the
+larger uncertainty introduced when a body-fitted reactive boundary is
+represented as a cell-supported interface.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=\linewidth]{figures/png/fig10_hm12_surface_area_validation.png}
+    \includegraphics[width=0.9\linewidth]{figures/png/fig10_hm12_surface_area_validation.png}
     \caption{Micromodel image-based comparison at $t = 200$~s. The
-    three-way comparison is reported between the resolved-wall
-    \texttt{snappyHexMesh} reference, DBS $|\nabla \varepsilon|$, and DBS
-    \texttt{smoothSurface}. Rows show dissolved Sr$^{2+}$ fields normalised by
+    comparison is reported between the resolved-wall
+    \texttt{snappyHexMesh} reference and DBS \texttt{smoothSurface}. Rows show
+    dissolved Sr$^{2+}$ fields normalised by
     $C_{\mathrm{in}}$, a detail window of cell-wise reactive surface area
     $a_{\mathrm{surf}}V$, and the corresponding sorbed inventory fields over
     the same detail window; the dashed boxes in the top row mark the detail
-    extent. In the \texttt{snappyHexMesh} column, the lower rows are rendered
-    on the body-fitted wall segments; the DBS columns are rendered on the
-    structured DBS cells. The area row reports both the integrated area and its
+    extent. The lower rows show the chemistry-cell inventories for both cases;
+    in the \texttt{snappyHexMesh} case, each wall face contributes its area to
+    its adjacent cell. The area row reports both the integrated area and its
     spatial distribution, which controls the surface-complexation inventory.
-    DBS \texttt{smoothSurface} remains the closest DBS match to the
-    resolved-wall reference on this micromodel, while DBS
-    $|\nabla \varepsilon|$ retains a clear positive surface-area bias.}
+    DBS \texttt{smoothSurface} retains the same interface topology on a
+    coarser cell-based support.}
     \label{fig:hm12SurfaceValidation}
 \end{figure}
 
@@ -266,8 +256,7 @@ streamwise concentration profiles averaged across the transverse direction.
         \toprule
         Method & \shortstack{Dissolved\\inventory [\%]} & \shortstack{Surface\\area [\%]} & \shortstack{Sorbed\\inventory [\%]} & \shortstack{Aqueous\\profile\\L1 norm [\%]} \\
         \midrule
-        DBS $|\nabla \varepsilon|$ & $-3.89$ & $+24.13$ & $+54.09$ & $1.07$ \\
-        DBS \texttt{smoothSurface} & $-3.95$ & $-4.24$ & $+17.13$ & $1.08$ \\
+        DBS \texttt{smoothSurface} & $-0.44$ & $-18.33$ & $-50.21$ & $1.04$ \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -279,10 +268,10 @@ streamwise concentration profiles averaged across the transverse direction.
 A third validation step tests the same resolved-wall/DBS comparison in a
 three-dimensional image crop. A $128^3$-voxel Estaillades subvolume is used,
 with the micropore label remapped to solid so that the comparison isolates the
-external pore--grain surface. The three cases use the same pressure drop and
+external pore--grain surface. The two cases use the same pressure drop and
 Sr$^{2+}$/Ca$^{2+}$ surface-complexation chemistry: a resolved-wall
-\texttt{snappyHexMesh} reference, DBS $|\nabla \varepsilon|$, and DBS
-\texttt{smoothSurface}. The reactive-transport comparison is made at
+\texttt{snappyHexMesh} reference and DBS \texttt{smoothSurface}. The
+reactive-transport comparison is made at
 $t = 2.5$~s, for which the advective front has traversed approximately half
 of the crop under the resolved-wall Darcy velocity. For this external-surface
 validation, the \texttt{smoothSurface} Gaussian occupancy width is
@@ -290,12 +279,10 @@ $\sigma = 0.74$ voxels.
 
 The 3D benchmark separates three quantities that affect the reactive result:
 the integrated external area, the DBS flow field, and the local overlap between
-aqueous Sr$^{2+}$ and reactive surface area. DBS $|\nabla \varepsilon|$
-overestimates the resolved-wall external area by $63.1\%$ and gives a sorbed
-Sr$^{2+}$ inventory $94.7\%$ above the resolved-wall reference. With
-\texttt{smoothSurface}, the integrated area differs from the resolved-wall
+aqueous Sr$^{2+}$ and reactive surface area. With \texttt{smoothSurface}, the
+integrated area differs from the resolved-wall
 area by only $-0.17\%$, and the sorbed-inventory error is reduced to
-$-25.3\%$. The remaining sorbed-inventory difference, despite the close
+$-25.6\%$. The remaining sorbed-inventory difference, despite the close
 agreement in total area, indicates that the spatial distribution of
 $a_{\mathrm{surf}}$ and the DBS flow representation also control the
 surface-complexation response.
@@ -306,8 +293,8 @@ surface-complexation response.
     \caption{Three-dimensional external-surface validation on the Estaillades
     crop. The 3D rendering shows the connected external pore--grain surface
     after remapping the micropore label to solid. Projected surface-area maps
-    compare the resolved-wall \texttt{snappyHexMesh} reference, DBS
-    $|\nabla \varepsilon|$, and DBS \texttt{smoothSurface}; difference maps
+    compare the resolved-wall \texttt{snappyHexMesh} reference and DBS
+    \texttt{smoothSurface}; difference maps
     and streamwise area profiles are reported relative to the resolved-wall
     reference. The \texttt{snappyHexMesh} wall faces are binned onto the image
     grid only for the projected-area visualisation; integrated areas and
@@ -327,8 +314,7 @@ surface-complexation response.
         \toprule
         Method & \shortstack{Surface\\area [\%]} & \shortstack{Sorbed Sr\\inventory [\%]} \\
         \midrule
-        DBS $|\nabla \varepsilon|$ & $+63.09$ & $+94.70$ \\
-        DBS \texttt{smoothSurface} & $-0.17$ & $-25.30$ \\
+        DBS \texttt{smoothSurface} & $-0.17$ & $-25.64$ \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -466,8 +452,8 @@ retardation limit on a domain with no geometric ambiguity. The controlled
 sphere and circular-post benchmarks isolate the geometric accuracy of the
 interface-area construction itself. The micromodel solid-grain and 3D
 external-surface comparisons transfer that geometric question to reactive image
-benchmarks by comparing DBS $|\nabla \varepsilon|$ and DBS
-\texttt{smoothSurface} with resolved-wall \texttt{snappyHexMesh} references.
+benchmarks by comparing DBS \texttt{smoothSurface} with resolved-wall
+\texttt{snappyHexMesh} references.
 The resolved-to-DBS micromodel benchmark tests the two-scale reactive-transport
 representation used when part of an image is treated as an unresolved reactive
 matrix; its production $Pe$ sweep satisfies the predefined inventory,
@@ -484,9 +470,8 @@ Figures~\ref{fig:twoScaleErrorVsPe} and~\ref{fig:twoScalePeOneFields}.
     \caption{Validation summary for the tracked 1D benchmark family.
     ``Splitting'' refers to the operator-splitting (chemistry--transport)
     consistency test; ``Timestep'' and ``Mesh'' are sensitivity studies on
-    the fixed 1D benchmark. The performance row reports the fraction of
-    wall-clock time spent in PHREEQC across the sensitivity runs. The
-    controlled-geometry, micromodel, and external-surface validation blocks are
+    the fixed 1D benchmark. The controlled-geometry, micromodel, and
+    external-surface validation blocks are
     reported separately because they test image-derived interface geometry
     rather than the 1D coupling alone.}
     \label{tab:validationSummary}
@@ -494,12 +479,11 @@ Figures~\ref{fig:twoScaleErrorVsPe} and~\ref{fig:twoScalePeOneFields}.
         \toprule
         Check & Metric & Result \\
         \midrule
-        Analytical 1D & Surface L1 norm / total drift & $1.43\%$ / $1.57\%$ \\
-        Closed-system (ads./des.) & Inventory drift & $1.2\times10^{-7}$ / $7.2\times10^{-7}$ \\
+        Analytical 1D & Surface L1 norm / total drift & $1.35\%$ / $1.19\%$ \\
+        Closed-system batch pair & Inventory drift & $8.9\times10^{-10}$ / $1.1\times10^{-10}$ \\
         Splitting     & Local / bulk drift        & $3$--$4.5\%$ / $<0.6\%$ \\
         Timestep      & Local / bulk drift        & $\approx 3\%$ / $0.25\%$ \\
         Mesh          & Front / total drift       & $2.5\times 10^{-7}$ / $0.37\%$ \\
-        Performance   & Surface chemistry fraction & $36$--$55\%$ \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -514,11 +498,7 @@ truncation errors are non-negligible.
 The near-zero front-position drift ($2.5 \times 10^{-7}$) from the mesh study
 confirms that the retardation-front position is not systematically biased by
 mesh resolution.
-The surface chemistry fraction of $36$--$55\%$ of wall-clock time reflects the
-per-cell cost of the PHREEQC equilibrium solve for a dilute two-ion system;
-the same per-cell cost governs chemistry overhead in the image-based cases,
-where it scales with the number of mobile cells rather than with domain
-topology. The validation results therefore support the conservative coupling
+The validation results therefore support the conservative coupling
 and the smooth-interface construction of $a_{\mathrm{surf}}$ used in the
 application cases that follow. Those cases then examine the additional
 intrinsic micropore contribution in progressively richer image-based media.

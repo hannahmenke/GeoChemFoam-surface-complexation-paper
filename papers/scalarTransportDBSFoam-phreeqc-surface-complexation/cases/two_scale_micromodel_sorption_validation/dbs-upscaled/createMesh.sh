@@ -84,15 +84,6 @@ eps_min=0
 cyclic="no"
 pad_value=$pores_value
 
-python "$GCFOAM_DIR/applications/utilities/pyTools/writeASurfReconstructionDict.py" \
-  $x_dim $y_dim $z_dim \
-  $x_min $x_max $y_min $y_max $z_min $z_max \
-  $n_x $n_y $n_z \
-  $res \
-  $ASurf_image_name \
-  $pores_value $matrix_value $dimension \
-  signedDistanceGaussian 0.90 "" "" false
-
 if [ "$NP" -gt 1 ]; then
   if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then
     parallel_run=(srun --ntasks="$NP")

@@ -42,7 +42,7 @@ def configure_style() -> None:
 def load_native_fields(
     case_dir: Path, time_name: str, *, resolved: bool
 ) -> dict[str, np.ndarray]:
-    theta = stitch_field(case_dir, time_name, "theta")
+    theta = stitch_field(case_dir, time_name, "eps")
     area = stitch_field(case_dir, time_name, "aSurf")
     aqueous = stitch_field(case_dir, time_name, "Li+").astype(np.float32) / INLET_LI
     sorbed = stitch_field(case_dir, time_name, "Sor_aLi").astype(np.float32) * 1000.0

@@ -145,7 +145,7 @@ def stitch_parallel_vector(case_dir: Path, time_name: str, field_name: str) -> t
 def build_grid(theta: np.ndarray, velocity: np.ndarray) -> pv.ImageData:
     nx, ny, nz = theta.shape
     grid = pv.ImageData(dimensions=(nx + 1, ny + 1, nz + 1))
-    grid.cell_data["theta"] = theta.flatten(order="F")
+    grid.cell_data["eps"] = theta.flatten(order="F")
     grid.cell_data["U"] = velocity.reshape((-1, 3), order="F")
     grid.cell_data["Umag"] = np.linalg.norm(velocity, axis=3).flatten(order="F")
     grid = grid.cell_data_to_point_data()
@@ -179,7 +179,7 @@ def main() -> None:
 
     pv.OFF_SCREEN = True
 
-    theta, nx, ny, nz = stitch_parallel_scalar(args.case_dir, args.time_name, "theta")
+    theta, nx, ny, nz = stitch_parallel_scalar(args.case_dir, args.time_name, "eps")
     velocity, vx, vy, vz = stitch_parallel_vector(args.case_dir, args.time_name, "U")
     if (vx, vy, vz) != (nx, ny, nz):
         raise RuntimeError("theta/U mesh mismatch")

@@ -23,8 +23,8 @@ def read_internal_values(path: Path) -> list[float]:
     return values
 
 
-def as_field(template: str, values: list[float]) -> str:
-    text = re.sub(r"object\s+\S+;", "object      aSurfIntrinsic;", template, count=1)
+def as_field(template: str, field_name: str, values: list[float]) -> str:
+    text = re.sub(r"object\s+\S+;", f"object      {field_name};", template, count=1)
     text = re.sub(
         r"dimensions\s+\[[^\]]+\];",
         "dimensions      [0 -1 0 0 0 0 0];",
@@ -57,7 +57,12 @@ def write_for_zero_dir(zero_dir: Path, matrix_porosity: float, intrinsic_asurf: 
         intrinsic_asurf if abs(value - matrix_porosity) < 1e-6 else 0.0
         for value in eps_values
     ]
-    (zero_dir / "aSurfIntrinsic").write_text(as_field(eps_path.read_text(), values))
+    (zero_dir / "aSurfIntrinsic").write_text(as_field(eps_path.read_text(), "aSurfIntrinsic", values))
+    external = read_internal_values(zero_dir / "aSurf")
+    if len(external) != len(values):
+        raise RuntimeError(f"aSurf/eps length mismatch in {zero_dir}")
+    total = [external_value + intrinsic_value for external_value, intrinsic_value in zip(external, values)]
+    (zero_dir / "aSurf").write_text(as_field(eps_path.read_text(), "aSurf", total))
 
 
 def main() -> None:

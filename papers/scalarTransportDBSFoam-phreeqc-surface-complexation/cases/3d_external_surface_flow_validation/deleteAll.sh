@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 rm -rf shared results
 
-for case_dir in snappy dbs-gradeps dbs-smoothsurface; do
+for case_dir in snappy dbs-smoothsurface; do
   if [ -x "$case_dir/deleteAll.sh" ]; then
     (cd "$case_dir" && ./deleteAll.sh)
   fi

@@ -4,9 +4,10 @@ set -Eeuo pipefail
 cd "$(dirname "$0")"
 
 repo_root="$(cd ../../.. && pwd)"
-paper_output="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/hm12_fourcase_solver_comparison_t200.png"
+paper_output="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig10_hm12_surface_area_validation.png"
+smooth_case="$repo_root/tutorials/reactiveTransport/reactiveTransportDBSFoam/2DHM12SolidGrainsSurfaceComplexation"
 
-for case_dir in legacy-snappy legacy-subset dbs-file dbs-fallback; do
+for case_dir in resolved-snappy "$smooth_case"; do
   if [ -x "$case_dir/deleteAll.sh" ]; then
     ( cd "$case_dir" && ./deleteAll.sh )
   fi

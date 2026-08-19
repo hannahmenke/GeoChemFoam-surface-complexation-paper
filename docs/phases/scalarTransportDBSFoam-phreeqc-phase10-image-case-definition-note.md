@@ -10,7 +10,7 @@ Unless a section explicitly states otherwise, the 2D and 3D manuscript cases
 should use:
 
 - solver:
-  - `reactiveScalarTransportDBSFoam`
+  - `reactiveTransportDBSFoam`
 - chemistry:
   - the same dilute calcium surface-complexation system used in the 1D
     analytical benchmark

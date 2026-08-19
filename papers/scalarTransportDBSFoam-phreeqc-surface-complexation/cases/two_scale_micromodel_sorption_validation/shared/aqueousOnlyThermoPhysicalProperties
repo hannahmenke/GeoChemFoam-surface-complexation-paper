@@ -18,4 +18,4 @@ solutionSpecies
     OH-   { D D [0 2 -1 0 0 0 0] TracerDiffusion; }
 }
 
-thetaChemistryMin 1e-3;
+epsChemistryMin 1e-3;

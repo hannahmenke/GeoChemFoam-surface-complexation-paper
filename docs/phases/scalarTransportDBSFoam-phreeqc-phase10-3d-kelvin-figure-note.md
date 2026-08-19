@@ -4,11 +4,11 @@
 
 This note records the accepted 3D field figure for:
 
-- `reactiveScalarTransportDBSFoam`
+- `reactiveTransportDBSFoam`
 
 using:
 
-- `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
+- `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`
 
 ## What Was Added
 

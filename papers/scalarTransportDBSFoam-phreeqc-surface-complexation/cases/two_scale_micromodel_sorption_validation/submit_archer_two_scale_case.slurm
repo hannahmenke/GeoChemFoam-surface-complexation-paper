@@ -197,7 +197,6 @@ rsync -a \
   --exclude='*/processor*/' \
   --exclude='*/constant/polyMesh/' \
   --exclude='*/constant/triSurface/' \
-  --exclude='*/constant/aSurfReconstructionDict' \
   --exclude='*.out' \
   --exclude='*.log' \
   --exclude='*.pid' \
@@ -217,7 +216,7 @@ if [ -n "$env_file" ] && [ -f "$env_file" ]; then
   module purge
   # shellcheck disable=SC1090
   source "$env_file"
-elif ! command -v reactiveScalarTransportDBSFoam >/dev/null 2>&1 || \
+elif ! command -v reactiveTransportDBSFoam >/dev/null 2>&1 || \
      [ -z "${WM_PROJECT_DIR:-}" ]; then
   echo "GeoChemFoam/OpenFOAM environment is not loaded." >&2
   echo "Load it before sbatch or set GCFOAM_ENV_FILE to a site environment helper." >&2

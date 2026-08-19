@@ -41,7 +41,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
-    theta = stitch_field(args.case_dir, args.times[0], "theta")
+    theta = stitch_field(args.case_dir, args.times[0], "eps")
     asurf = stitch_field(args.case_dir, args.times[0], "aSurf")
     aqueous: list[np.ndarray] = []
     sorbed: list[np.ndarray] = []

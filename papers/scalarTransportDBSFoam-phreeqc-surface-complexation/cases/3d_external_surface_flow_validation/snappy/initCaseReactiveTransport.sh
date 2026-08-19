@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+repo_root="$(cd "$(dirname "$0")"/../../../../.. && pwd)"
+
 ###### USERS INPUT ############################################################
 
 ## Define the diffusion coefficient of the species as a solute (m^2/s)
@@ -56,7 +58,6 @@ from pathlib import Path
 target_dir = Path(os.environ["TARGET_DIR"])
 scalar_template_path = Path("0_orig/Ca+2")
 surface_template_path = Path("0_orig/Surf_a-")
-surf_master_template_path = Path("0_orig/Surf")
 
 
 def replace_object(text: str, name: str) -> str:
@@ -109,22 +110,17 @@ def write_aqueous_species(name: str, internal: str, inlet_value: str) -> None:
     (target_dir / name).write_text(text)
 
 
-def write_surface_master(density: str) -> None:
-    text = surf_master_template_path.read_text()
+def write_surface_master(name: str, density: str) -> None:
+    text = surface_template_path.read_text()
+    text = replace_object(text, name)
+    text = replace_internal_uniform(text, density)
     text = replace_token(text, "SurfDen", density)
     body = (
-        "        type            reactingWall;\n"
-        "        surfaceMasters\n"
-        "        {\n"
-        "            Surf_a\n"
-        "            {\n"
-        f"                density {density};\n"
-        "            }\n"
-        "        }\n"
-        f"        value           uniform {density};\n"
+        "        type            zeroGradient;\n"
     )
+    text = ensure_patch_block(text, "walls", body)
     text = ensure_patch_block(text, "solidwalls", body)
-    (target_dir / "Surf").write_text(text)
+    (target_dir / name).write_text(text)
 
 
 def write_surface_species(name: str, internal: str) -> None:
@@ -132,12 +128,12 @@ def write_surface_species(name: str, internal: str) -> None:
     text = replace_object(text, name)
     text = replace_internal_uniform(text, internal)
     text = replace_token(text, "SurfDen", internal)
-    text = ensure_patch_block(
-        text,
-        "solidwalls",
-        "        type            fixedValue;\n"
-        f"        value           uniform {internal};\n",
-    )
+    for patch_name in ("walls", "solidwalls"):
+        text = ensure_patch_block(
+            text,
+            patch_name,
+            "        type            zeroGradient;\n",
+        )
     (target_dir / name).write_text(text)
 
 
@@ -146,11 +142,27 @@ write_aqueous_species("Sr+2", os.environ["SR_INTERNAL"], os.environ["SR_INLET"])
 write_aqueous_species("Cl-", os.environ["CL_INTERNAL"], os.environ["CL_INLET"])
 write_aqueous_species("H+", os.environ["H_INTERNAL"], os.environ["H_INLET"])
 write_aqueous_species("OH-", os.environ["OH_INTERNAL"], os.environ["OH_INLET"])
-write_surface_master("2.4e-9")
+write_surface_master("Surf_a", "2.4e-9")
 write_surface_species("Surf_a-", os.environ["SURF_AMINUS"])
 write_surface_species("Surf_aCa+", os.environ["SURF_ACAPLUS"])
 write_surface_species("Surf_aSr+", os.environ["SURF_ASRPLUS"])
 write_surface_species("Surf_aH", os.environ["SURF_AH"])
+PY
+}
+
+write_eps_field() {
+    local target_dir="$1"
+    python - "$target_dir/Ca+2" "$target_dir/eps" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text()
+text = re.sub(r"object\s+\S+;", "object      eps;", text, count=1)
+text = re.sub(r"dimensions\s+\[[^\]]+\];", "dimensions      [0 0 0 0 0 0 0];", text, count=1)
+text = re.sub(r"internalField\s+uniform\s+[^;]+;", "internalField   uniform 1;", text, count=1)
+text = re.sub(r"type\s+fixedValue;\s*value\s+uniform\s+[^;]+;", "type            zeroGradient;", text)
+Path(sys.argv[2]).write_text(text)
 PY
 }
 
@@ -175,6 +187,15 @@ then
     decomposePar -fields > decomposeParRT.out
 
     rm -rf 0
+    for proc_dir in processor*/0; do
+        write_eps_field "$proc_dir"
+    done
+    mpirun -np "$(find processor* -maxdepth 0 -type d | wc -l)" \
+        postProcess -parallel -func writeCellVolumes -time 0 > writeCellVolumes.out
+    for proc_dir in processor*/0; do
+        python "$repo_root/scripts/createWallCellASurf.py" "${proc_dir%/0}" \
+            --time 0 --patch solidwalls --template eps
+    done
 else
     mkdir -p 0
 
@@ -186,6 +207,11 @@ else
 
     rm -rf 0/uniform
     write_reactive_fields 0
+    write_eps_field 0
+    postProcess -func writeCellVolumes -time 0 > writeCellVolumes.out
+    python "$repo_root/scripts/createWallCellASurf.py" . \
+        --time 0 --patch solidwalls --template eps
 fi
 
+python "$repo_root/scripts/initialiseSurfaceSpecies.py" . --time 0
 echo -e "Case initialised"

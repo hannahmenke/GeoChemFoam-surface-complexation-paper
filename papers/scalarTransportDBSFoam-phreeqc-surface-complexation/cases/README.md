@@ -1,11 +1,17 @@
 # Paper Test-Case Asset Map
 
+The cases are stored and run from this paper repository. Build the main-branch
+GeoChemFoam solver in a separate checkout and either place it beside this
+repository as `GeoChemFoam-main-runtime` or set `GCFOAM_RUNTIME_DIR` to that
+checkout. The case scripts source `etc/bashrc` from this repository and do not
+write to the solver checkout.
+
 The manuscript uses the following case ladder.
 
 ## 1D Analytical
 
 - tracked case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/1DLinearRetardation`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
 - role:
   - analytical retardation benchmark
 - manuscript note:
@@ -56,12 +62,10 @@ The manuscript uses the following case ladder.
 
 ## 3D External-Surface Validation
 
-- area-only case:
-  - `cases/3d_external_surface_area_validation`
 - resolved-wall/DBS flow and sorption comparison:
   - `cases/3d_external_surface_flow_validation`
 - role:
-  - compares `snappyHexMesh`, DBS `|grad(epsilon)|`, and DBS `smoothSurface`
+  - compares resolved-wall `snappyHexMesh` with DBS `smoothSurface`
     for an image-derived three-dimensional porous geometry
 
 ## Two-Scale Upscaling Validation

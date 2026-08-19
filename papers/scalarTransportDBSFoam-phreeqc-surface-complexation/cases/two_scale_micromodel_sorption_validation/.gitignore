@@ -10,7 +10,6 @@ results/
 */processor*/
 */constant/polyMesh/
 */constant/triSurface/
-*/constant/aSurfReconstructionDict
 */constant/transportProperties
 */constant/thermoPhysicalProperties
 */constant/eps

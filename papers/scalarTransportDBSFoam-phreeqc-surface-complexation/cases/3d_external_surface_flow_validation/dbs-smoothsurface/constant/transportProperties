@@ -15,7 +15,11 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-DT DT [0 2 -1 0 0 0 0] Diff;
+transportModel  Newtonian;
+
+nu              nu [0 2 -1 0 0 0 0] 1e-6;
+
+kf              kf [0 -2 0 0 0 0 0] 0;
 
 
 

@@ -16,7 +16,7 @@ import sys
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.analyze_sphere_area_benchmark import patch_area
+from scripts.measureSphereSurfaceArea import patch_area
 
 
 def write_cylinder_stl(path: Path, radius: float, zmin: float, zmax: float, nseg: int = 720) -> None:

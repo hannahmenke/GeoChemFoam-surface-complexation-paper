@@ -21,7 +21,7 @@ if str(PYTOOLS) not in sys.path:
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from analyze_sphere_area_benchmark import parse_boundary, parse_faces, parse_points, parse_scalar_field, patch_area, polygon_area
+from measureSphereSurfaceArea import parse_boundary, parse_faces, parse_points, parse_scalar_field, patch_area, polygon_area
 from createASurfMarchingCubes import build_field, marching_cubes_for_pair
 
 
@@ -49,19 +49,6 @@ def load_phase_crop() -> np.ndarray:
     if raw.size != expected:
         raise RuntimeError(f"Unexpected crop size: {raw.size} != {expected}")
     return raw.reshape((128, 128, 128))
-
-
-def staircase_area(image: np.ndarray) -> float:
-    pore = image == PORE_LABEL
-    solid = image == SOLID_LABEL
-    contacts = 0
-    contacts += int(np.count_nonzero(pore[:, :, :-1] & solid[:, :, 1:]))
-    contacts += int(np.count_nonzero(solid[:, :, :-1] & pore[:, :, 1:]))
-    contacts += int(np.count_nonzero(pore[:, :-1, :] & solid[:, 1:, :]))
-    contacts += int(np.count_nonzero(solid[:, :-1, :] & pore[:, 1:, :]))
-    contacts += int(np.count_nonzero(pore[:-1, :, :] & solid[1:, :, :]))
-    contacts += int(np.count_nonzero(solid[:-1, :, :] & pore[1:, :, :]))
-    return contacts * VOXEL_SIZE * VOXEL_SIZE
 
 
 def smoothsurface_area(image: np.ndarray) -> tuple[float, int, str]:
@@ -190,7 +177,7 @@ def processor_field_paths(case_dir: Path, time_name: str, field_name: str, fallb
     return sorted(case_dir.glob(f"processor*/{fallback_time}/{field_name}"))
 
 
-def dbs_sorbed_inventory(case_dir: Path, time_name: str = TRANSPORT_TIME) -> float | None:
+def cell_sorbed_inventory(case_dir: Path, time_name: str = TRANSPORT_TIME) -> float | None:
     cell_volume = VOXEL_SIZE**3
     internal_paths = processor_field_paths(case_dir, time_name, "Surf_aSr+")
     if internal_paths:
@@ -204,7 +191,9 @@ def dbs_sorbed_inventory(case_dir: Path, time_name: str = TRANSPORT_TIME) -> flo
                 return None
             sorbed = parse_scalar_field(sorbed_path)
             a_surf = parse_scalar_field(a_surf_path)
-            total += float(np.sum(sorbed * a_surf) * cell_volume)
+            volume_path = proc_zero / "V"
+            volumes = parse_scalar_field(volume_path) if volume_path.exists() else cell_volume
+            total += float(np.sum(sorbed * a_surf * volumes))
         return total
 
     sorbed_path = latest_field_path(case_dir, time_name, "Surf_aSr+")
@@ -213,7 +202,11 @@ def dbs_sorbed_inventory(case_dir: Path, time_name: str = TRANSPORT_TIME) -> flo
         a_surf_path = latest_field_path(case_dir, "0", "aSurf")
     if sorbed_path is None or a_surf_path is None:
         return None
-    return float(np.sum(parse_scalar_field(sorbed_path) * parse_scalar_field(a_surf_path)) * cell_volume)
+    volume_path = latest_field_path(case_dir, "0", "V")
+    volumes = parse_scalar_field(volume_path) if volume_path is not None else cell_volume
+    return float(
+        np.sum(parse_scalar_field(sorbed_path) * parse_scalar_field(a_surf_path) * volumes)
+    )
 
 
 def patch_face_areas(poly_mesh_dir: Path, patch_name: str) -> np.ndarray:
@@ -291,18 +284,15 @@ def main() -> None:
     image = load_phase_crop()
 
     snappy_area = patch_area(CASE_ROOT / "snappy" / "constant" / "polyMesh", "solidwalls")
-    grad_area = staircase_area(image)
     smooth_area, triangles, used_mode = smoothsurface_area(image)
 
     flow = {
         "snappy": read_poro_perm(CASE_ROOT / "snappy"),
-        "dbs-gradeps": read_poro_perm(CASE_ROOT / "dbs-gradeps"),
         "dbs-smoothsurface": read_poro_perm(CASE_ROOT / "dbs-smoothsurface"),
     }
     sorbed_inventory = {
-        "snappy": snappy_sorbed_inventory(CASE_ROOT / "snappy"),
-        "dbs-gradeps": dbs_sorbed_inventory(CASE_ROOT / "dbs-gradeps"),
-        "dbs-smoothsurface": dbs_sorbed_inventory(CASE_ROOT / "dbs-smoothsurface"),
+        "snappy": cell_sorbed_inventory(CASE_ROOT / "snappy"),
+        "dbs-smoothsurface": cell_sorbed_inventory(CASE_ROOT / "dbs-smoothsurface"),
     }
 
     rows = [
@@ -315,16 +305,6 @@ def main() -> None:
             "sorbed_sr_inventory": sorbed_inventory["snappy"],
             "sorbed_sr_inventory_relative_to_snappy": 0.0 if sorbed_inventory["snappy"] is not None else None,
             **flow["snappy"],
-        },
-        {
-            "method": "dbs-gradeps",
-            "surface_area": grad_area,
-            "surface_area_relative_to_snappy": rel(grad_area, snappy_area),
-            "surface_triangles": None,
-            "surface_mode": "staircase",
-            "sorbed_sr_inventory": sorbed_inventory["dbs-gradeps"],
-            "sorbed_sr_inventory_relative_to_snappy": rel(sorbed_inventory["dbs-gradeps"], sorbed_inventory["snappy"]),
-            **flow["dbs-gradeps"],
         },
         {
             "method": "dbs-smoothsurface",
@@ -360,7 +340,7 @@ def main() -> None:
         "tau",
     ]
     with args.output_csv.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 

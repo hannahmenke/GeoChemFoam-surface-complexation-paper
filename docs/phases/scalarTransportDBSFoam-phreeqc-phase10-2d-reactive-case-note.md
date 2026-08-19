@@ -5,7 +5,7 @@
 This note records the first image-based 2D manuscript case built for the paper:
 
 - runtime case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation`
 - figure:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_2d_fractures.png`
 
@@ -78,7 +78,7 @@ reactive interface.
 ## Timing
 
 - solver log:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation/reactiveScalarTransportDBSFoamRT.out`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation/reactiveTransportDBSFoamRT.out`
 - observed end-of-run wall-clock in the log:
   - about `240 s` to `t = 3000` after adding the intrinsic matrix surface term
 - this is a draft paper-case timing on `8` MPI ranks, not the formal benchmark

@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+# Explicit-aSurf, fixed-eps cases do not use the solver's auxiliary normalized gradient.
+export FOAM_SIGFPE="${FOAM_SIGFPE:-false}"
+
 repo_root="$(cd "$(dirname "$0")"/../../../../.. && pwd)"
 
 if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
@@ -37,12 +40,12 @@ cp system/fvSolution1 system/fvSolution
 if [ -d "processor0" ]
 then
     export NP="$(find processor* -maxdepth 0 -type d -print | wc -l)"
-    echo -e "Run reactiveScalarTransportDBSFoam in parallel on $NP processors"
+    echo -e "Run reactiveTransportDBSFoam in parallel on $NP processors"
     if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then
-        srun reactiveScalarTransportDBSFoam -parallel > reactiveScalarTransportDBSFoamRT.out
+        srun reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT.out
     else
-        mpirun -np "$NP" reactiveScalarTransportDBSFoam -parallel > reactiveScalarTransportDBSFoamRT.out
+        mpirun -np "$NP" reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT.out
     fi
 else
-    reactiveScalarTransportDBSFoam > reactiveScalarTransportDBSFoamRT.out
+    reactiveTransportDBSFoam > reactiveTransportDBSFoamRT.out
 fi

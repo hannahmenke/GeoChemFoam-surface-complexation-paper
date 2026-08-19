@@ -1,0 +1,17 @@
+# OpenFOAM run products; case inputs remain tracked.
+processor*/
+[0-9]*/
+*.out
+*.pid
+*.status
+*.wrapper.log
+*.solver.log
+poroPerm.csv
+error.inp
+createASurfReactive.out
+Paraview_loader.foam
+*/processor*/
+*/[0-9]*/
+*/constant/polyMesh/
+*/constant/triSurface/*
+!*/constant/triSurface/raw2stl.py

@@ -11,13 +11,7 @@ error.inp
 createASurfReactive.out
 Paraview_loader.foam
 
-# Legacy snappy generated geometry
-legacy-snappy/constant/triSurface/*
-!legacy-snappy/constant/triSurface/raw2stl.py
-
-# DBS generated thresholded images
-dbs-file/constant/triSurface/*
-dbs-fallback/constant/triSurface/*
-
-# Generated mesh dictionaries
-legacy-subset/system/topoSetDict
+# Generated resolved-wall geometry
+resolved-snappy/constant/polyMesh/
+resolved-snappy/constant/triSurface/*
+!resolved-snappy/constant/triSurface/raw2stl.py

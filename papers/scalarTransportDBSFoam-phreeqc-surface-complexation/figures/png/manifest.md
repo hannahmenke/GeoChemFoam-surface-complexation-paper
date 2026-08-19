@@ -175,7 +175,7 @@
 - content:
   - relative error in integrated surface area versus the analytic 3D sphere
   - relative error in integrated surface area versus the analytic 2D circular post
-  - comparison of `snappyHexMesh`, staircase DBS, and smooth-interface DBS where applicable
+  - comparison of `snappyHexMesh` and smooth-interface DBS where applicable
 - source assets:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_sphere_surface_area_benchmark/results`
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
@@ -192,14 +192,14 @@
 - section:
   - Validation / Micromodel Image-Based Surface-Area Validation
 - content:
-  - micromodel three-case panel at `t = 200`
-  - resolved-wall `snappyHexMesh`, DBS `|\nabla \varepsilon|`, and DBS `smoothSurface`
+  - micromodel two-case panel at `t = 200`
+  - resolved-wall `snappyHexMesh` and DBS `smoothSurface`
   - aqueous Sr/C_in fields, cell-wise reactive area, and sorbed inventory fields
 - source asset:
-  - generated directly from the micromodel case outputs once all three comparison cases are available
+  - generated directly from the two micromodel case outputs
 - note:
-  - the paper-facing figure is only rendered when the `snappyHexMesh`,
-    `DBS |\nabla \varepsilon|`, and `DBS smoothSurface` outputs all exist
+  - the paper-facing figure is only rendered when the `snappyHexMesh` and
+    `DBS smoothSurface` outputs both exist
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_surface_area_validation_figures.sh`
 
@@ -212,7 +212,7 @@
 - content:
   - translucent 3D render of the connected Estaillades external pore-grain surface with micropore label remapped to solid
   - external pore-solid surface area only, excluding intrinsic micropore area
-  - `snappyHexMesh` wall area binned to the image grid, DBS `|\nabla \varepsilon|` area, DBS `smoothSurface` area, projected differences, and axial area profiles at `t = 2.5`
+  - `snappyHexMesh` wall area binned to the image grid, DBS `smoothSurface` area, projected differences, and axial area profiles at `t = 2.5`
 - source case:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation`
 - note:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.patches import Rectangle
 
-from generate_hm12_fourcase_conc_sorbed_diff import (
+from hm12_case_tools import (
     add_scale_bar,
     assemble_parallel_structured,
     boundary_patch_segments,
@@ -67,23 +68,19 @@ def assemble_structured_with_fallback(case_dir: Path, time_name: str, fallback_t
         return assemble_parallel_structured(case_dir, fallback_time, field_name)
 
 
-def wall_inventory_grid(
-    segments: np.ndarray,
+def points_to_sum_grid(
+    x: np.ndarray,
+    y: np.ndarray,
     values: np.ndarray,
     nx: int,
     ny: int,
     res: float,
 ) -> np.ndarray:
     grid = np.zeros((ny, nx), dtype=float)
-    if segments.size == 0 or values.size == 0:
-        return grid
-
-    midpoints = segments.mean(axis=1)
-    lengths = np.linalg.norm(segments[:, 1, :] - segments[:, 0, :], axis=1)
-    ix = np.floor(midpoints[:, 0] / res).astype(int)
-    iy = np.floor(midpoints[:, 1] / res).astype(int)
+    ix = np.rint(x / res - 0.5).astype(int)
+    iy = np.rint(y / res - 0.5).astype(int)
     valid = (ix >= 0) & (ix < nx) & (iy >= 0) & (iy < ny)
-    np.add.at(grid, (iy[valid], ix[valid]), values[valid] * lengths[valid] * res)
+    np.add.at(grid, (iy[valid], ix[valid]), values[valid])
     return grid
 
 
@@ -122,7 +119,7 @@ def dbs_inventory_grid(
     surface_density: np.ndarray,
     a_surf: np.ndarray,
     pore_mask: np.ndarray,
-    cell_volume: float,
+    cell_volume: float | np.ndarray,
 ) -> np.ndarray:
     return np.where(pore_mask & (a_surf > 0.0), surface_density * a_surf * cell_volume, 0.0)
 
@@ -173,8 +170,7 @@ def profile_error_metrics(candidate: np.ndarray, reference: np.ndarray) -> tuple
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--legacy-snappy-case", required=True)
-    parser.add_argument("--dbs-gradeps-case", required=True)
+    parser.add_argument("--resolved-snappy-case", required=True)
     parser.add_argument("--dbs-smoothsurface-case", required=True)
     parser.add_argument("--time", default="200")
     parser.add_argument("--asurf-time", default=None)
@@ -187,6 +183,7 @@ def main() -> None:
     parser.add_argument("--detail-ymin-mm", type=float, default=3.6)
     parser.add_argument("--detail-ymax-mm", type=float, default=10.8)
     parser.add_argument("--output-png", required=True)
+    parser.add_argument("--output-metrics", default=None)
     args = parser.parse_args()
 
     time_name = args.time
@@ -194,80 +191,69 @@ def main() -> None:
     res_mm = args.res * 1e3
     x_extent = args.nx * res_mm
     y_extent = args.ny * res_mm
-    cell_volume = args.res ** 3
-
-    legacy_snappy_case = Path(args.legacy_snappy_case)
-    dbs_gradeps_case = Path(args.dbs_gradeps_case)
+    resolved_snappy_case = Path(args.resolved_snappy_case)
     dbs_smooth_case = Path(args.dbs_smoothsurface_case)
 
-    theta_gradeps = assemble_parallel_structured(dbs_gradeps_case, "0", "theta")
-    pore_mask_gradeps = theta_gradeps > 0.5
-    theta_smooth = assemble_parallel_structured(dbs_smooth_case, "0", "theta")
-    pore_mask_smooth = theta_smooth > 0.5
-
-    gradeps_sr = assemble_parallel_structured(dbs_gradeps_case, time_name, "Sr+2") / args.cin
-    gradeps_sorbed = assemble_parallel_structured(dbs_gradeps_case, time_name, "Surf_aSr+")
-    gradeps_asurf = assemble_structured_with_fallback(dbs_gradeps_case, asurf_time_name, "0", "aSurf")
+    theta_smooth = assemble_parallel_structured(dbs_smooth_case, "0", "eps")
+    pore_mask_smooth = theta_smooth > 1.0e-3
 
     smooth_sr = assemble_parallel_structured(dbs_smooth_case, time_name, "Sr+2") / args.cin
     smooth_sorbed = assemble_parallel_structured(dbs_smooth_case, time_name, "Surf_aSr+")
     smooth_asurf = assemble_structured_with_fallback(dbs_smooth_case, asurf_time_name, "0", "aSurf")
+    smooth_volumes = assemble_parallel_structured(dbs_smooth_case, "0", "V")
 
-    snappy_x, snappy_y, snappy_sr_vals = gather_parallel_unstructured(legacy_snappy_case, time_name, "Sr+2")
+    snappy_x, snappy_y, snappy_sr_vals = gather_parallel_unstructured(resolved_snappy_case, time_name, "Sr+2")
     snappy_sr = points_to_grid(snappy_x, snappy_y, snappy_sr_vals / args.cin, args.nx, args.ny, args.res)
     snappy_pore_mask = np.isfinite(snappy_sr)
-    snappy_wall_segments, snappy_wall_sorbed_vals = boundary_patch_segments(
-        legacy_snappy_case,
+    snappy_wall_segments, _ = boundary_patch_segments(
+        resolved_snappy_case,
         time_name,
-        "Surf_aSr+",
     )
     snappy_wall_segments_mm = snappy_wall_segments * 1e3
-    snappy_wall_area_vals = wall_segment_area_values(snappy_wall_segments, args.res)
-    snappy_wall_sorbed_inventory_vals = snappy_wall_sorbed_vals * snappy_wall_area_vals
-    snappy_area_grid = wall_inventory_grid(
-        snappy_wall_segments,
-        np.ones_like(snappy_wall_sorbed_vals),
-        args.nx,
-        args.ny,
-        args.res,
+    area_x, area_y, snappy_asurf = gather_parallel_unstructured(
+        resolved_snappy_case, "0", "aSurf", centers_time=time_name
     )
-    snappy_sorbed_inventory = wall_inventory_grid(
-        snappy_wall_segments,
-        snappy_wall_sorbed_vals,
-        args.nx,
-        args.ny,
-        args.res,
+    _, _, snappy_volumes = gather_parallel_unstructured(
+        resolved_snappy_case, "0", "V", centers_time=time_name
     )
-    gradeps_sorbed_inventory = dbs_inventory_grid(gradeps_sorbed, gradeps_asurf, pore_mask_gradeps, cell_volume)
-    smooth_sorbed_inventory = dbs_inventory_grid(smooth_sorbed, smooth_asurf, pore_mask_smooth, cell_volume)
-    gradeps_area_grid = np.where(pore_mask_gradeps & (gradeps_asurf > 0.0), gradeps_asurf * cell_volume, 0.0)
-    smooth_area_grid = np.where(pore_mask_smooth & (smooth_asurf > 0.0), smooth_asurf * cell_volume, 0.0)
+    _, _, snappy_sorbed_density = gather_parallel_unstructured(
+        resolved_snappy_case, time_name, "Surf_aSr+"
+    )
+    snappy_area_values = snappy_asurf * snappy_volumes
+    snappy_sorbed_values = snappy_sorbed_density * snappy_area_values
+    snappy_area_grid = points_to_sum_grid(
+        area_x, area_y, snappy_area_values, args.nx, args.ny, args.res
+    )
+    snappy_sorbed_inventory = points_to_sum_grid(
+        area_x, area_y, snappy_sorbed_values, args.nx, args.ny, args.res
+    )
+    smooth_sorbed_inventory = dbs_inventory_grid(
+        smooth_sorbed, smooth_asurf, pore_mask_smooth, smooth_volumes
+    )
+    smooth_area_grid = np.where(
+        pore_mask_smooth & (smooth_asurf > 0.0), smooth_asurf * smooth_volumes, 0.0
+    )
 
     sr_fields = [
         np.ma.masked_invalid(snappy_sr),
-        masked_structured(gradeps_sr, pore_mask_gradeps),
         masked_structured(smooth_sr, pore_mask_smooth),
     ]
     pore_masks = [
         snappy_pore_mask,
-        pore_mask_gradeps,
         pore_mask_smooth,
     ]
     area_fields = [
         masked_nonzero(snappy_area_grid),
-        masked_nonzero(gradeps_area_grid),
         masked_nonzero(smooth_area_grid),
     ]
     sorbed_fields = [
         masked_nonzero(snappy_sorbed_inventory),
-        masked_nonzero(gradeps_sorbed_inventory),
         masked_nonzero(smooth_sorbed_inventory),
     ]
 
     column_titles = [
         "snappyHexMesh",
-        r"DBS $|\nabla \varepsilon|$",
-        "DBS smoothSurface",
+        "DBS smooth interface",
     ]
 
     sr_vmin = 0.0
@@ -286,12 +272,12 @@ def main() -> None:
     sorbed_cmap.set_bad(color=(0.0, 0.0, 0.0, 0.0))
     sorbed_cmap.set_over("#00d5ff")
 
-    fig = plt.figure(figsize=(13.8, 13.8), constrained_layout=False)
-    panel = 0.235
-    col_x = [0.075, 0.375, 0.675]
+    fig = plt.figure(figsize=(10.2, 13.8), constrained_layout=False)
+    panel = 0.31
+    col_x = [0.10, 0.54]
     row_y = [0.695, 0.385, 0.075]
 
-    top_axes = np.empty((3, 3), dtype=object)
+    top_axes = np.empty((3, 2), dtype=object)
     im_sr = None
     im_area = None
     im_sorbed = None
@@ -327,40 +313,24 @@ def main() -> None:
         )
         for ax in (ax_area, ax_sorbed):
             ax.set_facecolor("black")
-        if col == 0:
-            im_area = add_wall_line_collection(
-                ax_area,
-                snappy_wall_segments_mm,
-                snappy_wall_area_vals,
-                area_cmap,
-                area_norm,
-            )
-            im_sorbed = add_wall_line_collection(
-                ax_sorbed,
-                snappy_wall_segments_mm,
-                snappy_wall_sorbed_inventory_vals,
-                sorbed_cmap,
-                sorbed_norm,
-            )
-        else:
-            im_area = ax_area.imshow(
-                area_fields[col],
-                origin="lower",
-                extent=(0.0, x_extent, 0.0, y_extent),
-                cmap=area_cmap,
-                norm=area_norm,
-                interpolation="nearest",
-                aspect="equal",
-            )
-            im_sorbed = ax_sorbed.imshow(
-                sorbed_fields[col],
-                origin="lower",
-                extent=(0.0, x_extent, 0.0, y_extent),
-                cmap=sorbed_cmap,
-                norm=sorbed_norm,
-                interpolation="nearest",
-                aspect="equal",
-            )
+        im_area = ax_area.imshow(
+            area_fields[col],
+            origin="lower",
+            extent=(0.0, x_extent, 0.0, y_extent),
+            cmap=area_cmap,
+            norm=area_norm,
+            interpolation="nearest",
+            aspect="equal",
+        )
+        im_sorbed = ax_sorbed.imshow(
+            sorbed_fields[col],
+            origin="lower",
+            extent=(0.0, x_extent, 0.0, y_extent),
+            cmap=sorbed_cmap,
+            norm=sorbed_norm,
+            interpolation="nearest",
+            aspect="equal",
+        )
         if col == 0 and snappy_wall_segments_mm.size:
             ax_sr.add_collection(
                 LineCollection(
@@ -432,6 +402,47 @@ def main() -> None:
     output_png.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_png, dpi=220)
     plt.close(fig)
+
+    smooth_sr_raw = assemble_parallel_structured(dbs_smooth_case, time_name, "Sr+2")
+    _, _, snappy_sr_raw = gather_parallel_unstructured(
+        resolved_snappy_case, time_name, "Sr+2"
+    )
+    metrics = {
+        "time_s": float(time_name),
+        "resolved_snappy": {
+            "surface_area_m2": float(np.sum(snappy_area_values)),
+            "sorbed_inventory_kmol": float(np.sum(snappy_sorbed_values)),
+            "dissolved_inventory_kmol": float(np.sum(snappy_sr_raw * snappy_volumes)),
+        },
+        "dbs_smoothsurface": {
+            "surface_area_m2": float(np.sum(smooth_area_grid)),
+            "sorbed_inventory_kmol": float(np.sum(smooth_sorbed_inventory)),
+            "dissolved_inventory_kmol": float(
+                np.sum(theta_smooth * smooth_sr_raw * smooth_volumes)
+            ),
+        },
+    }
+    reference = metrics["resolved_snappy"]
+    candidate = metrics["dbs_smoothsurface"]
+    metrics["relative_errors_percent"] = {
+        name: 100.0 * (candidate[name] - reference[name]) / reference[name]
+        for name in ("surface_area_m2", "sorbed_inventory_kmol", "dissolved_inventory_kmol")
+    }
+    snappy_profile = mean_profile_over_pore(snappy_sr)
+    smooth_profile = mean_profile_over_pore(masked_structured(smooth_sr, pore_mask_smooth).filled(np.nan))
+    snappy_x_profile = (np.arange(snappy_profile.size) + 0.5) / snappy_profile.size
+    smooth_x_profile = (np.arange(smooth_profile.size) + 0.5) / smooth_profile.size
+    valid_smooth = np.isfinite(smooth_profile)
+    smooth_on_snappy = np.interp(
+        snappy_x_profile,
+        smooth_x_profile[valid_smooth],
+        smooth_profile[valid_smooth],
+    )
+    metrics["aqueous_profile_l1_percent"] = float(
+        100.0 * np.nanmean(np.abs(smooth_on_snappy - snappy_profile))
+    )
+    metrics_path = Path(args.output_metrics) if args.output_metrics else output_png.with_suffix(".json")
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n")
 
 
 if __name__ == "__main__":

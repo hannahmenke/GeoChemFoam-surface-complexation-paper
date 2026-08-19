@@ -39,7 +39,7 @@ def parse_partition(
 ) -> tuple[float, int, float | None]:
     case_dir, time_name, written_time, rank, n_cells, chemistry_min = task
     proc = case_dir / f"processor{rank}"
-    theta_path = proc / time_name / "theta"
+    theta_path = proc / time_name / "eps"
     theta = read_scalar(theta_path, n_cells)
     active_grid_cells = np.flatnonzero((theta > 1.0e-300) & (theta >= chemistry_min))
 

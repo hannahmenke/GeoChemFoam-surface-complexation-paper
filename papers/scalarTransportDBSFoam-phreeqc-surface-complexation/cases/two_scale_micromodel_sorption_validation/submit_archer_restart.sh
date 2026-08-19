@@ -140,7 +140,7 @@ env_file="${GCFOAM_ENV_FILE:-$repo_root/.archer2-tools/gcfoam-env.sh}"
 if [ -f "$env_file" ]; then
     environment_export=",GCFOAM_ENV_FILE=$env_file"
     run_prefix="source '$env_file' && "
-elif command -v reactiveScalarTransportDBSFoam >/dev/null 2>&1 && \
+elif command -v reactiveTransportDBSFoam >/dev/null 2>&1 && \
      [ -n "${WM_PROJECT_DIR:-}" ]; then
     environment_export=""
     run_prefix=""

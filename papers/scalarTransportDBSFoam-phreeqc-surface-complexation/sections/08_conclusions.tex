@@ -8,10 +8,9 @@ image-based, and multi-scale porous-media cases.
 
 The key contribution is a cell-based representation of unresolved reactive
 surface area that is consistent with the DBS micro-continuum framework. By
-using the physical mobile-water fraction $\theta$ as the accumulation and
-chemistry storage variable, rather than the numerical DBS porosity, the method
-preserves conservative aqueous transport and well-defined local mass balances
-simultaneously. The unresolved micropore surface area is
+using one fixed porosity field consistently for aqueous accumulation,
+transport, and PHREEQC cell volumes, the method preserves conservative aqueous
+transport and well-defined local mass balances. The unresolved micropore surface area is
 introduced as an additive intrinsic volumetric density, allowing the method to
 represent reactive uptake in image phases where the internal surface area
 exceeds what can be recovered from the coarse-cell boundary alone.
@@ -19,10 +18,8 @@ exceeds what can be recovered from the coarse-cell boundary alone.
 The reported results demonstrate that the formulation: (i) reproduces the
 dilute analytical retardation limit with sub-percent bulk inventory error;
 (ii) produces resolved dissolved and adsorbed fields in
-transparent 2D and 3D image-based geometries; and (iii) remains computationally
-tractable at application scale, with chemistry representing 36--55\% of the
-total wall-clock time for the calcium surface-complexation system studied here,
-with cell masking providing an effective cost control for near-solid regions.
+transparent 2D and 3D image-based geometries; and (iii) uses a fixed active-cell
+mapping so near-solid regions can be excluded consistently from chemistry.
 
 The method closes a specific gap in existing DBS reactive transport
 capabilities: conservative, unresolved surface complexation in multi-scale

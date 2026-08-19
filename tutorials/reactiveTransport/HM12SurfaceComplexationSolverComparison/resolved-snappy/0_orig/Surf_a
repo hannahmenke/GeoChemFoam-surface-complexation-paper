@@ -1,0 +1,20 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      Surf_a;
+}
+
+dimensions      [0 -2 0 0 1 0 0];
+internalField   uniform SurfDen;
+
+boundaryField
+{
+    walls { type zeroGradient; }
+    inlet { type zeroGradient; }
+    outlet { type zeroGradient; }
+    frontandback { type empty; }
+    fixedWalls { type zeroGradient; }
+}

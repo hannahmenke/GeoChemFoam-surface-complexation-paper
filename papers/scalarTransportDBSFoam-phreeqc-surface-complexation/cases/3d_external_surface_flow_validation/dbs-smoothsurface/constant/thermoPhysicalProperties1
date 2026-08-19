@@ -15,6 +15,18 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+mixtureType phreeqcMixture;
+epsChemistryMin 1e-3;
+maxRelativeClippedMass 1e-8;
+
+kineticPhases
+{
+}
+
+kineticPhaseReactions
+{
+}
+
 solutionSpecies
 {
 	Ca+2
@@ -60,5 +72,3 @@ surfaceMasterDensities
 surfaceInitialSolutionId 1;
 
 // ************************************************************************* //
-
-thetaChemistryMin 1e-3;

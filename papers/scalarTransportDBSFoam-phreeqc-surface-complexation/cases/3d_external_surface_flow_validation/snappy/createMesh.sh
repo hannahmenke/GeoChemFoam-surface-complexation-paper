@@ -2,6 +2,8 @@
 
 set -Eeuo pipefail
 
+repo_root="$(cd "$(dirname "$0")"/../../../../.. && pwd)"
+
 Image_name="estaillades_external_crop_binary"
 format="raw"
 x_dim=128
@@ -28,7 +30,7 @@ cp ../shared/${Image_name}.raw constant/triSurface/.
 
 cd constant/triSurface
 echo "make stl"
-python raw2stl.py \
+python "$repo_root/scripts/raw2stl.py" \
   --x_min=$x_min --x_max=$x_max \
   --y_min=$y_min --y_max=$y_max \
   --z_min=$z_min --z_max=$z_max \

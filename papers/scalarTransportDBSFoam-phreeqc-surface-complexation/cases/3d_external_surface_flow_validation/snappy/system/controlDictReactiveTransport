@@ -15,7 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     reactiveScalarTransportFoam;
+application     reactiveTransportDBSFoam;
 
 startFrom       startTime;
 
@@ -35,7 +35,9 @@ purgeWrite      0;
 
 writeFormat     ascii;
 
-writePrecision  8;
+writePrecision  16;
+
+phreeqcRestartCheckpoints true;
 
 writeCompression off;
 

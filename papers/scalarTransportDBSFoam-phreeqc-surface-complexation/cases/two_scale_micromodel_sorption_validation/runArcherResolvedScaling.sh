@@ -43,10 +43,10 @@ for spec in $SCALING_SPECS; do
 
   (
     cd resolved-reference
-    rm -rf 0 processor* constant/polyMesh constant/triSurface constant/aSurfReconstructionDict \
+    rm -rf 0 processor* constant/polyMesh constant/triSurface \
       system/NPX system/NPY system/NPZ system/Nx1 system/Ny1 system/Nz1 \
       constant/transportProperties constant/thermoPhysicalProperties \
-      simpleDBSFoam.out simpleDBSFoamFlow.out processPoroPermFlow.out reactiveScalarTransportDBSFoamRT.out
+      simpleDBSFoam.out simpleDBSFoamFlow.out processPoroPermFlow.out reactiveTransportDBSFoamRT.out
 
     export RESOLVED_NPX="$npx"
     export RESOLVED_NPY="$npy"
@@ -175,7 +175,7 @@ PY
   cp resolved-reference/simpleDBSFoam.out "$out_dir/" 2>/dev/null || true
   cp resolved-reference/simpleDBSFoamFlow.out "$out_dir/" 2>/dev/null || true
   cp resolved-reference/processPoroPermFlow.out "$out_dir/" 2>/dev/null || true
-  cp resolved-reference/reactiveScalarTransportDBSFoamRT.out "$out_dir/" 2>/dev/null || true
+  cp resolved-reference/reactiveTransportDBSFoamRT.out "$out_dir/" 2>/dev/null || true
   cp resolved-reference/system/controlDict "$out_dir/controlDict.reactive" 2>/dev/null || true
   echo "=== Completed scaling point: ${ranks} ranks ==="
 done

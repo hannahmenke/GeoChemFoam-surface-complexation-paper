@@ -4,8 +4,9 @@ set -Eeuo pipefail
 cd "$(dirname "$0")"
 
 repo_root="$(cd ../../.. && pwd)"
-paper_script="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_hm12_fourcase_conc_sorbed_diff.py"
-paper_output="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/hm12_fourcase_solver_comparison_t200.png"
+paper_script="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_micromodel_surface_area_validation.py"
+paper_output="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig10_hm12_surface_area_validation.png"
+smooth_case="$repo_root/tutorials/reactiveTransport/reactiveTransportDBSFoam/2DHM12SolidGrainsSurfaceComplexation"
 
 if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
   set +e
@@ -33,18 +34,14 @@ run_task() {
   echo "--- Done: $path ---"
 }
 
-echo "=== HM12 four-case solver comparison ==="
-run_task legacy-snappy
-run_task legacy-subset
-run_task dbs-file
-run_task dbs-fallback
+echo "=== HM12 resolved-wall/DBS comparison ==="
+run_task resolved-snappy
+run_task "$smooth_case"
 
 echo "--- Rendering paper figure ---"
 python "$paper_script" \
-  --legacy-snappy-case "$PWD/legacy-snappy" \
-  --legacy-subset-case "$PWD/legacy-subset" \
-  --dbs-file-case "$PWD/dbs-file" \
-  --dbs-fallback-case "$PWD/dbs-fallback" \
+  --resolved-snappy-case "$PWD/resolved-snappy" \
+  --dbs-smoothsurface-case "$smooth_case" \
   --time 200 \
   --cin 1e-4 \
   --nx 600 \
@@ -52,4 +49,4 @@ python "$paper_script" \
   --res 3e-5 \
   --output-png "$paper_output"
 echo "--- Figure written to: $paper_output ---"
-echo "=== Completed HM12 four-case solver comparison ==="
+echo "=== Completed HM12 resolved-wall/DBS comparison ==="

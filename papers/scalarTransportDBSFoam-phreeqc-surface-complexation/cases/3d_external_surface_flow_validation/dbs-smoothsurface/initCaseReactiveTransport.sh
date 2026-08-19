@@ -22,7 +22,6 @@ cl_inlet="2e-4"
 h_internal="1.051e-7"
 oh_internal="1.069e-7"
 
-cp constant/transportProperties2 constant/transportProperties
 cp constant/thermoPhysicalProperties1 constant/thermoPhysicalProperties
 
 NPX="$(tail -n 1 system/NPX)"
@@ -36,8 +35,19 @@ if [ -d "processor0" ]; then
   else
     mpirun -np "$NP" python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 3D "$NPX" "$NPY" "$NPZ" 0 1 zeroGradient zeroGradient
   fi
+  for proc_dir in processor*; do
+    proc_index="${proc_dir#processor}"
+    python "$repo_root/scripts/createASurfMarchingCubesLocal.py" \
+      128 128 128 0 128 0 128 0 128 128 128 128 4e-6 \
+      estaillades_external_crop_phase 1 3 3D aSurf occupancyGaussian 0.74 \
+      "" "" false 0 "$proc_index" eps > "createASurfReactive.proc${proc_index}.out"
+  done
 else
   python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 3D 1 1 1 0 1 zeroGradient zeroGradient
+  python "$repo_root/scripts/createASurfMarchingCubes.py" \
+    128 128 128 0 128 0 128 0 128 128 128 128 4e-6 \
+    estaillades_external_crop_phase 1 3 3D aSurf occupancyGaussian 0.74 \
+    "" "" false 0 > createASurfReactive.out
 fi
 
 export CA_INTERNAL="$ca_internal"
@@ -135,9 +145,9 @@ for target_dir in target_dirs:
     write_species(template_path, target_dir / "Surf_aCa+", "Surf_aCa+", surface_dims, "0", "zeroGradient", None)
     write_species(template_path, target_dir / "Surf_aSr+", "Surf_aSr+", surface_dims, "0", "zeroGradient", None)
     write_species(template_path, target_dir / "Surf_aH", "Surf_aH", surface_dims, "0", "zeroGradient", None)
-    copy_field(eps_path, target_dir / "epsNum", "epsNum")
-    copy_field(eps_path, target_dir / "theta", "theta")
+    write_species(template_path, target_dir / "Surf_a", "Surf_a", surface_dims, "2.4e-9", "zeroGradient", None)
     template_path.unlink(missing_ok=True)
 PY
 
-echo "Reactive transport case initialised for reactiveScalarTransportDBSFoam."
+python "$repo_root/scripts/initialiseSurfaceSpecies.py" . --time 0
+echo "Reactive transport case initialised for reactiveTransportDBSFoam."

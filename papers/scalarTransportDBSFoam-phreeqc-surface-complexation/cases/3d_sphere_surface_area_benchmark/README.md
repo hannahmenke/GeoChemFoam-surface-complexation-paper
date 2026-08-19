@@ -14,13 +14,11 @@ Stage 1, implemented here:
 - compute and save the two reference areas
 
 Stage 2, to be executed on top of these generated assets:
-- mesh the same sphere with:
-  - `legacy snappy`
-  - `legacy subsetMesh`
-  - `DBS file`
-  - `DBS fallback`
-- extract only the geometric surface areas
-- compare all measured areas against both references
+- mesh the analytic sphere with `snappyHexMesh`
+- reconstruct the binary-image interface with the explicit smoothed
+  marching-cubes method used by the paper cases
+- compare both geometric surface areas against the analytic and voxel-face
+  references
 
 How to run the geometry/reference sweep:
 
@@ -33,7 +31,7 @@ How to run the mesh-only area comparison after the assets exist:
 
 ```bash
 cd papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_sphere_surface_area_benchmark
-./runMeshOnlyBenchmark.sh 8 16
+./runMeshOnlyBenchmark.sh 8 16 32 64
 ```
 
 What `runAll.sh` writes:
@@ -54,14 +52,11 @@ The JSON contains:
 - symmetry checks
 - grid and radius metadata
 
-The generic analyzer for the later full benchmark is:
-- `scripts/analyze_sphere_area_benchmark.py`
-
 The geometry generator is:
 - `scripts/generate_symmetric_sphere_geometry.py`
 
-The mesh-only benchmark runner is:
-- `scripts/run_sphere_area_mesh_only_benchmark.sh`
+The area-measurement utility is:
+- `scripts/measureSphereSurfaceArea.py`
 
 Notes:
 - the generator uses odd `N` in each direction so the sphere centre lies on the
@@ -70,5 +65,7 @@ Notes:
   `z`
 - this benchmark is meant to separate voxelization error from surface-method
   error, which is why both analytic and voxel-face reference areas are saved
-- the intended full benchmark is mesh-only; it does not require flow, transport,
-  or chemistry solves
+- the benchmark is mesh-only; it does not require flow, transport, or chemistry
+  solves
+- the higher-resolution meshes are large, so individual levels may be supplied
+  to `runMeshOnlyBenchmark.sh`

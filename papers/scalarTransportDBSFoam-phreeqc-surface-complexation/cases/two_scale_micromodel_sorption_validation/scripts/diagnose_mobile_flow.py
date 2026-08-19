@@ -63,7 +63,7 @@ def volume_fraction_for_flux(speed: np.ndarray, storage: np.ndarray, fraction: f
 
 
 def diagnose(case_dir: Path, time: str, resolved: bool) -> dict[str, float | int]:
-    theta = stitch_field(case_dir, time, "theta").astype(np.float64)
+    theta = stitch_field(case_dir, time, "eps").astype(np.float64)
     velocity = stitch_vector(case_dir, time, "U")
     speed = np.linalg.norm(velocity[:, :, :2], axis=2)
     ux = velocity[:, :, 0]

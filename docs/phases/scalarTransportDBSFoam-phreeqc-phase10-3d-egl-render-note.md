@@ -54,14 +54,14 @@ Successful outputs:
 
 - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig03_3d_kelvin.png`
   - generated from:
-    - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
+    - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`
   - reported time:
     - `t = 50`
   - reason for chosen time:
     - the dissolved front is still near the mid-domain position
 - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades.png`
   - generated from:
-    - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+    - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DEstailladesSurfaceComplexation`
   - reported time:
     - `t = 100`
   - reason for chosen time:

@@ -44,7 +44,7 @@ if [ -n "${GCFOAM_ENV_FILE:-}" ]; then
   module purge
   # shellcheck disable=SC1090
   source "$GCFOAM_ENV_FILE"
-elif ! command -v reactiveScalarTransportDBSFoam >/dev/null 2>&1 || \
+elif ! command -v reactiveTransportDBSFoam >/dev/null 2>&1 || \
      [ -z "${WM_PROJECT_DIR:-}" ]; then
   echo "Load GeoChemFoam/OpenFOAM before sbatch or set GCFOAM_ENV_FILE." >&2
   exit 2

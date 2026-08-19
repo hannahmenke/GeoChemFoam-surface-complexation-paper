@@ -40,7 +40,6 @@ rt_diffusion="${RT_DIFFUSION:-${DIFFUSION:-1e-9}}"
 
 export GCFOAM_ASURF_PROCS="${GCFOAM_ASURF_PROCS:-1}"
 
-cp constant/transportProperties2 constant/transportProperties
 cp constant/thermoPhysicalProperties1 constant/thermoPhysicalProperties
 sed -i "s/Diff/$rt_diffusion/g" constant/transportProperties
 python - <<'PY' "$rt_diffusion"
@@ -66,9 +65,10 @@ COARSE_NX="$(tail -n 1 system/Nx1)"
 COARSE_NY="$(tail -n 1 system/Ny1)"
 COARSE_NZ="$(tail -n 1 system/Nz1)"
 
-# The smoothInterface case reconstructs aSurf inside the solver at startup
-# from constant/aSurfReconstructionDict, so no precomputed 0/aSurf field is
-# generated here.
+metadata="../shared/metadata.json"
+x_dim="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["resolved_full_reference"]["shape"][0])' "$metadata")"
+y_dim="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["resolved_full_reference"]["shape"][1])' "$metadata")"
+res="$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["resolved_full_reference"]["voxel_size_m"])' "$metadata")"
 
 if [ -d "processor0" ]
 then
@@ -78,8 +78,21 @@ then
     else
         mpirun -np "$NP" python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 2D "$NPX" "$NPY" "$NPZ" 0 1 zeroGradient zeroGradient
     fi
+    for proc_dir in processor*; do
+        proc_index="${proc_dir#processor}"
+        python "$repo_root/scripts/createASurfMarchingCubesLocal.py" \
+            "$x_dim" "$y_dim" 1 0 "$x_dim" 0 "$y_dim" 0 1 \
+            "$COARSE_NX" "$COARSE_NY" "$COARSE_NZ" "$res" \
+            resolved_full_reference 255 0 2D aSurf signedDistanceGaussian 0.90 \
+            "" "" false 0 "$proc_index" eps > "createASurfReactive.proc${proc_index}.out"
+    done
 else
     python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 2D 1 1 1 0 1 zeroGradient zeroGradient
+    python "$repo_root/scripts/createASurfMarchingCubes.py" \
+        "$x_dim" "$y_dim" 1 0 "$x_dim" 0 "$y_dim" 0 1 \
+        "$COARSE_NX" "$COARSE_NY" "$COARSE_NZ" "$res" \
+        resolved_full_reference 255 0 2D aSurf signedDistanceGaussian 0.90 \
+        "" "" false 0 > createASurfReactive.out
 fi
 
 export LI_INTERNAL="$li_internal"
@@ -335,9 +348,8 @@ if CASE_IS_PARALLEL:
         write_species(template_path, proc_dir / "Sor_aK", "Sor_aK", surface_dims, "0", "zeroGradient", None)
         write_species(template_path, proc_dir / "Sor_aMg+", "Sor_aMg+", surface_dims, "0", "zeroGradient", None)
         write_species(template_path, proc_dir / "Sor_aH", "Sor_aH", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Sor_a", "Sor_a", surface_dims, "2.4e-9", "zeroGradient", None)
 
-        make_eps_copy(eps_path, proc_dir / "epsNum", "epsNum")
-        make_eps_copy(eps_path, proc_dir / "theta", "theta")
 
         template_path.unlink(missing_ok=True)
 else:
@@ -360,10 +372,10 @@ else:
     write_species(template_path, zero_dir / "Sor_aK", "Sor_aK", surface_dims, "0", "zeroGradient", None)
     write_species(template_path, zero_dir / "Sor_aMg+", "Sor_aMg+", surface_dims, "0", "zeroGradient", None)
     write_species(template_path, zero_dir / "Sor_aH", "Sor_aH", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Sor_a", "Sor_a", surface_dims, "2.4e-9", "zeroGradient", None)
 
-    make_eps_copy(eps_path, zero_dir / "epsNum", "epsNum")
-    make_eps_copy(eps_path, zero_dir / "theta", "theta")
     template_path.unlink(missing_ok=True)
 PY
 
-echo "Reactive transport case initialised for reactiveScalarTransportDBSFoam."
+python "$repo_root/scripts/initialiseSurfaceSpecies.py" . --time 0
+echo "Reactive transport case initialised for reactiveTransportDBSFoam."

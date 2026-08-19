@@ -16,6 +16,13 @@ FoamFile
 
 solvers
 {
+    eps
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-10;
+        relTol          0;
+    }
     p
     {
         solver           GAMG;
@@ -52,6 +59,13 @@ solvers
        relTol 0;
     }
 
+}
+
+STEADYSTATE
+{
+    momentumPredictor          no;
+    nNonOrthogonalCorrectors   0;
+    nCorrectors                0;
 }
 
 SIMPLE

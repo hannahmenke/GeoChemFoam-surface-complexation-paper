@@ -30,7 +30,6 @@ echo "=== Run: 3D external DBS smoothSurface flow case ==="
 ./runCaseFlow.sh
 ./processFlow.sh
 ./initCaseReactiveTransport.sh
-rm -f 0/aSurf processor*/0/aSurf
 ./runCaseReactiveTransport.sh
 ./processReactiveTransport.sh
 echo "=== Completed: 3D external DBS smoothSurface flow case ==="

@@ -4,7 +4,7 @@
 
 This note records the correction of the large 3D paper case:
 
-- `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation`
+- `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DEstailladesSurfaceComplexation`
 
 ## Problem
 

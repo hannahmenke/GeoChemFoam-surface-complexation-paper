@@ -75,13 +75,13 @@ boundary.
 The fix was then exercised on the full draft Kelvin 3D reactive case:
 
 - tutorial:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DKelvinSurfaceComplexation`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`
 - command:
   - `conda run -n gcfoam bash -lc './deleteAll.sh && ./runAll.sh'`
 - MPI decomposition:
   - `8` ranks (`2 x 2 x 2`)
 - reactive log:
-  - `reactiveScalarTransportDBSFoamRT.out`
+  - `reactiveTransportDBSFoamRT.out`
 
 The run completed cleanly to:
 
