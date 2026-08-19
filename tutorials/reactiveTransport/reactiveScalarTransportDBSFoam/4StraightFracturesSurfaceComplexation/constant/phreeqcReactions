@@ -1,0 +1,60 @@
+TITLE Pb2+ sorption on Dzombak-Morel hydrous ferric oxide (HFO) coating
+# Two-site HFO model (Dzombak & Morel 1990) representing iron-oxyhydroxide
+# coatings on fracture walls. Strong sites (Hfo_s) provide near-irreversible
+# high-affinity uptake; weak sites (Hfo_w) provide reversible bulk capacity.
+# Log K values from the standard Dzombak-Morel database (GeoChem.dat).
+
+SURFACE_MASTER_SPECIES
+    Hfo_s  Hfo_sOH
+    Hfo_w  Hfo_wOH
+
+SURFACE_SPECIES
+    # Strong-site proton reactions
+    Hfo_sOH = Hfo_sOH
+    Hfo_sOH + H+ = Hfo_sOH2+
+        -log_k  7.29
+        -mole_balance Hfo_sOH2+
+    Hfo_sOH = Hfo_sO- + H+
+        -log_k -8.93
+        -mole_balance Hfo_sO-
+    # Strong-site Pb2+ complexation
+    Hfo_sOH + Pb+2 = Hfo_sOPb+ + H+
+        -log_k  4.65
+        -mole_balance Hfo_sOPb+
+
+    # Weak-site proton reactions
+    Hfo_wOH = Hfo_wOH
+    Hfo_wOH + H+ = Hfo_wOH2+
+        -log_k  7.29
+        -mole_balance Hfo_wOH2+
+    Hfo_wOH = Hfo_wO- + H+
+        -log_k -8.93
+        -mole_balance Hfo_wO-
+    # Weak-site Pb2+ complexation
+    Hfo_wOH + Pb+2 = Hfo_wOPb+ + H+
+        -log_k  0.3
+        -mole_balance Hfo_wOPb+
+
+SOLUTION 0 background clean groundwater
+    units   mol/L
+    Pb      1e-15
+    Cl      1e-15
+    pH      7 charge
+
+SOLUTION 1 initial surface equilibration state (clean)
+    units   mol/L
+    Pb      1e-15
+    Cl      1e-15
+    pH      7 charge
+
+SELECTED_OUTPUT
+    -molalities Hfo_sOH Hfo_sO- Hfo_sOPb+ Hfo_wOH Hfo_wO- Hfo_wOPb+
+    -ionic_strength true
+
+USER_PUNCH
+    -headings psi_s
+    -start
+    10 PUNCH SURF("Hfo_s","psi")
+    -end
+
+END
