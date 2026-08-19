@@ -32,7 +32,7 @@ aqueous and adsorbed mass---differs from the analytical limit by $1.57\%$ for
 the surface-enabled run and by $0.58\%$ for the aqueous-only run.
 
 The solver therefore reproduces the dilute field-level retardation limit of the
-DBS formulation at sub-percent bulk inventory accuracy. Because the domain
+DBS formulation with bulk inventory error below $1.6\%$. Because the domain
 geometry is uniform, any residual error reflects inaccuracies in the
 surface-chemistry coupling and the batch-secant estimation procedure rather than
 mesh or geometry artefacts. Figure~\ref{fig:1DRetardation} shows the spatial
@@ -131,8 +131,8 @@ PHREEQC convergence level in both directions.
 Sensitivity studies on the operator-splitting step size, the physical
 timestep, and the mesh resolution quantify the local and bulk drift at
 practical settings.
-Table~\ref{tab:validationSummary} summarises the key metrics from all tracked
-checks.
+Table~\ref{tab:validationSummary} summarises the key metrics from this
+benchmark family.
 
 \begin{table}[htbp]
     \centering
@@ -170,3 +170,62 @@ The surface chemistry fraction of $36$--$55\%$ of wall-clock time reflects the
 per-cell cost of the PHREEQC equilibrium solve for a dilute two-ion system;
 the same per-cell cost governs chemistry overhead in the 3D image-based cases,
 where it scales with the number of mobile cells rather than with domain topology.
+
+\subsection{Two-Scale Upscaling Validation}\label{sec:twoScaleValidation}
+
+The upscaled formulation is tested directly against a fully resolved
+lithium-sorption calculation on the same long micromodel geometry. The fully
+resolved reference retains binary pore and grain cells, whereas the DBS case
+represents the unresolved pore structure through its coarse-cell properties and
+internal reactive surface area. Both cases use the same inlet chemistry and are
+compared at matched P\'{e}clet number and normalized advective distance $x/L$.
+This removes the difference in physical travel time caused by the separately
+calibrated flow fields.
+
+The fully resolved production resolution was selected after categorical
+downsampling tests at $5$, $10$, and $15~\mu$m. Categorical majority voting was
+used throughout: no pore/grain cell was formed by averaging to an intermediate
+porosity. The $5~\mu$m image was retained because it preserves the streamwise
+pore connectivity and the pore--grain interfaces on which sorption occurs;
+coarser images gave increasing local Li-field differences even where bulk
+porosity, permeability, and reactive area remained similar.
+
+Figure~\ref{fig:twoScaleErrorPe} compares aqueous and sorbed Li at
+$x/L=0.125$ for $\mathrm{Pe}=0.1$, $1$, $3$, and $10$. The acceptance limits
+were $5\%$ absolute inventory difference, $10\%$ normalized streamwise-profile
+L1 error, and $0.1$ map dissimilarity. Across the sweep, the largest aqueous
+and sorbed inventory differences are $2.15\%$ and $1.83\%$, respectively; the
+largest profile errors are $2.09\%$ and $5.19\%$; and every map dissimilarity
+is below $8.0\times10^{-4}$. All four cases therefore pass the predefined
+criteria. The error does not grow systematically with P\'{e}clet number, and no
+breakdown of the upscaling is observed by $\mathrm{Pe}=10$ for this geometry.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/png/fig09_two_scale_error_vs_peclet.png}
+    \caption{DBS-upscaled error relative to the fully resolved lithium-sorption
+    reference at matched $x/L=0.125$. (a)~Signed differences in integrated
+    aqueous and sorbed Li inventory. (b)~Normalized L1 errors of the
+    streamwise profiles. (c)~Map dissimilarity, defined as one minus cosine
+    similarity. Green shading marks the predefined acceptance region in each
+    panel.}
+    \label{fig:twoScaleErrorPe}
+\end{figure}
+
+Figure~\ref{fig:twoScalePe1Fields} shows the fields later in the Pe=1 run, at
+$x/L=0.625$. The resolved result is plotted on its native $5~\mu$m grid with
+grain cells masked rather than spatially averaged. The pore-scale aqueous plume
+and sorbed-Li pattern remain visible, while the DBS fields show the corresponding
+coarse representation. Their front positions and large-scale plume shapes are
+consistent despite the deliberately different local descriptions.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/png/fig10_two_scale_pe1_fields.png}
+    \caption{Lithium fields at $\mathrm{Pe}=1$ and matched $x/L=0.625$.
+    (a,b)~Aqueous Li normalized by the inlet concentration for the fully
+    resolved and DBS-upscaled cases. (c,d)~Corresponding sorbed Li on a shared
+    logarithmic scale. The inset panels show the native computational grids;
+    the fully resolved pore/grain image is masked, not averaged.}
+    \label{fig:twoScalePe1Fields}
+\end{figure}

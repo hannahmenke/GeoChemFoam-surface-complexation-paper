@@ -65,6 +65,14 @@ physically important for predicting effective retardation factors at the
 continuum scale, and it can only be captured by an image-based simulation that
 resolves the local connectivity.
 
+The direct resolved-to-DBS comparison shows that the coarse representation also
+preserves the bulk transport and sorption response over the tested range
+$\mathrm{Pe}=0.1$--$10$. Inventory differences remain below $2.2\%$ and
+profile errors below $5.2\%$, with no systematic increase in error over the
+P\'{e}clet-number sweep. This establishes the tested range rather than a general
+asymptotic limit: higher P\'{e}clet numbers, different connectivity, or sharper
+kinetic fronts may still expose an upscaling failure.
+
 \subsection{Computational Cost and Scaling}
 
 The chemistry fraction of 36--55\% observed in the 1D benchmark sensitivity
@@ -108,21 +116,16 @@ stiffer geochemical systems. A second-order Strang splitting
 splitting-error order without requiring changes to the transport or chemistry
 operators.
 
-Third, exact surface-state restart is not yet a fully validated capability.
-Saved \texttt{Surf\_*} fields are not identically reintroduced into PHREEQC on
-restart because the surface-state representation in the finite-volume field and
-in the PHREEQC internal state are not trivially interchangeable. The
-surface-enabled production results reported here therefore rely on clean starts.
-Enabling robust restart will require either a direct serialization of the
-PHREEQC internal state or a validated remapping procedure that reconstructs the
-internal surface equilibrium from the written field values.
+Third, restart currently depends on the serialized PHREEQC state written with
+each complete checkpoint; the finite-volume \texttt{Surf\_*} fields alone are
+not sufficient to reconstruct that state. The production P\'{e}clet sweep used
+these checkpoints successfully across multiple restart jobs, but portability
+therefore requires the field data and its matching PHREEQC dump to be retained
+together.
 
-Finally, the present study uses a single-component surface-complexation system
-(calcium on a single surface site) for clarity. Extension to multi-component
-competitive surface complexation, in which multiple aqueous species compete for
-the same surface sites, is mathematically straightforward within the PHREEQC
-framework but requires careful attention to the cell-level mass balances and to
-the sign conventions used in the field-level inventory expression. This
-extension is a direct target for future work, particularly for applications
-involving multi-ion exchange and competitive adsorption in carbonate pore
-systems.
+Finally, the present study includes competitive multi-component examples and a
+Li-selective multi-ion brine in the direct upscaling test, but it does not span
+the wider range of mineral surfaces and aqueous compositions encountered in
+natural systems. Extending the validation to those systems will require the
+same attention to cell-level mass balances and field-level inventory sign
+conventions used here.
