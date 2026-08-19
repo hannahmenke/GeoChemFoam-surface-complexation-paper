@@ -23,16 +23,15 @@ if [ -f "$repo_root/etc/bashrc" ]; then
     set -u
 fi
 
-# Zn2+/Ca2+ competitive sorption scenario.
-# Ca2+ background water; Zn2+ contaminant (e.g. mine drainage) at the inlet.
-# Zn binds ~70x more strongly than Ca2+ (log_k -4.0 vs -5.85), so the two
-# species compete for surface sites in a genuinely nonlinear way.
-ca_internal="1e-4"
-ca_inlet="1e-4"
-zn_internal="0"
-zn_inlet="1e-5"
-cl_internal="2e-4"
-cl_inlet="2.2e-4"
+# Mn2+ capture from Mg-rich water on a two-site HFO coating.
+# Mn is the target critical-metal species; Mg represents abundant brine
+# hardness competing weakly for the same weak HFO surface sites.
+mn_internal="0"
+mn_inlet="1e-5"
+mg_internal="1e-3"
+mg_inlet="1e-3"
+cl_internal="2e-3"
+cl_inlet="2.02e-3"
 h_internal="1.051e-7"
 oh_internal="1.069e-7"
 
@@ -82,10 +81,10 @@ else
     python "$GCFOAM_DIR/applications/utilities/pyTools/createT.py" 3D 1 1 1 0 1 zeroGradient zeroGradient
 fi
 
-export CA_INTERNAL="$ca_internal"
-export CA_INLET="$ca_inlet"
-export ZN_INTERNAL="$zn_internal"
-export ZN_INLET="$zn_inlet"
+export MN_INTERNAL="$mn_internal"
+export MN_INLET="$mn_inlet"
+export MG_INTERNAL="$mg_internal"
+export MG_INLET="$mg_inlet"
 export CL_INTERNAL="$cl_internal"
 export CL_INLET="$cl_inlet"
 export H_INTERNAL="$h_internal"
@@ -289,15 +288,18 @@ if CASE_IS_PARALLEL:
         template_path = proc_dir / "T"
         eps_path = proc_dir / "eps"
 
-        write_species(template_path, proc_dir / "Ca+2", "Ca+2", aqueous_dims, os.environ["CA_INTERNAL"], "fixedValue", os.environ["CA_INLET"])
-        write_species(template_path, proc_dir / "Zn+2", "Zn+2", aqueous_dims, os.environ["ZN_INTERNAL"], "fixedValue", os.environ["ZN_INLET"])
+        write_species(template_path, proc_dir / "Mn+2", "Mn+2", aqueous_dims, os.environ["MN_INTERNAL"], "fixedValue", os.environ["MN_INLET"])
+        write_species(template_path, proc_dir / "Mg+2", "Mg+2", aqueous_dims, os.environ["MG_INTERNAL"], "fixedValue", os.environ["MG_INLET"])
         write_species(template_path, proc_dir / "Cl-", "Cl-", aqueous_dims, os.environ["CL_INTERNAL"], "fixedValue", os.environ["CL_INLET"])
         write_species(template_path, proc_dir / "H+", "H+", aqueous_dims, os.environ["H_INTERNAL"], "fixedValue", os.environ["H_INTERNAL"])
         write_species(template_path, proc_dir / "OH-", "OH-", aqueous_dims, os.environ["OH_INTERNAL"], "fixedValue", os.environ["OH_INTERNAL"])
-        write_species(template_path, proc_dir / "Surf_a-", "Surf_a-", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Surf_aCa+", "Surf_aCa+", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Surf_aZn+", "Surf_aZn+", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Surf_aH", "Surf_aH", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_sOH", "Hfo_sOH", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_sO-", "Hfo_sO-", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_sOMn+", "Hfo_sOMn+", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_wOH", "Hfo_wOH", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_wO-", "Hfo_wO-", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_wOMg+", "Hfo_wOMg+", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Hfo_wOMn+", "Hfo_wOMn+", surface_dims, "0", "zeroGradient", None)
 
         make_eps_copy(eps_path, proc_dir / "epsNum", "epsNum")
         make_eps_copy(eps_path, proc_dir / "theta", "theta")
@@ -325,15 +327,18 @@ else:
     template_path = zero_dir / "T"
     eps_path = zero_dir / "eps"
 
-    write_species(template_path, zero_dir / "Ca+2", "Ca+2", aqueous_dims, os.environ["CA_INTERNAL"], "fixedValue", os.environ["CA_INLET"])
-    write_species(template_path, zero_dir / "Zn+2", "Zn+2", aqueous_dims, os.environ["ZN_INTERNAL"], "fixedValue", os.environ["ZN_INLET"])
+    write_species(template_path, zero_dir / "Mn+2", "Mn+2", aqueous_dims, os.environ["MN_INTERNAL"], "fixedValue", os.environ["MN_INLET"])
+    write_species(template_path, zero_dir / "Mg+2", "Mg+2", aqueous_dims, os.environ["MG_INTERNAL"], "fixedValue", os.environ["MG_INLET"])
     write_species(template_path, zero_dir / "Cl-", "Cl-", aqueous_dims, os.environ["CL_INTERNAL"], "fixedValue", os.environ["CL_INLET"])
     write_species(template_path, zero_dir / "H+", "H+", aqueous_dims, os.environ["H_INTERNAL"], "fixedValue", os.environ["H_INTERNAL"])
     write_species(template_path, zero_dir / "OH-", "OH-", aqueous_dims, os.environ["OH_INTERNAL"], "fixedValue", os.environ["OH_INTERNAL"])
-    write_species(template_path, zero_dir / "Surf_a-", "Surf_a-", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Surf_aCa+", "Surf_aCa+", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Surf_aZn+", "Surf_aZn+", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Surf_aH", "Surf_aH", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_sOH", "Hfo_sOH", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_sO-", "Hfo_sO-", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_sOMn+", "Hfo_sOMn+", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_wOH", "Hfo_wOH", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_wO-", "Hfo_wO-", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_wOMg+", "Hfo_wOMg+", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Hfo_wOMn+", "Hfo_wOMn+", surface_dims, "0", "zeroGradient", None)
 
     make_eps_copy(eps_path, zero_dir / "epsNum", "epsNum")
     make_eps_copy(eps_path, zero_dir / "theta", "theta")

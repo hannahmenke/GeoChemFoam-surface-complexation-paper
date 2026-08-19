@@ -1,50 +1,61 @@
-# 3D Manuscript Case: Kelvin Cell
+# 3D Manuscript Case: HFO-Coated Kelvin Cell
 
 ## Source Asset
 
-- image:
-  - `images/raw/Kelvin1-200x200x200.raw.tar.gz`
-- metadata:
-  - `images/raw/Kelvin1-200x200x200.txt`
+- image: `images/raw/Kelvin1-200x200x200.raw.tar.gz`
+- metadata: `images/raw/Kelvin1-200x200x200.txt`
 
 ## Paper Role
 
-- controlled 3D geometry
-- first 3D demonstration of topology-driven unresolved surface interaction
+- controlled 3D image-based reactive transport example
+- critical-metal recovery analogue in an open-cell sorbent medium
+- coupled flow, transport, and surface-complexation response in a 3D DBS case
 
-## Source Metadata
+## Geometry
 
-- image size:
-  - `200 x 200 x 200`
-- voxel size:
-  - `10 mum`
+- image size: `200 x 200 x 200`
+- voxel size: `10 mum`
 - labels:
   - `1 = pore`
-  - `2 = micropore` (paper rendering convention)
+  - `2 = microporous/reactive sorbent phase`
 
-## Current Draft Surface Model
+## Surface Model
 
-- the Kelvin draft case now uses:
-  - interface-count `aSurf`
-  - plus an intrinsic micropore contribution inside label `2`
-- current draft intrinsic micropore density:
-  - `1e5 1/m`
-- this is a case parameter, not yet a calibrated physical claim
+- two-site Dzombak-Morel hydrous ferric oxide (HFO) surface complexation
+- strong sites: `Hfo_s = 2e-7 mol/m2`
+- weak sites: `Hfo_w = 6e-6 mol/m2`
+- target species: Mn2+
+- competing background species: Mg2+
+- initial and inlet Mg2+: `1e-3 mol/L`
+- inlet Mn2+: `1e-5 mol/L`
 
-## Planned Outputs
+Mn2+ has stronger HFO affinity than Mg2+ in the Dzombak-Morel reaction set, so
+the injected Mn-bearing front is preferentially captured from Mg-rich water.
 
-- aqueous concentration volume render
-- surface-loading volume render
+## Surface Area
 
-## Planned Figure
+- interface-count `aSurf`
+- intrinsic micropore contribution inside label `2`
+- intrinsic micropore density: `1e5 1/m`
+
+## Reproducibility
+
+Run the full case from this directory:
+
+```bash
+./runAll.sh
+```
+
+The script creates the mesh, runs flow, runs reactive transport, and performs
+the configured post-processing.
+
+## Figures
 
 - `figures/png/fig03_3d_kelvin.png`
+- `figures/png/fig07_kelvin_temporal.png`
 
-## Current Draft Figure Convention
+Regenerate both figures after a completed run with:
 
-- the current draft figure is a true 3D volume render of the stitched solver
-  fields
-- both panels use the same camera
-- the left panel shows dissolved `Ca+2`
-- the right panel shows adsorbed `Surf_aCa+`
-- per-panel relative scaling is used to emphasize spatial structure
+```bash
+../../figures/scripts/render_kelvin_mnmg_figures.sh
+```

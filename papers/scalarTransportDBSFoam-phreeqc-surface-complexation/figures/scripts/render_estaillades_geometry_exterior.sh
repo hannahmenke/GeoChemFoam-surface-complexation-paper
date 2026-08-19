@@ -15,6 +15,6 @@ export DISPLAY=
 export VTK_DEFAULT_OPENGL_WINDOW="${VTK_DEFAULT_OPENGL_WINDOW:-vtkEGLRenderWindow}"
 
 python "$script_dir/generate_estaillades_geometry_exterior.py" \
-  --case-dir "$repo_root/tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation" \
+  --case-dir "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades" \
   --time-name 0 \
   --output "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades_geometry_exterior.png"

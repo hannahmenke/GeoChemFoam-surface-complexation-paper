@@ -17,11 +17,11 @@ FoamFile
 
 solutionSpecies
 {
-	Ca+2
+	Mn+2
 	{
 		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
 	}
-	Zn+2
+	Mg+2
 	{
 		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
 	}
@@ -41,20 +41,25 @@ solutionSpecies
 
 surfaceSpecies
 {
-	Surf_a-;
-	Surf_aCa+;
-	Surf_aZn+;
-	Surf_aH;
+	Hfo_sOH;
+	Hfo_sO-;
+	Hfo_sOMn+;
+	Hfo_wOH;
+	Hfo_wO-;
+	Hfo_wOMg+;
+	Hfo_wOMn+;
 };
 
 surfaceMasters
 {
-	Surf_a;
+	Hfo_s;
+	Hfo_w;
 };
 
 surfaceMasterDensities
 {
-	Surf_a 2.4e-9;
+	Hfo_s 2e-7;
+	Hfo_w 6e-6;
 };
 
 surfaceInitialSolutionId 1;

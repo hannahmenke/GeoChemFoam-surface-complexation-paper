@@ -44,6 +44,26 @@ The manuscript uses the following case ladder.
 - manuscript note:
   - `cases/3d_estaillades/README.md`
 
+## Controlled Surface-Area Validation
+
+- tracked 2D circular-post metrics:
+  - `cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
+- tracked 3D sphere case:
+  - `cases/3d_sphere_surface_area_benchmark`
+- role:
+  - verifies the quasi-2D contour and 3D isosurface branches against controlled
+    geometries
+
+## 3D External-Surface Validation
+
+- area-only case:
+  - `cases/3d_external_surface_area_validation`
+- resolved-wall/DBS flow and sorption comparison:
+  - `cases/3d_external_surface_flow_validation`
+- role:
+  - compares `snappyHexMesh`, DBS `|grad(epsilon)|`, and DBS `smoothSurface`
+    for an image-derived three-dimensional porous geometry
+
 ## Two-Scale Upscaling Validation
 
 - tracked case:

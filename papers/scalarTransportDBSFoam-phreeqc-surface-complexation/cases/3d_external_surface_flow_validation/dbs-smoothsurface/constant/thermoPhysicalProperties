@@ -1,0 +1,64 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2106                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermoPhysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solutionSpecies
+{
+	Ca+2
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	Sr+2
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	Cl-
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	H+
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	OH-
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+};
+
+surfaceSpecies
+{
+	Surf_a-;
+	Surf_aCa+;
+	Surf_aSr+;
+	Surf_aH;
+};
+
+surfaceMasters
+{
+	Surf_a;
+};
+
+surfaceMasterDensities
+{
+	Surf_a 2.4e-9;
+};
+
+surfaceInitialSolutionId 1;
+
+// ************************************************************************* //
+
+thetaChemistryMin 1e-3;

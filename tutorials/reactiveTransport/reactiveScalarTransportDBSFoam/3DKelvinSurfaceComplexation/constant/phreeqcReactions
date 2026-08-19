@@ -1,42 +1,57 @@
-TITLE Zn2+/Ca2+ competitive sorption on generic surface sites
+TITLE Mn2+ capture from Mg-rich water on Dzombak-Morel hydrous ferric oxide
 
 SURFACE_MASTER_SPECIES
-    Surf_a Surf_aH
+    Hfo_s  Hfo_sOH
+    Hfo_w  Hfo_wOH
 
 SURFACE_SPECIES
-    Surf_aH = Surf_aH
-    Surf_aH = Surf_a- + H+
-        -log_k -7.9
-        -mole_balance Surf_a-
-    Surf_aH + Ca+2 = Surf_aCa+ + H+
-        -log_k -5.85
-        -mole_balance Surf_aCa+
-    Surf_aH + Zn+2 = Surf_aZn+ + H+
-        -log_k -4.0
-        -mole_balance Surf_aZn+
+    Hfo_sOH = Hfo_sOH
+    Hfo_sOH + H+ = Hfo_sOH2+
+        -log_k  7.29
+        -mole_balance Hfo_sOH2+
+    Hfo_sOH = Hfo_sO- + H+
+        -log_k -8.93
+        -mole_balance Hfo_sO-
+    Hfo_sOH + Mn+2 = Hfo_sOMn+ + H+
+        -log_k -0.4
+        -mole_balance Hfo_sOMn+
 
-SOLUTION 0 background water with trace Ca and Zn
+    Hfo_wOH = Hfo_wOH
+    Hfo_wOH + H+ = Hfo_wOH2+
+        -log_k  7.29
+        -mole_balance Hfo_wOH2+
+    Hfo_wOH = Hfo_wO- + H+
+        -log_k -8.93
+        -mole_balance Hfo_wO-
+    Hfo_wOH + Mg+2 = Hfo_wOMg+ + H+
+        -log_k -4.6
+        -mole_balance Hfo_wOMg+
+    Hfo_wOH + Mn+2 = Hfo_wOMn+ + H+
+        -log_k -3.5
+        -mole_balance Hfo_wOMn+
+
+SOLUTION 0 Mg-rich background water
     units   mol/L
-    Ca      1e-12
-    Zn      1e-12
-    Cl      1e-12
+    Mn      1e-12
+    Mg      1e-3
+    Cl      2e-3
     pH      7 charge
 
 SOLUTION 1 initial surface equilibration state
     units   mol/L
-    Ca      1e-12
-    Zn      1e-12
-    Cl      1e-12
+    Mn      1e-12
+    Mg      1e-3
+    Cl      2e-3
     pH      7 charge
 
 SELECTED_OUTPUT
-    -molalities Surf_a- Surf_aCa+ Surf_aZn+ Surf_aH
+    -molalities Hfo_sOH Hfo_sO- Hfo_sOMn+ Hfo_wOH Hfo_wO- Hfo_wOMg+ Hfo_wOMn+
     -ionic_strength true
 
 USER_PUNCH
-    -headings psi
+    -headings psi_s
     -start
-    10 PUNCH SURF("Surf_a","psi")
+    10 PUNCH SURF("Hfo_s","psi")
     -end
 
 END

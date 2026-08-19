@@ -14,6 +14,8 @@
 - application-scale performance and surface-complexation showcase
 - distinct from the simple 3D case because the structure must visibly span more
   than one geometric scale in the reported volume render
+- the binary pores-plus-solids variant is preserved separately in:
+  - `cases/3d_estaillades_micropore_as_solid`
 
 ## Planned Outputs
 
@@ -52,6 +54,13 @@
 ## Planned Figure
 
 - `figures/png/fig04_3d_estaillades.png`
+- `figures/png/fig08_estaillades_temporal.png`
+
+Regenerate both figures after a completed run with:
+
+```bash
+../../figures/scripts/render_estaillades_figures.sh
+```
 
 ## Current Runtime Status
 

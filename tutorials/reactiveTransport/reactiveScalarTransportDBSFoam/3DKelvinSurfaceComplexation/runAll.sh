@@ -37,7 +37,7 @@ run_task() {
   echo "--- Done: $name ---"
 }
 
-echo "=== Run: 3DKelvinSurfaceComplexation ==="
+echo "=== Run: 3D Kelvin HFO Mn/Mg selective capture ==="
 run_task createMesh.sh
 run_task initCaseFlow.sh
 run_task runCaseFlow.sh
@@ -45,4 +45,4 @@ run_task processFlow.sh
 run_task initCaseReactiveTransport.sh
 run_task runCaseReactiveTransport.sh
 run_task processReactiveTransport.sh
-echo "=== Completed: 3DKelvinSurfaceComplexation ==="
+echo "=== Completed: 3D Kelvin HFO Mn/Mg selective capture ==="

@@ -5,7 +5,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../../../.." && pwd)"
 
-case_dir="$repo_root/tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesMicroporeAsSolidSurfaceComplexation"
+case_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades_micropore_as_solid"
 panel_png="/tmp/fig04_3d_estaillades_micropore_as_solid_panel_d_t20.png"
 output_png="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades_micropore_as_solid_t20.png"
 connectivity_image="$repo_root/images/raw/Est_3phase500cubed4micron.raw.tar.gz"

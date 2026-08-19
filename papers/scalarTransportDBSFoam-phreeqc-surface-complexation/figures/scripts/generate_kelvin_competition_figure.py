@@ -130,6 +130,31 @@ def add_volume_scene(
     plotter.camera_position = camera_position(nx, ny, nz)
 
 
+def stitch_field_sum(
+    case_dir: Path,
+    time_name: str,
+    field_names: str,
+) -> tuple[np.ndarray, int, int, int]:
+    names = [name.strip() for name in field_names.split(",") if name.strip()]
+    if not names:
+        raise ValueError("At least one field name is required")
+
+    total: np.ndarray | None = None
+    dims: tuple[int, int, int] | None = None
+    for name in names:
+        values, nx, ny, nz = stitch_parallel_scalar(case_dir, time_name, name)
+        current_dims = (nx, ny, nz)
+        if dims is None:
+            dims = current_dims
+            total = values.copy()
+        elif current_dims != dims:
+            raise RuntimeError(f"Field mesh mismatch for {name}")
+        else:
+            total = total + values
+    assert total is not None and dims is not None
+    return total, *dims
+
+
 def render_scene(
     plot_builder,
     width: int,
@@ -219,10 +244,14 @@ def main() -> None:
     parser.add_argument("--time-name", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--geometry-field", default="theta")
-    parser.add_argument("--zn-field", default="Zn+2")
-    parser.add_argument("--ca-field", default="Ca+2")
-    parser.add_argument("--surf-zn-field", default="Surf_aZn+")
-    parser.add_argument("--surf-ca-field", default="Surf_aCa+")
+    parser.add_argument("--target-field", default="Mn+2")
+    parser.add_argument("--background-field", default="Mg+2")
+    parser.add_argument("--surf-target-fields", default="Hfo_sOMn+,Hfo_wOMn+")
+    parser.add_argument("--surf-background-fields", default="Hfo_wOMg+")
+    parser.add_argument("--target-label", default="Mn$^{2+}$ / C$_{in}$")
+    parser.add_argument("--background-label", default="Mg$^{2+}$ / C$_{init}$")
+    parser.add_argument("--surf-target-label", default="$\\Delta$HFO-Mn")
+    parser.add_argument("--surf-background-label", default="HFO-Mg loss")
     parser.add_argument("--surface-baseline-time", default="0")
     parser.add_argument("--lower-quantile", type=float, default=0.01)
     parser.add_argument("--upper-quantile", type=float, default=0.995)
@@ -232,19 +261,23 @@ def main() -> None:
 
     pv.OFF_SCREEN = True
 
-    zn, nx, ny, nz = stitch_parallel_scalar(args.case_dir, args.time_name, args.zn_field)
-    ca, cx, cy, cz = stitch_parallel_scalar(args.case_dir, args.time_name, args.ca_field)
-    surf_zn, sx, sy, sz = stitch_parallel_scalar(
-        args.case_dir, args.time_name, args.surf_zn_field
+    target, nx, ny, nz = stitch_parallel_scalar(
+        args.case_dir, args.time_name, args.target_field
     )
-    surf_ca, tx, ty, tz = stitch_parallel_scalar(
-        args.case_dir, args.time_name, args.surf_ca_field
+    background, cx, cy, cz = stitch_parallel_scalar(
+        args.case_dir, args.time_name, args.background_field
     )
-    baseline_zn, bx, by, bz = stitch_parallel_scalar(
-        args.case_dir, args.surface_baseline_time, args.surf_zn_field
+    surf_target, sx, sy, sz = stitch_field_sum(
+        args.case_dir, args.time_name, args.surf_target_fields
     )
-    baseline_ca, ux, uy, uz = stitch_parallel_scalar(
-        args.case_dir, args.surface_baseline_time, args.surf_ca_field
+    surf_background, tx, ty, tz = stitch_field_sum(
+        args.case_dir, args.time_name, args.surf_background_fields
+    )
+    baseline_target, bx, by, bz = stitch_field_sum(
+        args.case_dir, args.surface_baseline_time, args.surf_target_fields
+    )
+    baseline_background, ux, uy, uz = stitch_field_sum(
+        args.case_dir, args.surface_baseline_time, args.surf_background_fields
     )
     theta, gx, gy, gz = stitch_parallel_scalar(
         args.case_dir, args.time_name, args.geometry_field
@@ -255,32 +288,31 @@ def main() -> None:
         if dims != expected:
             raise RuntimeError("Field meshes do not match")
 
-    delta_zn = np.maximum(surf_zn - baseline_zn, 0.0)
-    delta_ca_loss = np.maximum(baseline_ca - surf_ca, 0.0)
-
-    zn_scaled, _ = normalized_field(
-        zn,
+    delta_target = np.maximum(surf_target - baseline_target, 0.0)
+    delta_background_loss = np.maximum(baseline_background - surf_background, 0.0)
+    target_scaled, _ = normalized_field(
+        target,
         lower_q=args.lower_quantile,
         upper_q=args.upper_quantile,
         log_scale=False,
         zero_mask=False,
     )
-    ca_scaled, _ = normalized_field(
-        ca,
+    background_scaled, _ = normalized_field(
+        background,
         lower_q=args.lower_quantile,
         upper_q=args.upper_quantile,
         log_scale=False,
         zero_mask=False,
     )
-    surf_zn_scaled, _ = normalized_field(
-        delta_zn,
+    surf_target_scaled, _ = normalized_field(
+        delta_target,
         lower_q=args.lower_quantile,
         upper_q=args.upper_quantile,
         log_scale=False,
         zero_mask=True,
     )
-    surf_ca_scaled, _ = normalized_field(
-        delta_ca_loss,
+    surf_background_scaled, _ = normalized_field(
+        delta_background_loss,
         lower_q=args.lower_quantile,
         upper_q=args.upper_quantile,
         log_scale=False,
@@ -298,11 +330,11 @@ def main() -> None:
         width=1800,
         height=900,
     ), pad=0)
-    zn_img = crop_white_border(render_scene(
+    target_img = crop_white_border(render_scene(
         lambda plotter: add_volume_scene(
             plotter,
-            build_image_data(zn_scaled),
-            "Zn$^{2+}$ / C$_{in}$",
+            build_image_data(target_scaled),
+            args.target_label,
             nx,
             ny,
             nz,
@@ -311,11 +343,11 @@ def main() -> None:
         width=1200,
         height=900,
     ), pad=0)
-    ca_img = crop_white_border(render_scene(
+    background_img = crop_white_border(render_scene(
         lambda plotter: add_volume_scene(
             plotter,
-            build_image_data(ca_scaled),
-            "Ca$^{2+}$ / C$_{init}$",
+            build_image_data(background_scaled),
+            args.background_label,
             nx,
             ny,
             nz,
@@ -324,11 +356,11 @@ def main() -> None:
         width=1200,
         height=900,
     ), pad=0)
-    surf_zn_img = crop_white_border(render_scene(
+    surf_target_img = crop_white_border(render_scene(
         lambda plotter: add_volume_scene(
             plotter,
-            build_image_data(surf_zn_scaled),
-            "$\\Delta$Surf$_a$Zn$^+$",
+            build_image_data(surf_target_scaled),
+            args.surf_target_label,
             nx,
             ny,
             nz,
@@ -337,11 +369,11 @@ def main() -> None:
         width=1200,
         height=900,
     ), pad=0)
-    surf_ca_img = crop_white_border(render_scene(
+    surf_background_img = crop_white_border(render_scene(
         lambda plotter: add_volume_scene(
             plotter,
-            build_image_data(surf_ca_scaled),
-            "-$\\Delta$Surf$_a$Ca$^+$",
+            build_image_data(surf_background_scaled),
+            args.surf_background_label,
             nx,
             ny,
             nz,
@@ -370,10 +402,10 @@ def main() -> None:
     col2_x = 2 * gap + cell_w
 
     canvas.paste(fit_image(geometry_img, top_w, top_h), (top_x, top_y))
-    canvas.paste(fit_image(zn_img, cell_w, cell_h), (col1_x, row1_y))
-    canvas.paste(fit_image(ca_img, cell_w, cell_h), (col2_x, row1_y))
-    canvas.paste(fit_image(surf_zn_img, cell_w, cell_h), (col1_x, row2_y))
-    canvas.paste(fit_image(surf_ca_img, cell_w, cell_h), (col2_x, row2_y))
+    canvas.paste(fit_image(target_img, cell_w, cell_h), (col1_x, row1_y))
+    canvas.paste(fit_image(background_img, cell_w, cell_h), (col2_x, row1_y))
+    canvas.paste(fit_image(surf_target_img, cell_w, cell_h), (col1_x, row2_y))
+    canvas.paste(fit_image(surf_background_img, cell_w, cell_h), (col2_x, row2_y))
 
     panel_label(draw, (top_x + 20, top_y + 16), "(a)")
     panel_label(draw, (col1_x + 18, row1_y + 14), "(b)")

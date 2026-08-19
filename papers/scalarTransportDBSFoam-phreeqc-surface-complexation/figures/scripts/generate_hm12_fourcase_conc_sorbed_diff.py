@@ -270,6 +270,74 @@ def boundary_patch_to_grid(
     return grid
 
 
+def boundary_patch_segments(
+    case_dir: Path,
+    time_name: str,
+    field_name: str | None = None,
+    patch_names: tuple[str, ...] = ("fixedWalls", "walls"),
+) -> tuple[np.ndarray, np.ndarray | None]:
+    segments: list[np.ndarray] = []
+    values_out: list[np.ndarray] = []
+
+    for proc_dir in sorted(case_dir.glob("processor*")):
+        points_path = proc_dir / "constant" / "polyMesh" / "points"
+        faces_path = proc_dir / "constant" / "polyMesh" / "faces"
+        boundary_path = proc_dir / "constant" / "polyMesh" / "boundary"
+        if not (points_path.exists() and faces_path.exists() and boundary_path.exists()):
+            continue
+
+        points = parse_points(points_path)
+        faces = parse_faces(faces_path)
+        boundary_meta = parse_boundary_metadata(boundary_path)
+
+        field_path = proc_dir / time_name / field_name if field_name is not None else None
+        patch_values: dict[str, np.ndarray] = {}
+        if field_path is not None and field_path.exists():
+            for patch_name in patch_names:
+                patch_values[patch_name] = parse_boundary_patch_values(field_path, patch_name)
+
+        for patch_name in patch_names:
+            if patch_name not in boundary_meta:
+                continue
+
+            n_faces = boundary_meta[patch_name]["nFaces"]
+            if n_faces == 0:
+                continue
+
+            patch_vals = patch_values.get(patch_name)
+            if patch_vals is not None:
+                if patch_vals.size == 1:
+                    patch_vals = np.full(n_faces, float(patch_vals[0]), dtype=float)
+                if patch_vals.size != n_faces:
+                    raise RuntimeError(
+                        f"Patch face count mismatch for {field_path} patch {patch_name}: "
+                        f"expected {n_faces}, got {patch_vals.size}"
+                    )
+
+            start_face = boundary_meta[patch_name]["startFace"]
+            for local_idx, face_idx in enumerate(range(start_face, start_face + n_faces)):
+                xy = points[faces[face_idx], :2]
+                unique_xy = np.unique(np.round(xy, decimals=14), axis=0)
+                if unique_xy.shape[0] < 2:
+                    continue
+                if unique_xy.shape[0] == 2:
+                    segment = unique_xy
+                else:
+                    diffs = unique_xy[:, None, :] - unique_xy[None, :, :]
+                    pairwise = np.sum(diffs * diffs, axis=2)
+                    i_max, j_max = np.unravel_index(np.argmax(pairwise), pairwise.shape)
+                    segment = unique_xy[[i_max, j_max], :]
+                segments.append(segment.astype(float, copy=False))
+                if patch_vals is not None:
+                    values_out.append(np.array([patch_vals[local_idx]], dtype=float))
+
+    segment_array = np.array(segments, dtype=float) if segments else np.empty((0, 2, 2), dtype=float)
+    if field_name is None:
+        return segment_array, None
+    value_array = np.concatenate(values_out) if values_out else np.empty((0,), dtype=float)
+    return segment_array, value_array
+
+
 def add_scale_bar(ax, x_extent: float, y_extent: float, length_mm: float = 2.0) -> None:
     x0 = x_extent * 0.06
     y0 = y_extent * 0.06
