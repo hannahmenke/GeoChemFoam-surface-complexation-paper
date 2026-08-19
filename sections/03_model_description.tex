@@ -18,22 +18,22 @@ where $\bm{u}_D = \epsilon_{\mathrm{num}}\bm{u}$ is the Darcy velocity,
 $\mu$ is the fluid viscosity, $\mu_{\mathrm{eff}}$ is an effective
 viscosity that smoothly recovers the Stokes equation in open-pore cells
 \citep{soulaine2016micro}, and $K(\epsilon_{\mathrm{num}})$ is a permeability
-function that enforces a no-slip condition in solid-like cells via a large
-resistance term. In open-pore cells the resistance vanishes and
-Eq.~\eqref{eq:brinkman} reduces to the Stokes equation.
+function. The drag coefficient $\mu/K(\epsilon_{\mathrm{num}})$ therefore acts
+as a large resistance term in solid-like cells and vanishes in open-pore cells,
+so Eq.~\eqref{eq:brinkman} reduces to the Stokes equation.
 
-Three cell-centred scalar fields are introduced for the reactive-transport
-problem. The first is the numerical porosity $\epsilon_{\mathrm{num}}$, already
-present in the flow solve and retained to regularize transport in nearly solid
-voxels. The second is the physical mobile-water fraction $\theta$ (volume of
-mobile water per bulk cell volume), which defines aqueous accumulation and
-chemical storage and may differ from $\epsilon_{\mathrm{num}}$ in microporous
-cells. The third is the reactive internal surface area per bulk volume
-$a_{\mathrm{surf}}$ (m$^2$\,m$^{-3}$), which represents surface available for
-adsorption and surface complexation. All aqueous species, together with
-$\theta$, $\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the adsorbed
-surface fields, are treated as cell-centred variables. The Darcy velocity
-$\bm{u}_D$ is face-centred.
+The reactive-transport model uses three cell-centred material fields. The first
+is the numerical porosity $\epsilon_{\mathrm{num}}$, which enters the DBS flow
+model and the transport regularization in nearly solid voxels. The second is
+the physical mobile-water fraction $\theta$ (volume of mobile water per bulk
+cell volume), which defines aqueous accumulation and chemical storage and may
+differ from $\epsilon_{\mathrm{num}}$ in microporous cells. The third is the
+reactive internal surface area per bulk volume $a_{\mathrm{surf}}$
+(m$^2$\,m$^{-3}$), which represents surface available for adsorption and
+surface complexation. All aqueous species, together with $\theta$,
+$\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the adsorbed surface
+fields, are treated as cell-centred variables. The Darcy velocity $\bm{u}_D$
+is face-centred.
 
 \subsection{Reactive Surface Area Field}
 \label{sec:aSurf}
@@ -55,42 +55,68 @@ a_{\mathrm{surf}}^{\mathrm{intrinsic}}.
 
 The first term, $a_{\mathrm{surf}}^{\mathrm{interface}}$, is computed
 geometrically from the segmented voxel image. The user designates one image
-label as the \emph{reference grain phase} (which may be a microporous grain,
-a dense solid, or any other label assigned to the reactive surface). Within
-each coarse finite-volume cell containing $N_{\mathrm{vox}} = p \times q
-\times r$ fine voxels of resolution $\Delta x$, let $N_{\mathrm{fs}}$ denote
-the number of voxel face pairs in which one voxel carries the reference grain
-label and its neighbour does not. The volumetric interface density is
+label as the \emph{reference grain phase}; this is simply the segmented label
+whose visible image-scale boundary is counted as reactive interface. It may
+correspond to a microporous grain, a dense solid, or any other label assigned
+to the reactive surface. In general,
+$a_{\mathrm{surf}}^{\mathrm{interface}}$ is the local interface area per bulk
+cell volume obtained by reconstructing the boundary of that reference phase
+inside each finite-volume cell.
+
+Two image-based constructions are used to evaluate the interface term. The
+staircase construction measures the exposed faces of the segmented voxel
+image. Within a coarse finite-volume cell containing
+$N_{\mathrm{vox}} = p \times q \times r$ fine voxels of resolution
+$\Delta x$, let $N_{\mathrm{fs}}$ denote the number of voxel face pairs in
+which one voxel carries the reference grain label and its neighbour does not.
+The corresponding estimator is
 \begin{equation}
-a_{\mathrm{surf}}^{\mathrm{interface}}
+a_{\mathrm{surf}}^{\mathrm{interface,stair}}
 = \frac{N_{\mathrm{fs}}}{N_{\mathrm{vox}}\,\Delta x}.
 \label{eq:asurf_interface}
 \end{equation}
 This is the standard specific surface area estimator from binary image
 analysis: each counted face contributes area $\Delta x^2$ to the numerator
-while the coarse cell volume is $N_{\mathrm{vox}}\,\Delta x^3$.
+while the coarse cell volume is $N_{\mathrm{vox}}\,\Delta x^3$. In the
+comparisons below, this staircase construction is denoted \emph{DBS
+$|\nabla \epsilon|$}. This label refers to the discrete indicator-gradient
+interpretation of the voxel face-pair count; it is not a smoothed
+gradient-magnitude reconstruction.
 
-The interface term therefore captures only grain--fluid boundaries that are
-\emph{visible at the image voxel scale}: every face where a reference-grain
-voxel is adjacent to a voxel of any other label. It does not detect reactive
-area that lies entirely \emph{within} a voxel, such as sub-voxel surface
-roughness of a grain or the internal pore network of a microporous phase.
-Those surfaces are below the image resolution by construction.
+The smooth-interface construction reconstructs a sub-voxel boundary from the
+same segmented image before accumulating area back into the computational
+fluid dynamics (CFD) cells. In the comparisons below, this route is denoted
+\emph{DBS smoothSurface}. The segmented owner phase is converted to a smoothed
+occupancy field, a sub-voxel interface is extracted, and the resulting line or
+surface measure is assigned to the owning finite-volume cells as a bulk
+$a_{\mathrm{surf}}$ field.
+Section~\ref{sec:valSummary} validates this geometric construction separately
+from the intrinsic micropore contribution. Both image-based constructions
+produce the same bulk field and use the same cell-local chemistry coupling.
+
+The interface term captures only grain--fluid boundaries that are visible at
+the resolved image scale, whether they are measured on the staircase image or
+on a smooth reconstruction of that same segmented geometry. It does not detect
+reactive area that lies entirely \emph{within} a voxel, such as sub-voxel
+surface roughness of a grain or the internal pore network of a microporous
+phase. Those surfaces are below the image resolution by construction.
 
 The second term, $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$, accounts for this
 sub-voxel contribution. A volumetric surface density $s_k$
-(units: m$^2$\,m$^{-3}$) is prescribed for each image label $k$; it may
+(units: m$^2$\,m$^{-3}$) is prescribed for each segmented image label $k$
+(for example pore, micropore, or dense solid); it may
 represent any sub-voxel surface that the image cannot resolve --- for example
-the BET surface area of a microporous grain measured by N$_2$ adsorption, or
-the surface roughness of a dense solid grain measured on powdered material.
+the Brunauer--Emmett--Teller (BET) surface area of a microporous grain measured
+by N$_2$ adsorption, or the surface roughness of a dense solid grain measured
+on powdered material.
 The intrinsic contribution is assembled by weighting each phase density by
 its local volume fraction $f_k$ within the coarse cell:
 \begin{equation}
 a_{\mathrm{surf}}^{\mathrm{intrinsic}} = \sum_k f_k\,s_k.
 \label{eq:asurf_intrinsic}
 \end{equation}
-Crucially, $s_k$ may be non-zero for any label, including the reference grain
-phase itself. This means the two terms are additive for the same phase:
+$s_k$ may be non-zero for any label, including the reference grain phase
+itself. The same segmented label may contribute through both terms:
 $a_{\mathrm{surf}}^{\mathrm{interface}}$ gives the image-scale outer surface
 of the grain, and $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$ adds the
 sub-voxel surface area that the image resolution cannot capture. If
@@ -99,9 +125,9 @@ image-scale surface. Both fields are pre-computed from the segmented image
 before the flow simulation begins and are held constant throughout the
 reactive-transport calculation.
 
-Both contributions enter the geochemical module through identical treatment.
-The PHREEQC reaction engine requires surface area expressed per litre of
-water, not per bulk cell volume. The conversion is
+Both contributions enter the geochemical module in the same way. PHREEQC
+requires surface area expressed per litre of water, not per bulk cell volume.
+In the units used here, the conversion is
 \begin{equation}
 a_{\mathrm{surf}}^{\mathrm{water}} = \frac{a_{\mathrm{surf}}}{10^{3}\,\theta},
 \label{eq:asurf_water}
@@ -113,23 +139,24 @@ in a microporous cell with small $\theta$, the same bulk surface area density
 is concentrated in a proportionally smaller water volume, yielding a higher
 effective surface-to-water ratio. In a fully open macro-pore cell ($\theta
 \approx 1$) the factor reduces to a simple unit conversion.
-Importantly, the division by $\theta$ is \emph{not} part of the image-based
-construction of $a_{\mathrm{surf}}$ itself. Any surface area estimated from
-nano-CT, micro-CT, FIB-SEM, or other image data must first be expressed on a
+The division by $\theta$ is applied after the image-based construction of
+$a_{\mathrm{surf}}$. Surface areas estimated from nano-computed tomography
+(nano-CT), micro-computed tomography (micro-CT), focused ion beam scanning
+electron microscopy (FIB-SEM), or other image data are first expressed on a
 bulk-volume basis (m$^2$\,m$^{-3}_{\mathrm{bulk}}$), consistent with
-Eqs.~\eqref{eq:asurf}--\eqref{eq:asurf_intrinsic}. Only after that bulk-based
-field has been assembled is the factor $1/\theta$ applied to obtain the area
-per unit water volume required by PHREEQC. If an image-derived surface area is
-instead reported per microporous-phase volume or per grain mass, it must be
-converted to the bulk-volume basis before applying Eq.~\eqref{eq:asurf_water}.
+Eqs.~\eqref{eq:asurf}--\eqref{eq:asurf_intrinsic}. The factor $1/\theta$ then
+converts this bulk-based field to the area per unit water volume required by
+PHREEQC. Image-derived surface areas reported per microporous-phase volume or
+per grain mass are converted to the bulk-volume basis before applying
+Eq.~\eqref{eq:asurf_water}.
 
-Critically, the numerical porosity $\epsilon_{\mathrm{num}}$ does not appear
-in Eq.~\eqref{eq:asurf_water}. Its role is confined to the DBS momentum
-equation, where it regularizes the Brinkman term in near-solid cells. All
-chemical accumulation and surface coupling is gated on $\theta$ alone, so
-numerical regularization and geochemical coupling are fully decoupled. Cells
-in which $\theta$ falls below a small threshold are treated as chemically
-inactive and their surface terms are suppressed.
+The numerical porosity $\epsilon_{\mathrm{num}}$ does not appear in
+Eq.~\eqref{eq:asurf_water}. Its role is confined to the DBS momentum equation,
+where it regularizes the Brinkman term in near-solid cells. Chemical
+accumulation and surface coupling are defined on $\theta$ alone. Cells in
+which $\theta$ falls below the chemistry mask threshold
+$\theta_{\mathrm{mask}}$ are treated as chemically inactive and their surface
+terms are suppressed.
 
 \subsection{Conservative Aqueous Transport}
 
@@ -140,24 +167,27 @@ transport equation is written as
 + \nabla \cdot (\bm{u}_D C_i)
 - \nabla \cdot (\theta D_i \nabla C_i) = 0,
 \end{equation}
-where $\bm{u}_D$ is the Darcy velocity obtained from a prior
-Darcy--Brinkman--Stokes flow solve, and $D_i$ is the diffusivity assigned to
-species $i$. In fully resolved macro-pore cells ($\theta \approx 1$), $D_i$
-is the free molecular diffusivity. In cells that represent microporous
-material ($0 < \theta < 1$), the unresolved pore structure introduces
-tortuosity; in that case $D_i$ may be replaced by an effective diffusivity
-$D_i^{\mathrm{eff}} = D_i / \tau$, where $\tau \geq 1$ is the tortuosity
-factor of the micropore network. In either case, the $\theta$ factor
+where $\bm{u}_D$ is the Darcy velocity satisfying
+Eqs.~\eqref{eq:continuity}--\eqref{eq:brinkman}, and $D_i$ denotes the
+diffusivity used in the transport equation. In fully resolved macro-pore cells
+($\theta \approx 1$), $D_i$ is the free molecular diffusivity. In cells that
+represent microporous material ($0 < \theta < 1$), $D_i$ is interpreted as an
+effective diffusivity, commonly $D_i = D_i^{\mathrm{mol}}/\tau$, where
+$D_i^{\mathrm{mol}}$ is the molecular diffusivity and $\tau \geq 1$ is the
+tortuosity factor of the micropore network. In either case, the $\theta$ factor
 multiplying $D_i$ in the diffusion term already accounts for the reduced
 water volume available for transport. There is no chemistry source term in
 this equation: reactions are handled by the subsequent operator-split
 PHREEQC step and do not appear as an explicit right-hand side here.
 
-This form is the correct mobile-water balance. The numerical porosity
-$\epsilon_{\mathrm{num}}$ is not used as a chemistry storage term unless an
-explicit modeling choice is made to set $\theta = \epsilon_{\mathrm{num}}$.
+This form makes the key modeling distinction explicit: $\theta$ is the
+mobile-water storage variable, whereas $\epsilon_{\mathrm{num}}$ remains a DBS
+regularization field. The numerical porosity is not used as a chemistry
+storage term unless an explicit modeling choice is made to set
+$\theta = \epsilon_{\mathrm{num}}$.
 
-For a vector of aqueous species $\bm{C}$, the transport step can be written in
+For a vector of aqueous species $\bm{C}$, the same transport balance can be
+written in
 compact form as
 \begin{equation}
 \frac{\partial (\theta \bm{C})}{\partial t}
@@ -169,7 +199,8 @@ applied.
 
 \subsection{Cell-Based Surface Inventory}
 
-For the unresolved DBS surface, the conservative local inventory is expressed
+For the cell-based unresolved surface carried by the DBS formulation, the
+conservative local inventory is expressed
 in the current solver field variables as
 \begin{equation}
 M = \theta C + \frac{a_{\mathrm{surf}}}{\theta}\Gamma_{\mathrm{field}},
@@ -191,9 +222,8 @@ $\Gamma_{\mathrm{field}} = K_s\,\theta\,C$, so
 \end{equation}
 and $\Gamma_{\mathrm{field}}$ has effective units mol\,m$^{-2}$ (the
 $\theta$ factor is dimensionless). The $a_{\mathrm{surf}}/\theta$ factor in
-the adsorbed inventory then follows from substituting
-Eq.~\eqref{eq:Gamma_conversion} into the standard expression
-$\Gamma \times a_{\mathrm{surf}}$:
+the adsorbed inventory then follows directly from the surface concentration
+multiplied by the local surface-area density:
 \begin{equation*}
 \Gamma \times a_{\mathrm{surf}}
 = \frac{\Gamma_{\mathrm{field}}}{\theta} \times a_{\mathrm{surf}}
@@ -221,26 +251,29 @@ fraction and cell-based surface state, is then mapped into PHREEQC
 assumption of \emph{thermodynamic equilibrium}: within each timestep, surface
 complexation reactions are treated as instantaneous relative to transport.
 This is appropriate when the equilibration timescale of the surface reactions
-is short compared with the transport timescale (P\'{e}clet- and
-Damk\"{o}hler-number regime), which holds for the strongly sorbing systems
-considered here. Kinetic surface reactions can in principle be handled by
-the same interface but are not used in the present work.
+is short compared with the transport timescale. The relevant transport regime
+is characterised by the P\'{e}clet number, $Pe = U L / D$, where $U$ is a
+representative velocity, $L$ is a representative transport length, and $D$ is
+the aqueous diffusion coefficient. This equilibrium assumption holds when
+surface equilibration is fast relative to advection and diffusion over the
+resolved transport length scale. Kinetic surface reactions can in principle be
+handled by the same interface but are not used in the present work.
 
-The baseline production method uses a first-order Lie splitting
-\citep{carrayrou2004operator}. The splitting introduces a global error of
-$\mathcal{O}(\Delta t)$ in the operator-split solution; the local error over
-one step is $\mathcal{O}(\Delta t^2)$. In practice, provided the timestep is
-chosen so that advection does not move a concentration front through more
-than one cell per step (i.e.\ the CFL number is at most $O(1)$), the
-splitting error remains comparable to the spatial discretisation error and
-does not dominate. Higher-order splitting is intentionally deferred until
-the conservative baseline is fully established.
+The solver uses first-order Lie splitting \citep{carrayrou2004operator}. The
+splitting introduces a global error of $\mathcal{O}(\Delta t)$ in the
+operator-split solution; the local error over one step is
+$\mathcal{O}(\Delta t^2)$. For the timesteps used here, the advective
+Courant--Friedrichs--Lewy (CFL) number remains $O(1)$, so the
+operator-splitting error is of the same formal order as the first-order
+transport discretization. The resulting algorithm keeps the conservative
+transport update and the local PHREEQC equilibrium update as distinct
+operators within each timestep.
 
 At the algorithmic level, one timestep of size $\Delta t$ is:
 \begin{align}
-\bm{C}^{n+1/2} &= \mathcal{T}_{\Delta t}(\bm{C}^{n}, \theta, \bm{u}_D, \bm{D}),\\
+\widetilde{\bm{C}}^{\,n+1} &= \mathcal{T}_{\Delta t}(\bm{C}^{n}, \theta, \bm{u}_D, \bm{D}),\\
 (\bm{C}^{n+1}, \bm{\Gamma}^{n+1}) &=
-\mathcal{R}_{\Delta t}(\bm{C}^{n+1/2}, \bm{\Gamma}^{n}, \theta, a_{\mathrm{surf}}),
+\mathcal{R}_{\Delta t}(\widetilde{\bm{C}}^{\,n+1}, \bm{\Gamma}^{n}, \theta, a_{\mathrm{surf}}),
 \end{align}
 where $\mathcal{T}_{\Delta t}$ is the conservative finite-volume transport
 operator (advancing $\theta\bm{C}$ in DBS form) and $\mathcal{R}_{\Delta t}$
@@ -294,5 +327,6 @@ The validation programme presented in this paper is designed to establish four
 criteria. First, the formulation must reduce to simpler known limits. Second,
 the local surface-coupled chemistry must conserve the intended field-level
 inventory. Third, the formulation must reproduce the dilute analytical
-retardation limit. Fourth, the same formulation must remain applicable as the
-geometric complexity increases from 1D to image-based 2D and 3D domains.
+retardation limit. Fourth, the same formulation must remain applicable without
+structural change as the application domain expands from 1D benchmarks to 2D
+and 3D image-based cases.

@@ -1,0 +1,25 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      aSurfReconstructionDict;
+}
+
+imageName           estaillades_external_crop_phase;
+imageDims           (128 128 128);
+cropMin             (0 0 0);
+cropMax             (128 128 128);
+meshDims            (128 128 128);
+voxelSize           4e-06;
+poreValue           1;
+solidValue          3;
+dimension           "3D";
+surfaceMode         occupancyGaussian;
+sigmaVox            0.74;
+pairSpecs           "";
+intrinsicSpecs      "";
+writeComponents     false;
+generatedBy         "writeASurfReconstructionDict.py";
+generatedAt         "2026-04-30T11:38:06";
+

@@ -5,7 +5,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../../../.." && pwd)"
 
-case_dir="$repo_root/tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesMicroporeAsSolidSurfaceComplexation"
+case_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades_micropore_as_solid"
 output_png="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades_micropore_as_solid_streamlines_t100.png"
 
 if [[ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]]; then

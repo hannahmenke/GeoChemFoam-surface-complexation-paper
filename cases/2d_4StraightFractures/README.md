@@ -30,8 +30,8 @@
 
 ## Runtime Case
 
-- solver case:
-  - `tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/4StraightFracturesSurfaceComplexation`
+- paper-local executable case:
+  - `runAll.sh`
 - draft mesh:
   - `250 x 250 x 1`
 - production draft run:
@@ -47,3 +47,9 @@
 
 - `figures/png/fig02_2d_fractures.png`
   - populated from the `t = 20000` solver output
+
+Regenerate the figure after a completed run with:
+
+```bash
+../../figures/scripts/render_2d_fractures_figure.sh
+```

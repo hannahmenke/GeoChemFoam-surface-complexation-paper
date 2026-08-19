@@ -1,0 +1,398 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import csv
+import json
+import math
+from dataclasses import dataclass
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Rectangle
+
+
+REPO_ROOT = Path(__file__).resolve().parents[4]
+PAPER_ROOT = REPO_ROOT / "papers" / "scalarTransportDBSFoam-phreeqc-surface-complexation"
+CASE_ROOT = PAPER_ROOT / "cases" / "two_scale_micromodel_sorption_validation"
+RESULTS_ROOT = CASE_ROOT / "results"
+GEOMETRY_FIGURE_PATH = PAPER_ROOT / "figures" / "png" / "fig12_two_scale_lithium_nested_geometries.png"
+RESULTS_FIGURE_PATH = PAPER_ROOT / "figures" / "png" / "fig13_two_scale_lithium_sorption_validation.png"
+TABLE_CSV = RESULTS_ROOT / "two_scale_lithium_pe_sweep_table.csv"
+TABLE_TEX = RESULTS_ROOT / "two_scale_lithium_pe_sweep_table.tex"
+
+PE_VALUES = [1.0, 0.3, 0.1]
+
+RESOLVED_COLOR = "#d98f00"
+DBS_COLOR = "#1b6b73"
+PENDING_COLOR = "#9a9a9a"
+MATRIX_COLOR = "#7b8794"
+PORE_COLOR = "#f7f7f7"
+
+
+@dataclass
+class RunData:
+    pe: float
+    summary: dict | None
+    profiles: dict[str, list[dict[str, float]]] | None
+    path: Path | None
+
+    @property
+    def available(self) -> bool:
+        return self.summary is not None and self.profiles is not None
+
+
+def pe_tag(pe: float) -> str:
+    return ("pe_" + f"{pe:g}".replace(".", "p").replace("-", "m")).replace("+", "")
+
+
+def load_profiles(path: Path) -> dict[str, list[dict[str, float]]]:
+    profiles: dict[str, list[dict[str, float]]] = {}
+    with path.open(newline="") as handle:
+        for row in csv.DictReader(handle):
+            case = row["case"]
+            parsed = {
+                key: float(value)
+                for key, value in row.items()
+                if key not in {"case"} and value not in {"", "nan"}
+            }
+            profiles.setdefault(case, []).append(parsed)
+    return profiles
+
+
+def load_run(pe: float) -> RunData:
+    candidates = [RESULTS_ROOT / "pe_sweep" / pe_tag(pe)]
+    if pe == 1.0:
+        candidates.append(RESULTS_ROOT)
+    for root in candidates:
+        summary_path = root / "analysis_summary.json"
+        profiles_path = root / "analysis_profiles.csv"
+        if summary_path.exists() and profiles_path.exists():
+            return RunData(
+                pe=pe,
+                summary=json.loads(summary_path.read_text()),
+                profiles=load_profiles(profiles_path),
+                path=root,
+            )
+    return RunData(pe=pe, summary=None, profiles=None, path=None)
+
+
+def relative_percent(run: RunData, key: str) -> float:
+    assert run.summary is not None
+    return 100.0 * float(run.summary["dbs_vs_resolved"][key])
+
+
+def metric(run: RunData, key: str) -> float:
+    assert run.summary is not None
+    return float(run.summary["dbs_vs_resolved"][key])
+
+
+def case_metric(run: RunData, case: str, key: str) -> float:
+    assert run.summary is not None
+    return float(run.summary["cases"][case][key])
+
+
+def fmt_value(value: float | None, digits: int = 2) -> str:
+    if value is None or not math.isfinite(value):
+        return "--"
+    return f"{value:.{digits}f}"
+
+
+def write_tables(runs: list[RunData]) -> None:
+    TABLE_CSV.parent.mkdir(parents=True, exist_ok=True)
+    rows = []
+    for run in runs:
+        if run.available:
+            rows.append(
+                {
+                    "Pe": f"{run.pe:g}",
+                    "status": "complete",
+                    "resolved_time_s": f"{case_metric(run, 'resolved-reference', 'time'):.12g}",
+                    "dbs_time_s": f"{case_metric(run, 'dbs-upscaled', 'time'):.12g}",
+                    "aqueous_li_pore_mean_relative_error_percent": f"{relative_percent(run, 'aqueous_li_pore_mean_mol_m-3_relative_difference'):.6g}",
+                    "sorbed_li_bulk_relative_error_percent": f"{relative_percent(run, 'sorbed_li_per_bulk_volume_mol_m-3_relative_difference'):.6g}",
+                    "sorbed_li_area_relative_error_percent": f"{relative_percent(run, 'sorbed_li_per_area_mol_m-2_relative_difference'):.6g}",
+                    "aqueous_li_profile_l1": f"{metric(run, 'aqueous_li_profile_normalized_l1'):.6g}",
+                    "sorbed_li_profile_l1": f"{metric(run, 'sorbed_li_profile_normalized_l1'):.6g}",
+                }
+            )
+        else:
+            rows.append(
+                {
+                    "Pe": f"{run.pe:g}",
+                    "status": "pending",
+                    "resolved_time_s": "--",
+                    "dbs_time_s": "--",
+                    "aqueous_li_pore_mean_relative_error_percent": "--",
+                    "sorbed_li_bulk_relative_error_percent": "--",
+                    "sorbed_li_area_relative_error_percent": "--",
+                    "aqueous_li_profile_l1": "--",
+                    "sorbed_li_profile_l1": "--",
+                }
+            )
+
+    with TABLE_CSV.open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(rows)
+
+    tex_lines = [
+        "% Auto-generated by generate_two_scale_lithium_sorption_validation.py.",
+        "% Rows marked -- are placeholders for runs that have not completed.",
+        "\\begin{tabular}{lrrrrr}",
+        "\\hline",
+        "$Pe$ & $t$ (s) & $\\Delta \\bar{C}_{Li}$ (\\%) & $\\Delta n_{Li,s}$ (\\%) & $L_1(C_{Li})$ & $L_1(n_{Li,s})$ \\\\",
+        "\\hline",
+    ]
+    for row in rows:
+        tex_lines.append(
+            " & ".join(
+                [
+                    row["Pe"],
+                    row["resolved_time_s"],
+                    row["aqueous_li_pore_mean_relative_error_percent"],
+                    row["sorbed_li_bulk_relative_error_percent"],
+                    row["aqueous_li_profile_l1"],
+                    row["sorbed_li_profile_l1"],
+                ]
+            )
+            + " \\\\"
+        )
+    tex_lines.extend(["\\hline", "\\end{tabular}", ""])
+    TABLE_TEX.write_text("\n".join(tex_lines))
+
+
+def load_raw_image(path: Path, shape: tuple[int, int]) -> np.ndarray:
+    raw = np.fromfile(path, dtype=np.uint8)
+    expected = shape[0] * shape[1]
+    if raw.size != expected:
+        raise RuntimeError(f"Unexpected raw image size for {path}: {raw.size} != {expected}")
+    return raw.reshape(shape)
+
+
+GEOM_CMAP = ListedColormap(["#7b8794", "#f7f7f7"])
+
+
+def downsample_for_display(image: np.ndarray, max_pixels: int = 2_200_000) -> np.ndarray:
+    if image.size <= max_pixels:
+        return image
+    stride = int(math.ceil(math.sqrt(image.size / max_pixels)))
+    return image[::stride, ::stride]
+
+
+def load_shared_binary(metadata: dict, key: str, file_key: str = "file") -> np.ndarray:
+    info = metadata[key]
+    x_dim, y_dim, z_dim = info["shape"]
+    if z_dim != 1:
+        raise RuntimeError(f"Expected a 2D image for {key}; got z_dim={z_dim}")
+    return load_raw_image(CASE_ROOT / "shared" / info[file_key], (y_dim, x_dim)) > 127
+
+
+def geometry_images() -> dict[str, object]:
+    metadata = json.loads((CASE_ROOT / "shared" / "metadata.json").read_text())
+    return {
+        "metadata": metadata,
+        "dbs_domain": load_shared_binary(metadata, "dbs_full_upscaled", "phase_file"),
+        "resolved_domain": load_shared_binary(metadata, "resolved_full_reference"),
+        "matrix_rev": load_raw_image(CASE_ROOT / "shared" / "TSmicromodel_matrix_rev.raw", (300, 300)) > 127,
+    }
+
+
+def draw_geometry_panels(axes: list[plt.Axes]) -> None:
+    images = geometry_images()
+    metadata = images["metadata"]
+    panels = [
+        (axes[0], images["dbs_domain"], "DBS upscaled transport domain"),
+        (axes[1], images["resolved_domain"], "Resolved reference transport domain"),
+        (axes[2], images["matrix_rev"], "Matrix REV closure"),
+    ]
+    for ax, image, title in panels:
+        ax.imshow(
+            downsample_for_display(image),
+            interpolation="nearest",
+            cmap=GEOM_CMAP,
+            vmin=0,
+            vmax=1,
+            extent=(0, image.shape[1], image.shape[0], 0),
+        )
+        ax.set_title(title, fontsize=9)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_aspect("equal")
+    axes[0].set_xlabel("3600 x 1200 at 5 um; 18 mm x 6 mm", fontsize=7.5)
+    axes[1].set_xlabel("18000 x 6000 at 1 um; 18 mm x 6 mm", fontsize=7.5)
+    axes[2].set_xlabel("300 x 300 at 1 um", fontsize=7.5)
+
+    for ax, key in ((axes[0], "dbs_full_upscaled"), (axes[1], "resolved_full_reference")):
+        x_dim, y_dim, _ = metadata[key]["shape"]
+        ax.set_xlim(0, x_dim)
+        ax.set_ylim(y_dim, 0)
+
+    matrix_box = metadata["matrix_rev"]
+    axes[1].add_patch(
+        Rectangle(
+            (matrix_box["x_min"], matrix_box["y_min"]),
+            matrix_box["x_max"] - matrix_box["x_min"],
+            matrix_box["y_max"] - matrix_box["y_min"],
+            fill=False,
+            ec=DBS_COLOR,
+            lw=1.5,
+        )
+    )
+    axes[1].text(
+        matrix_box["x_max"] + 110,
+        matrix_box["y_min"],
+        "matrix REV",
+        color=DBS_COLOR,
+        fontsize=7.2,
+        ha="left",
+        va="top",
+        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.85, "pad": 1.0},
+    )
+    axes[2].text(
+        0.5,
+        -0.14,
+        "porosity, permeability, dispersion, intrinsic area",
+        transform=axes[2].transAxes,
+        ha="center",
+        va="top",
+        color="#555555",
+        fontsize=6.8,
+        clip_on=False,
+    )
+
+
+def profile_arrays(run: RunData, case: str, field: str) -> tuple[np.ndarray, np.ndarray]:
+    assert run.profiles is not None
+    rows = sorted(run.profiles[case], key=lambda row: row["bin"])
+    x = np.array([row["x_mid_fraction"] for row in rows], dtype=float)
+    y = np.array([row[field] for row in rows], dtype=float)
+    return x, y
+
+
+def draw_profile_panel(ax: plt.Axes, runs: list[RunData], field: str, title: str) -> None:
+    for run in runs:
+        if not run.available:
+            continue
+        alpha = 1.0 if run.pe == 1.0 else 0.76
+        lw = 2.2 if run.pe == 1.0 else 1.7
+        x_res, y_res = profile_arrays(run, "resolved-reference", field)
+        x_dbs, y_dbs = profile_arrays(run, "dbs-upscaled", field)
+        ax.plot(
+            x_res,
+            y_res,
+            color=RESOLVED_COLOR,
+            lw=lw,
+            alpha=alpha,
+            label=f"Resolved, Pe={run.pe:g}",
+        )
+        ax.plot(
+            x_dbs,
+            y_dbs,
+            color=DBS_COLOR,
+            lw=lw,
+            ls="--",
+            alpha=alpha,
+            label=f"DBS, Pe={run.pe:g}",
+        )
+    for run in runs:
+        if not run.available:
+            ax.plot([], [], color=PENDING_COLOR, lw=1.5, ls=":", label=f"Pe={run.pe:g} pending")
+    ax.set_title(title, fontsize=10)
+    ax.set_xlabel("x/L")
+    ax.set_ylabel("Fraction of final inventory")
+    ax.set_xlim(0.0, 1.0)
+    ax.set_ylim(bottom=0.0)
+    ax.grid(True, color="#e6e6e6", lw=0.7)
+
+
+def draw_error_panel(ax: plt.Axes, runs: list[RunData]) -> None:
+    available = [run for run in runs if run.available]
+    pending = [run for run in runs if not run.available]
+    if available:
+        pes = np.array([run.pe for run in available])
+        sorbed = np.array([abs(relative_percent(run, "sorbed_li_per_bulk_volume_mol_m-3_relative_difference")) for run in available])
+        aqueous = np.array([abs(relative_percent(run, "aqueous_li_pore_mean_mol_m-3_relative_difference")) for run in available])
+        order = np.argsort(pes)
+        ax.plot(pes[order], sorbed[order], color=DBS_COLOR, marker="o", lw=2.0, label="Sorbed Li bulk error")
+        ax.plot(pes[order], aqueous[order], color=RESOLVED_COLOR, marker="s", lw=2.0, label="Aqueous Li pore-mean error")
+    if pending:
+        y_marker = 1.0
+        for run in pending:
+            ax.scatter([run.pe], [y_marker], s=52, facecolors="none", edgecolors=PENDING_COLOR, linewidths=1.5)
+            ax.text(run.pe, y_marker * 1.4, "pending", ha="center", va="bottom", fontsize=7, color=PENDING_COLOR)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.invert_xaxis()
+    ax.set_xlabel("Peclet number")
+    ax.set_ylabel("Absolute relative error (%)")
+    ax.set_title("Global mismatch versus Pe", fontsize=10)
+    ax.grid(True, which="both", color="#e6e6e6", lw=0.7)
+
+
+def panel_label(ax: plt.Axes, label: str) -> None:
+    ax.text(
+        0.015,
+        0.98,
+        label,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=10,
+        fontweight="bold",
+        bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8, "pad": 1.5},
+    )
+
+
+def main() -> None:
+    runs = [load_run(pe) for pe in PE_VALUES]
+    write_tables(runs)
+
+    GEOMETRY_FIGURE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    fig_geom = plt.figure(figsize=(10.6, 4.8), constrained_layout=True)
+    gs_geom = fig_geom.add_gridspec(2, 6, height_ratios=(1.0, 1.0), width_ratios=(1, 1, 1, 1, 0.9, 0.9))
+    ax_dbs = fig_geom.add_subplot(gs_geom[0, :4])
+    ax_resolved = fig_geom.add_subplot(gs_geom[1, :4])
+    ax_matrix = fig_geom.add_subplot(gs_geom[:, 4:])
+    draw_geometry_panels([ax_dbs, ax_resolved, ax_matrix])
+    for ax, label in zip([ax_dbs, ax_resolved, ax_matrix], ["a", "b", "c"]):
+        panel_label(ax, label)
+    fig_geom.savefig(GEOMETRY_FIGURE_PATH, dpi=300, bbox_inches="tight")
+    plt.close(fig_geom)
+
+    fig_results = plt.figure(figsize=(10.8, 6.2), constrained_layout=True)
+    gs_results = fig_results.add_gridspec(2, 4, height_ratios=(1.0, 1.05))
+    ax_aq = fig_results.add_subplot(gs_results[0, :3])
+    ax_err = fig_results.add_subplot(gs_results[0, 3])
+    ax_sor = fig_results.add_subplot(gs_results[1, :])
+    draw_profile_panel(ax_aq, runs, "aqueous_li_inventory_fraction", "Aqueous Li axial distribution")
+    draw_profile_panel(ax_sor, runs, "sorbed_li_inventory_fraction", "Sorbed Li axial distribution")
+    draw_error_panel(ax_err, runs)
+
+    handles, labels = ax_aq.get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    fig_results.legend(
+        by_label.values(),
+        by_label.keys(),
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.035),
+        ncol=4,
+        frameon=False,
+        fontsize=8,
+    )
+    ax_err.legend(loc="lower left", fontsize=8, frameon=False)
+    for ax, label in zip([ax_aq, ax_err, ax_sor], ["a", "b", "c"]):
+        panel_label(ax, label)
+
+    fig_results.savefig(RESULTS_FIGURE_PATH, dpi=300, bbox_inches="tight")
+    plt.close(fig_results)
+    print(f"Wrote {GEOMETRY_FIGURE_PATH}")
+    print(f"Wrote {RESULTS_FIGURE_PATH}")
+    print(f"Wrote {TABLE_CSV}")
+    print(f"Wrote {TABLE_TEX}")
+
+
+if __name__ == "__main__":
+    main()

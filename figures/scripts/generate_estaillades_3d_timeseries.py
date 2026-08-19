@@ -174,7 +174,7 @@ def main() -> None:
     render_wrapper = script_dir / "render_3d_volume_pyvista_egl.sh"
     case_dir = (
         repo_root
-        / "tutorials/reactiveTransport/reactiveScalarTransportDBSFoam/3DEstailladesSurfaceComplexation"
+        / "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades"
     )
     output_dir = (
         repo_root

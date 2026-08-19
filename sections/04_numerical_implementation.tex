@@ -8,22 +8,21 @@ single operator-split formulation.
 
 \subsection{Field Locations And Discretization}
 
-The baseline discretization keeps all chemistry-bearing state cell-centered.
-This avoids introducing an extra face reconstruction for the unresolved
-surface-reaction source. The solution species, $\theta$,
-$\epsilon_{\mathrm{num}}$, $a_{\mathrm{surf}}$, and the surface fields are
-therefore stored at cell centres, whereas only the Darcy velocity $\bm{u}_D$
-remains face-centred. Transport uses face interpolation only within the
-conservative flux assembly, while the surface chemistry remains strictly
-cell-local. The additive decomposition of $a_{\mathrm{surf}}$ into interface
-and intrinsic contributions is defined in Section~\ref{sec:aSurf}
+The discretization used throughout this paper keeps all chemistry-bearing state
+cell-centered. The solution species, $\theta$, $\epsilon_{\mathrm{num}}$,
+$a_{\mathrm{surf}}$, and the adsorbed surface-species fields are stored at
+cell centres, whereas the Darcy velocity $\bm{u}_D$ is face-centred. Transport
+uses face interpolation within the conservative flux assembly, while surface
+chemistry is evaluated as a cell-local update. The additive decomposition of
+$a_{\mathrm{surf}}$ into interface and intrinsic contributions is defined in
+Section~\ref{sec:aSurf}
 (Eqs.~\eqref{eq:asurf}--\eqref{eq:asurf_intrinsic}).
 
 All simulations reported here use the following discretization. Time
 integration uses the first-order implicit Euler scheme, consistent with the
 first-order Lie splitting of the transport and chemistry operators. The
-convective term $\nabla\cdot(\bm{u}_D C_i)$ is discretized with a bounded
-first-order upwind scheme, which is monotone and free of spurious oscillations
+convective term $\nabla\cdot(\bm{u}_D C_i)$ is discretized with the standard
+first-order upwind scheme, which is bounded, monotone, and free of spurious oscillations
 on the unstructured image-based meshes used here. The diffusive term
 $\nabla\cdot(\theta D_i \nabla C_i)$ uses a second-order Gauss linear scheme
 with non-orthogonality correction. The combination gives a scheme that is
@@ -60,13 +59,25 @@ used to pass the area per unit water volume to PhreeqcRM via
 PHREEQC remains consistent with the finite-volume fields even as $\theta$ may
 vary spatially. The surface mode is optional and reduces exactly to
 aqueous-only mode when $a_{\mathrm{surf}} = 0$ everywhere.
+For the validation cases in this paper, two interface-area constructions are
+used. The \emph{DBS $|\nabla \epsilon|$} construction evaluates the
+image-scale staircase interface from an indicator/porosity field. The
+\emph{DBS smoothSurface} construction applies a smooth sub-voxel
+reconstruction to the segmented occupancy field and maps the reconstructed
+interface back into the CFD cells as volumetric $a_{\mathrm{surf}}$. In three
+dimensions, \texttt{smoothSurface} extracts an isosurface and deposits the
+resulting triangle areas into the cells that carry the reactive surface. In
+quasi-two-dimensional image cases, it extracts an isoline on the image plane,
+multiplies the reconstructed line length by the physical out-of-plane
+thickness, and assigns the resulting area to the corresponding DBS cells. The
+2D and 3D variants produce the same bulk field type and enter PHREEQC through
+the same \texttt{setSurfaceAreaScale} call.
 
-Cells with negligible mobile-water fraction ($\theta < \theta_{\min}$, where
-$\theta_{\min}$ is a small threshold) remain chemically inactive in the
+Cells with negligible mobile-water fraction
+($\theta \le \theta_{\mathrm{mask}}$) remain chemically inactive in the
 finite-volume fields. The PHREEQC backend retains a minimal internal water
-volume for these cells only to maintain numerical well-posedness of the
-chemistry module; their aqueous and surface states do not contribute to any
-reported inventory.
+volume for these cells for numerical well-posedness of the chemistry module,
+but their aqueous and surface states do not contribute to reported inventories.
 
 The cell-local nature of the chemistry step means that all PHREEQC calls are
 embarrassingly parallel across cells. PhreeqcRM distributes the cell
@@ -83,16 +94,13 @@ Third, the updated aqueous concentrations and surface states are pushed into
 PhreeqcRM. Fourth, PhreeqcRM executes the local equilibrium chemistry for all
 active cells in parallel. Fifth, the updated aqueous and surface
 concentrations are pulled back into the finite-volume fields. Finally, the
-domain-integrated bulk inventory
-\begin{equation}
-M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
-\left( \theta C + \frac{a_{\mathrm{surf}}}{\theta}\Gamma_{\mathrm{field}} \right)
-\end{equation}
-is computed and written, where the sum runs over all cells and $V_{\mathrm{cell}}$
-is the cell volume. This integrated diagnostic is the primary conservation
-check: in a closed domain it should remain constant to within discretisation
-error, and in a flow-through domain it should balance the net flux through
-the inlet and outlet faces.
+solver writes the domain-integrated bulk inventory
+$M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
+\left( \theta C + \frac{a_{\mathrm{surf}}}{\theta}\Gamma_{\mathrm{field}} \right)$
+as a conservation diagnostic, where $V_{\mathrm{cell}}$ is the cell volume. In
+a closed domain this quantity should remain constant to within discretisation
+error; in a flow-through domain it should balance the net flux through the
+inlet and outlet faces.
 
 The operator-split structure keeps
 transport and chemistry individually testable and ensures that the
@@ -118,7 +126,6 @@ composite implicit source term.
 
 Figure~\ref{fig:dbsWorkflow} illustrates the implemented algorithm. The
 chemistry state remains cell-centred throughout the loop. The solver does not
-reconstruct a face-based reaction source for the unresolved surface term.
-Instead, the transport operator acts on cell inventories through the face
-fluxes, while the reaction operator acts locally on the updated cell state
-through PHREEQC.
+convert the unresolved surface reaction into an equivalent face flux. Instead,
+transport acts through the aqueous face fluxes, while PHREEQC updates the
+cell-local aqueous and adsorbed inventories after each transport solve.

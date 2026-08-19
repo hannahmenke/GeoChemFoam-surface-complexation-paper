@@ -7,14 +7,20 @@ that cannot be captured by a simple retardation factor, and each motivated by
 a distinct class of subsurface application:
 (i)~Pb$^{2+}$ sorption on a two-site Dzombak--Morel hydrous ferric oxide (HFO)
 coating for the 2D fracture case, representative of heavy-metal retardation in
-fractured rock systems and permeable reactive barrier (PRB) remediation;
-(ii)~competitive Zn$^{2+}$/Ca$^{2+}$ sorption on a single-site generic surface
-for the Kelvin 3D case, representative of trace-metal contamination in
-Ca$^{2+}$-bearing groundwater and microporous industrial sorbent media; and
+fractured rock systems and permeable reactive barrier remediation;
+(ii)~selective Mn$^{2+}$ uptake from Mg$^{2+}$-rich brine on a two-site HFO
+surface for the Kelvin-cell 3D case, representative of critical-metal capture
+in microporous industrial sorbent media; and
 (iii)~Sr$^{2+}$ leachate invading Ca$^{2+}$-bearing limestone formation water,
-representing a radwaste deep geological repository (DGR) scenario,
+representing a radioactive-waste deep geological repository (DGR) scenario,
 for the Estaillades 3D case.
-In all cases the mobile-water threshold is $\theta_{\mathrm{mask}} \le 10^{-3}$
+The validated coupling, image-derived interface-area construction, and
+two-scale DBS reactive-surface representation are then applied to progressively richer
+2D and 3D reactive-transport problems, including media in which the intrinsic
+micropore contribution to $a_{\mathrm{surf}}$ (Section~\ref{sec:aSurf})
+contributes to uptake.
+In all cases the mobile-water chemistry mask is
+$\theta \le \theta_{\mathrm{mask}} = 10^{-3}$
 and PHREEQC thermodynamic data are drawn from the GeoChem.dat database
 distributed with GeoChemFoam.
 The 1D case uses a prescribed uniform inlet velocity $U = 10^{-6}\ \mathrm{m\,s^{-1}}$;
@@ -32,7 +38,8 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
     intrinsic surface-area density $a_{\mathrm{surf,intr}}$ is assigned (all
     other phases have $a_{\mathrm{surf}} = 0$ or carry only resolved interface
     area). The 1D case uses a uniform synthetic domain with no image source.
-    The 2D fracture case uses 8 MPI ranks ($4\times2\times1$ decomposition);
+    The 2D fracture case uses 8 Message Passing Interface (MPI) ranks
+    ($4\times2\times1$ decomposition);
     the 3D cases use 64 MPI ranks ($4\times4\times4$ decomposition);
     the 1D case is serial.}
     \label{tab:simParams}
@@ -67,7 +74,7 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & $10^{5}$
             & $5$
             & $20000$ \\
-        3D Kelvin (Zn$^{2+}$/Ca$^{2+}$)
+        3D Kelvin (Mn$^{2+}$/Mg$^{2+}$)
             & $200^{3}$
             & $10$
             & $200^{3}$
@@ -97,8 +104,9 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
     so positive $\log K$ indicates sorption that is thermodynamically
     favourable at neutral pH relative to proton release.
     Dzombak--Morel HFO site densities and $\log K$ values for
-    Pb$^{2+}$ are taken from \citet{dzombak1990surface}.
-    \texttt{Surf\_a} equilibrium constants for Ca$^{2+}$, Zn$^{2+}$, and
+    Pb$^{2+}$, Mn$^{2+}$, and Mg$^{2+}$ are taken from
+    \citet{dzombak1990surface}.
+    \texttt{Surf\_a} equilibrium constants for Ca$^{2+}$ and
     Sr$^{2+}$ are from the \texttt{GeoChem.dat} database distributed with
     GeoChemFoam \citep{maes2021geochemfoam,parkhurst2013phreeqc}.
     The diffusivity $D = 10^{-9}$\,m$^2$\,s$^{-1}$ is a representative
@@ -117,28 +125,28 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
         Parameter
             & 1D retardation
             & 2D Pb$^{2+}$/HFO
-            & 3D Zn$^{2+}$/Ca$^{2+}$
+            & 3D Mn$^{2+}$/Mg$^{2+}$
             & 3D Sr$^{2+}$/Ca$^{2+}$ \\
         \midrule
         Surface model
             & \texttt{Surf\_a} (single-site)
             & Dzombak--Morel HFO (two-site)
-            & \texttt{Surf\_a} (single-site)
+            & Dzombak--Morel HFO (two-site)
             & \texttt{Surf\_a} (single-site) \\
         Reactive species
             & Ca$^{2+}$
             & Pb$^{2+}$
-            & Zn$^{2+}$, Ca$^{2+}$
+            & Mn$^{2+}$, Mg$^{2+}$
             & Sr$^{2+}$, Ca$^{2+}$ \\
         Site density $s_k$ (mol\,m$^{-2}$)
             & $2.4\times10^{-9}$
             & Hfo$_s$: $2\times10^{-7}$;\enspace Hfo$_w$: $6\times10^{-6}$
-            & $2.4\times10^{-9}$
+            & Hfo$_s$: $2\times10^{-7}$;\enspace Hfo$_w$: $6\times10^{-6}$
             & $2.4\times10^{-9}$ \\
         Surface $\log K$
             & Ca: $-5.85$
             & Pb/Hfo$_s$: $+4.65$;\enspace Pb/Hfo$_w$: $+0.30$
-            & Ca: $-5.85$;\enspace Zn: $-4.0$
+            & Mn/Hfo$_s$: $-0.40$;\enspace Mn/Hfo$_w$: $-3.50$;\enspace Mg/Hfo$_w$: $-4.60$
             & Ca: $-5.85$;\enspace Sr: $-5.5$ \\
         Diffusivity $D$ (m$^2$\,s$^{-1}$)
             & $10^{-11}$
@@ -163,12 +171,12 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
         $C_{\mathrm{in}}$ (mol\,m$^{-3}$)
             & Ca: $2\times10^{-9}$
             & Pb: $10^{-5}$
-            & Ca: $10^{-4}$;\enspace Zn: $10^{-5}$
+            & Mn: $10^{-5}$;\enspace Mg: $10^{-3}$
             & Ca: $0$;\enspace Sr: $10^{-4}$ \\
         $C_{\mathrm{init}}$ (mol\,m$^{-3}$)
             & Ca: $0$
             & $\approx 0$
-            & Ca: $10^{-4}$;\enspace Zn: $0$
+            & Mn: $0$;\enspace Mg: $10^{-3}$
             & Ca: $10^{-3}$;\enspace Sr: $0$ \\
         pH (inlet / initial)
             & 7
@@ -179,11 +187,13 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
     \end{tabular}}
 \end{table}
 
+\FloatBarrier
+
 \subsection{Simple 2D Image-Based Case: Pb$^{2+}$ on Dzombak--Morel HFO}
 
-The 2D demonstration uses the segmented fracture-network image
-\texttt{4StraightFractures} with dimensions
-$500 \times 500 \times 1$ and two labels corresponding to micropore ($1$) and
+The 2D demonstration uses the GeoChemFoam benchmark fracture-network image
+\nolinkurl{4StraightFractures}. The segmented domain has dimensions
+$500 \times 500 \times 1$ with two labels corresponding to micropore ($1$) and
 pore ($2$). The computational grid is $250 \times 250 \times 1$.
 This case provides a geometrically transparent setting to study heavy-metal
 retardation by iron-oxide coatings on fracture walls, directly relevant to
@@ -229,61 +239,64 @@ inlet and around downstream fracture intersections.
 \end{figure}
 
 \FloatBarrier
-\subsection{Simple 3D Image-Based Case: Competitive Zn$^{2+}$/Ca$^{2+}$ Sorption}
+
+\subsection{Simple 3D Image-Based Case: Selective Mn$^{2+}$ Capture from Mg$^{2+}$-Rich Brine}
 
 The simple 3D case uses a Kelvin-cell image dataset with dimensions
 $200 \times 200 \times 200$ and voxel size $10~\mu\mathrm{m}$, where
-label $1$ denotes pore and label $2$ denotes micropore.
+label $1$ denotes pore and label $2$ denotes a connected microporous lattice.
+Transport is solved in DBS form through both labels; the micropore cells carry
+$\theta = 0.4$ and the intrinsic reactive surface area.
 This case demonstrates competitive multi-species sorption in a fully
-three-dimensional unresolved surface network: two dissolved species compete for
-the same surface sites, producing coupled nonlinear isotherms that cannot be
-described by independent retardation factors.
-The scenario is representative of trace-metal transport (e.g.\ Zn$^{2+}$
-from industrial or mining sources) in Ca$^{2+}$-bearing groundwater, where
-the background divalent cation competes for the same surface sites as the
-contaminant and suppresses effective retardation relative to single-species
-estimates.
+three-dimensional geometry with a cell-based reactive surface inventory: a
+trace target metal is transported through a Mg$^{2+}$-rich background brine and
+competes for HFO surface sites. The scenario represents Mn$^{2+}$ capture from
+a high-hardness process or mine-water stream in an open-cell sorbent medium.
+Although the conditional affinities are moderate at neutral pH, Mn$^{2+}$ has
+stronger HFO complexation than Mg$^{2+}$ in the selected reaction set, so
+breakthrough and surface loading are controlled by both advection through the
+Kelvin-cell geometry and competitive exchange on the reactive coating.
 
-The chemistry uses a single-site \texttt{Surf\_a} model with two competing
-reactions:
+The chemistry uses the same Dzombak--Morel two-site HFO model as the 2D Pb
+case, with Mn$^{2+}$ and Mg$^{2+}$ competing on weak sites and Mn$^{2+}$ also
+complexing with strong sites:
 \begin{align}
-    \mathrm{Surf_a H} + \mathrm{Ca^{2+}} &\rightleftharpoons \mathrm{Surf_a Ca^{+}} + \mathrm{H^{+}}, \quad \log K = -5.85 \\
-    \mathrm{Surf_a H} + \mathrm{Zn^{2+}} &\rightleftharpoons \mathrm{Surf_a Zn^{+}} + \mathrm{H^{+}}, \quad \log K = -4.0
+    \mathrm{Hfo_sOH} + \mathrm{Mn^{2+}} &\rightleftharpoons \mathrm{Hfo_sOMn^{+}} + \mathrm{H^{+}}, \quad \log K = -0.40 \\
+    \mathrm{Hfo_wOH} + \mathrm{Mn^{2+}} &\rightleftharpoons \mathrm{Hfo_wOMn^{+}} + \mathrm{H^{+}}, \quad \log K = -3.50 \\
+    \mathrm{Hfo_wOH} + \mathrm{Mg^{2+}} &\rightleftharpoons \mathrm{Hfo_wOMg^{+}} + \mathrm{H^{+}}, \quad \log K = -4.60
 \end{align}
-Zn$^{2+}$ binds approximately $70\times$ more strongly than Ca$^{2+}$ per unit
-concentration at pH~7. The initial and inlet Ca$^{2+}$ are both
-$C_{\mathrm{in}}(\mathrm{Ca^{2+}}) = 10^{-4}$~mol~m$^{-3}$; Zn$^{2+}$ enters
-only at the inlet at $C_{\mathrm{in}}(\mathrm{Zn^{2+}}) = 10^{-5}$~mol~m$^{-3}$
-with zero initial condition. Surface sites are initially empty and load rapidly
-with Ca$^{2+}$ on the first PHREEQC step before the Zn$^{2+}$ front arrives.
-Site density is $2.4\times10^{-9}$~mol~m$^{-2}$ and
+The initial and inlet Mg$^{2+}$ concentration is
+$10^{-3}$~mol~m$^{-3}$; Mn$^{2+}$ is absent initially and enters at
+$10^{-5}$~mol~m$^{-3}$. Surface sites are equilibrated initially with the
+Mg-bearing background water, after which incoming Mn$^{2+}$ accumulates on
+the HFO sites and displaces part of the Mg inventory.
+The strong- and weak-site densities are $2\times10^{-7}$ and
+$6\times10^{-6}$~mol~m$^{-2}$, respectively, and
 $a_{\mathrm{surf,intr}} = 10^{5}$~m$^{-1}$ in the micropore phase.
 
 Figure~\ref{fig:3DKelvin} shows the geometry and 3D volume renders of both
-competing dissolved species and their corresponding surface-loading changes at
-$t = 12$~s.
-Figure~\ref{fig:KelvinTemporal} shows the temporal evolution of domain-mean
-Ca$^{2+}$ and Zn$^{2+}$ (normalised by their respective inlet concentrations)
-and the incremental surface loadings \texttt{Surf\_aCa+} and \texttt{Surf\_aZn+}
-over the full 120~s simulation. The Zn$^{2+}$ front reaches $C/C_{\mathrm{in}} \approx 1$
-within ${\sim}20$~s as the higher-affinity species displaces Ca$^{2+}$ from surface
-sites; the Ca$^{2+}$ domain mean remains near unity because of the uniform inlet
-background. The surface-loading panel shows the resulting competitive exchange:
-Surf\_aZn$^+$ accumulates while Surf\_aCa$^+$ is progressively displaced.
+competing dissolved species and their corresponding adsorbed-amount changes at
+$t = 120$~s.
+Figure~\ref{fig:KelvinTemporal} shows the temporal evolution of pore-volume
+weighted aqueous Mn$^{2+}$, the excess aqueous Mg$^{2+}$ released above the
+background concentration, and the surface-area-weighted strong- plus weak-site
+HFO loadings over the full 120~s simulation. The adsorbed-amount panel
+quantifies the competitive exchange: HFO-Mn accumulates behind the front while
+the initially equilibrated HFO-Mg inventory decreases where the Mn-bearing
+water has contacted the sorbent.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig03_3d_kelvin.png}
-    \caption{Five-panel 3D competition snapshot for the Kelvin case at $t = 12$~s.
+    \caption{Five-panel 3D competition snapshot for the Kelvin case at $t = 120$~s.
     (a)~Segmented geometry: micropore diamond lattice in blue, pore space in grey.
-    (b)~Normalised dissolved Zn$^{2+}$ / $C_{\mathrm{in}}$; the advancing front enters
+    (b)~Normalised dissolved Mn$^{2+}$ / $C_{\mathrm{in}}$; the advancing front enters
     from the left.
-    (c)~Normalised dissolved Ca$^{2+}$ / $C_{\mathrm{init}}$.
-    (d)~Incremental Zn surface loading (\mbox{$\Delta$\texttt{Surf\_aZn+}}),
+    (c)~Normalised dissolved Mg$^{2+}$ / $C_{\mathrm{init}}$.
+    (d)~Incremental adsorbed Mn, summed over strong and weak HFO sites,
     concentrated in the microporous diamond-lattice channels.
-    (e)~Magnitude of the displaced Ca surface loading
-    (\mbox{$-\Delta$\texttt{Surf\_aCa+}}), showing where Zn$^{2+}$ has replaced
-    initially sorbed Ca$^{2+}$ on the reactive surface.}
+    (e)~Magnitude of the displaced adsorbed Mg, showing where Mn$^{2+}$ has
+    replaced part of the initially sorbed Mg$^{2+}$ inventory on weak HFO sites.}
     \label{fig:3DKelvin}
 \end{figure}
 
@@ -291,18 +304,17 @@ Surf\_aZn$^+$ accumulates while Surf\_aCa$^+$ is progressively displaced.
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig07_kelvin_temporal.png}
     \caption{Temporal evolution of domain-mean fields for the Kelvin case
-    ($t = 0$--$120$~s, writeInterval $= 4$~s).
-    Left: domain-mean dissolved Ca$^{2+}$ and Zn$^{2+}$ normalised by their
-    respective inlet concentrations $C_{\mathrm{in}}$.
-    Right: normalised incremental domain-mean surface loading
-    (\mbox{$\Delta$\texttt{Surf\_aCa+}} and \mbox{$\Delta$\texttt{Surf\_aZn+}}),
-    defined relative to their values at $t = 0$. The faster accumulation of
-    Surf\_aZn$^+$ relative to Surf\_aCa$^+$ reflects Zn$^{2+}$'s higher surface
-    affinity.}
+    ($t = 0$--$120$~s, sampled every $12$~s).
+    Left: pore-volume weighted Mn$^{2+}$ normalised by the inlet concentration
+    and pore-volume weighted Mg$^{2+}$ excess above the background concentration.
+    Right: normalised signed change in surface-area-weighted adsorbed amount
+    for summed strong- plus weak-site HFO-Mn and weak-site HFO-Mg, defined relative to
+    their values at $t = 0$.}
     \label{fig:KelvinTemporal}
 \end{figure}
 
 \FloatBarrier
+\clearpage
 \subsection{Large 3D Porous-Media Case: Sr$^{2+}$ DGR Scenario}
 
 The large 3D porous-medium case uses an Estaillades-style three-phase
@@ -311,13 +323,14 @@ $500 \times 500 \times 500$ and voxel size $4~\mu\mathrm{m}$. The three phases
 correspond to pore ($1$), micropore ($2$), and solid ($3$). The simulation is
 run on a $50 \times 50 \times 50$ coarse grid on eight MPI ranks. This case
 demonstrates nonlinear chromatographic exchange in a geologically realistic
-pore structure, motivated by radionuclide migration in deep geological
-repositories (DGR) for nuclear waste.
+pore structure, motivated by radionuclide migration from nuclear-waste deep
+geological repositories.
 
 The chemistry models Sr$^{2+}$ leachate from a waste package invading
-Ca$^{2+}$-bearing limestone formation water. Surface sites are pre-equilibrated
-with 1~mM Ca$^{2+}$ (via \texttt{surfaceInitialSolutionId~1}) before transport
-begins. The two competing surface reactions are:
+Ca$^{2+}$-bearing limestone formation water. Before transport begins, the
+surface sites are equilibrated locally with a 1~mM Ca$^{2+}$ solution at pH~7,
+so the initial sorbed inventory is Ca-dominated. The two competing surface
+reactions are:
 \begin{align}
     \mathrm{Surf_a H} + \mathrm{Ca^{2+}} &\rightleftharpoons \mathrm{Surf_a Ca^{+}} + \mathrm{H^{+}}, \quad \log K = -5.85 \\
     \mathrm{Surf_a H} + \mathrm{Sr^{2+}} &\rightleftharpoons \mathrm{Surf_a Sr^{+}} + \mathrm{H^{+}}, \quad \log K = -5.5
@@ -368,7 +381,7 @@ exchange history.
     case ($t = 0$--$100$~s, writeInterval $= 20$~s).
     Left: domain-mean dissolved Ca$^{2+}$ and Sr$^{2+}$ normalised by
     $C_{\mathrm{init}}$ and $C_{\mathrm{in}}$, respectively.
-    Right: normalised incremental domain-mean surface loading
+    Right: normalised incremental domain-mean adsorbed amount
     (\mbox{$\Delta$\texttt{Surf\_aCa+}} and \mbox{$\Delta$\texttt{Surf\_aSr+}}),
     defined relative to their values at $t = 0$.
     The curves make the chromatographic exchange explicit: Sr$^{2+}$ invades and
@@ -376,3 +389,5 @@ exchange history.
     aqueous and sorbed phases.}
     \label{fig:EstailladesTemporal}
 \end{figure}
+
+\FloatBarrier

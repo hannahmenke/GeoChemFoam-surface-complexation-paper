@@ -1,0 +1,55 @@
+{
+  "voxel_size": 4e-06,
+  "smooth_sigma_vox": 0.74,
+  "transport_time": "2.5",
+  "rows": [
+    {
+      "method": "snappy",
+      "surface_area": 3.7569612044768534e-06,
+      "surface_area_relative_to_snappy": 0.0,
+      "surface_triangles": null,
+      "surface_mode": "resolved-wall",
+      "sorbed_sr_inventory": 6.377596168102397e-17,
+      "sorbed_sr_inventory_relative_to_snappy": 0.0,
+      "porosity": 0.263546,
+      "permeability": 1.32925e-12,
+      "darcy_velocity": 2.90773e-05,
+      "reynolds": 0.000700835,
+      "tau": 1.48125,
+      "permeability_relative_to_snappy": 0.0,
+      "darcy_velocity_relative_to_snappy": 0.0
+    },
+    {
+      "method": "dbs-gradeps",
+      "surface_area": 6.127151999999999e-06,
+      "surface_area_relative_to_snappy": 0.6308797633307444,
+      "surface_triangles": null,
+      "surface_mode": "staircase",
+      "sorbed_sr_inventory": 1.2417077375347243e-16,
+      "sorbed_sr_inventory_relative_to_snappy": 0.9469839494465586,
+      "porosity": 0.2784015394687653,
+      "permeability": 1.7200927751070754e-12,
+      "darcy_velocity": 3.762702945546728e-05,
+      "reynolds": 0.0009501964730205964,
+      "tau": 1.4417211281955744,
+      "permeability_relative_to_snappy": 0.2940325560331581,
+      "darcy_velocity_relative_to_snappy": 0.29403450304764467
+    },
+    {
+      "method": "dbs-smoothsurface",
+      "surface_area": 3.750744732873323e-06,
+      "surface_area_relative_to_snappy": -0.001654654191297629,
+      "surface_triangles": 714504,
+      "surface_mode": "occupancyGaussian",
+      "sorbed_sr_inventory": 4.082633457864715e-17,
+      "sorbed_sr_inventory_relative_to_snappy": -0.3598476055470489,
+      "porosity": 0.2784015394687653,
+      "permeability": 1.7200927751070754e-12,
+      "darcy_velocity": 3.762702945546728e-05,
+      "reynolds": 0.0009501964730205964,
+      "tau": 1.4417211281955744,
+      "permeability_relative_to_snappy": 0.2940325560331581,
+      "darcy_velocity_relative_to_snappy": 0.29403450304764467
+    }
+  ]
+}

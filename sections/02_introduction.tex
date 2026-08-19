@@ -9,7 +9,14 @@ change the apparent accessibility of pore space \citep{dzombak1990surface}.
 These effects are especially important in multi-scale rocks that combine open
 macropores with microporous matrix regions, because the same image may contain
 fast transport pathways, slow exchange domains, and large unresolved internal
-reactive area \citep{menke2021upscaling}.
+reactive area \citep{menke2021upscaling}. The same physics is central to
+applications in contaminant retention and acid mine drainage treatment
+\citep{webster1998trace,blowes2000treatment}, critical-mineral recovery and
+direct lithium extraction \citep{reich2022lithium,vera2023environmental}, and
+radionuclide transport for geological disposal
+\citep{miller2010upscaling,dewindt2019reactive,bildstein2019rtm}, where
+selective adsorption or ion exchange can be controlled by surface area that is
+not resolved at the image scale.
 
 Classical Darcy-scale reactive transport models can represent adsorption and
 surface complexation through effective source terms or equilibrium closures,
@@ -34,11 +41,12 @@ menke2018fourd,menke2021upscaling,wildenschild2013xray,blunt2013porescale}. Segm
 microporous, and nearly solid regions, but the reactive internal surface of the
 microporous phase is not equivalent to the explicitly meshed boundary of the
 coarse computational cells. If that internal area is ignored, reactive uptake
-is under-predicted. If it is inserted as an ad hoc volumetric sink, conservation
-and interpretation can become unclear. A useful intermediate-scale method
+is under-predicted. If it is inserted as an ad hoc volumetric sink, both
+conservation and the meaning of the cell-scale surface inventory become
+unclear. A useful intermediate-scale method
 therefore needs to do two things at once: preserve a conservative transport
 balance in the mobile fluid, and represent unresolved surface chemistry as a
-physically interpretable cell-scale inventory.
+cell-scale inventory with a clear mass-balance interpretation.
 
 PHREEQC and its reaction-module form, PhreeqcRM, provide a robust chemical
 engine for this problem because they already support aqueous speciation,
@@ -52,7 +60,8 @@ operator-split multi-component solvers \citep{jyoti2021validation}, but they do 
 mathematically clean representation of cell-based internal surface area in a
 DBS-style pore-structure model. In particular, when unresolved reactive area
 is treated as a cell property rather than an explicit mesh boundary, the
-choice of storage variable, porosity variable, and surface-state variable
+choice of accumulation variable, transport-regularization porosity, and
+surface-state representation
 becomes central.
 
 Several previous approaches have addressed parts of this problem, but none
@@ -61,7 +70,7 @@ Darcy scale, codes such as those reviewed by \citet{steefel2015reactive} and
 the foundational work of \citet{lichtner1985continuum} represent surface
 complexation as a bulk sorption coefficient or equilibrium closure applied to
 the continuum volume, which cannot capture the spatial heterogeneity of surface
-loading visible in image-based data \citep{battiato2011applicability}. Fully resolved pore-scale methods,
+inventory visible in image-based data \citep{battiato2011applicability}. Fully resolved pore-scale methods,
 including direct numerical simulation \citep{molins2012investigation,starchenko2018development} and
 explicit-boundary DBS approaches \citep{maes2018direct,maes2021geochemfoam,soulaine2017mineral},
 locate reactive uptake at the meshed grain surface: this is appropriate when
@@ -81,7 +90,7 @@ boundary, and no explicit distinction is drawn between the numerical DBS
 porosity used for transport regularization and the physical mobile-water
 fraction used for chemistry. The present work addresses this gap directly.
 
-This is also the key gap relative to earlier resolved-surface workflows within
+The same gap also appears relative to earlier resolved-surface workflows within
 GeoChemFoam itself \citep{maes2022heat,maes2022vos}.
 Existing PHREEQC-coupled cases in the code base already support reactive
 transport and surface complexation when the reactive surface coincides with an
@@ -106,7 +115,7 @@ force an explicit distinction between the numerical DBS porosity used for
 stable transport in nearly solid voxels \citep{soulaine2016micro} and the
 physically mobile water fraction used for chemistry. They also force a clear
 statement of where the surface inventory lives: in the present work, it is
-cell-centered and tied to an unresolved internal surface-area density rather
+cell-centered and driven by an unresolved internal surface-area density rather
 than reconstructed on mesh faces. This is the key modeling choice that allows
 the method to act on microporous matrix regions instead of only on explicitly
 resolved pore--grain boundaries.
@@ -119,9 +128,13 @@ implementation. Validation is carried out against a 1D analytical retardation
 solution, which provides a closed-form reference for the coupled
 advection--diffusion--sorption system. The method is then applied to three
 image-based test cases of increasing geometric complexity to demonstrate applicability across realistic
-pore geometries: a 2D fracture network (Pb$^{2+}$ on HFO, motivated by
-heavy-metal remediation in fractured aquifers and permeable reactive
-barriers), a 3D Kelvin-cell geometry (competitive Zn$^{2+}$/Ca$^{2+}$
-sorption, representative of trace-metal contamination in Ca-bearing
-groundwater), and a 3D Estaillades limestone (Sr$^{2+}$ DGR scenario for
-radionuclide migration in nuclear waste repositories).
+pore geometries: a 2D fracture network (Pb$^{2+}$ on hydrous ferric oxide
+(HFO), motivated by heavy-metal remediation in fractured aquifers and permeable reactive
+barriers), a 3D Kelvin-cell geometry (selective Mn$^{2+}$ uptake from a
+Mg$^{2+}$-rich brine on HFO, representative of critical-metal capture in
+sorbent media), and a 3D Estaillades limestone (Sr$^{2+}$ deep geological
+repository (DGR) scenario for radionuclide migration in nuclear waste
+repositories). A resolved-to-DBS micromodel benchmark further tests selective
+Li$^{+}$ uptake as a critical-mineral recovery analogue. The same governing
+equations can be posed on general finite-volume meshes; the image-based cases
+used here are the motivating application and validation targets.

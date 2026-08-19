@@ -132,6 +132,18 @@ mkdir -p constant/polyMesh
 
 mkdir -p 0
 
+# This case reconstructs aSurf inside the reactive-transport startup path, not
+# during createMesh. Clear any previous reconstructed aSurf fields and support
+# logs here so geometry-only rebuilds cannot silently reuse stale results from
+# an older smoothInterface variant.
+rm -f 0/aSurf processor*/0/aSurf processor*/[0-9]*/aSurf
+rm -f createASurfSmoothInterface.proc*.out \
+      createASurfSmoothInterface.stage1.proc*.out \
+      createASurfSmoothInterface.stage2.proc*.out \
+      createASurfSmoothInterface.ownerfix.proc*.out \
+      createASurfSmoothInterface.2dtest.proc*.out \
+      createASurfSmoothInterface.support.proc*.out
+
 filename=$Source_image_name\.$format
 
 if [ $compressed == 'yes' ]
@@ -233,7 +245,7 @@ python "$GCFOAM_DIR/applications/utilities/pyTools/writeASurfReconstructionDict.
     $res \
     $Image_name \
     $pores_value $solid_value $dimension \
-    occupancyGaussian 0.60 "" "" false
+    occupancyGaussian 0.90 "" "" false
 
 if [[ $NP > 1 ]]; then
     # if PLATFORM is ARCHER2 then use srun, otherwise use serial version
