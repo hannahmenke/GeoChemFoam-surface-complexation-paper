@@ -4,7 +4,7 @@
   "production_template_commit": "913efcf59e75b9ccd93fcee42193a8a6a4c26b60",
   "provenance_checked_utc": "2026-08-18",
   "provenance_note": "Plot times are complete checkpoints and remain valid even when the containing base job later reached its wall-time limit.",
-  "metrics_x_over_L": 0.125,
+  "metrics_x_over_L": 0.625,
   "acceptance_limits": {
     "inventory_percent_absolute": 5.0,
     "profile_l1_percent": 10.0,
@@ -14,13 +14,13 @@
     {
       "peclet": 0.1,
       "resolved_case": "archer_work/two_scale_resolved-reference_pe_0.1_14682105/resolved-reference",
-      "resolved_time": "226.07265052",
+      "resolved_time": "1130.3632526114332",
       "resolved_jobs": {
         "base": {"id": 14682105, "state": "TIMEOUT_AFTER_CHECKPOINT"},
         "full_run_restart": {"id": 14797633, "state": "RUNNING", "state_checked_utc": "2026-08-18"}
       },
       "dbs_case": "archer_work/two_scale_dbs-upscaled_pe_0.1_14682107/dbs-upscaled",
-      "dbs_time": "203.52408459",
+      "dbs_time": "1017.6789404962124",
       "dbs_jobs": {
         "base": {"id": 14682107, "state": "TIMEOUT_AFTER_CHECKPOINT"},
         "full_run_restart": {"id": 14797644, "state": "RUNNING", "state_checked_utc": "2026-08-18"}
@@ -29,14 +29,14 @@
     {
       "peclet": 1.0,
       "resolved_case": "archer_work/surface_resolved_xL0p125_preserved_phi_20260806",
-      "resolved_time": "22.60726505",
+      "resolved_time": "113.04031313410741",
       "resolved_jobs": {
         "stage_1": {"id": 14656677, "state": "COMPLETED"},
         "final_stage": {"id": 14656678, "state": "COMPLETED"},
         "final_write_recovery": {"id": 14673356, "state": "COMPLETED"}
       },
       "dbs_case": "archer_work/surface_dbs_xL0p125_preserved_phi_20260806",
-      "dbs_time": "20.35240806",
+      "dbs_time": "101.7737438027048",
       "dbs_jobs": {
         "stage_1": {"id": 14656679, "state": "COMPLETED"},
         "final_stage": {"id": 14656680, "state": "COMPLETED"},
@@ -47,13 +47,13 @@
     {
       "peclet": 3.0,
       "resolved_case": "archer_work/two_scale_resolved-reference_pe_3_14686718/resolved-reference",
-      "resolved_time": "7.53575502",
+      "resolved_time": "37.678775087078265",
       "resolved_jobs": {
         "base": {"id": 14686718, "state": "TIMEOUT_AFTER_CHECKPOINT"},
         "restart": {"id": 14697989, "state": "COMPLETED"}
       },
       "dbs_case": "archer_work/two_scale_dbs-upscaled_pe_3_14686719/dbs-upscaled",
-      "dbs_time": "6.78413623",
+      "dbs_time": "33.92263171746146",
       "dbs_jobs": {
         "base": {"id": 14686719, "state": "TIMEOUT_AFTER_CHECKPOINT"},
         "restart": {"id": 14698006, "state": "COMPLETED"}
@@ -62,13 +62,13 @@
     {
       "peclet": 10.0,
       "resolved_case": "archer_work/two_scale_resolved-reference_pe_10_14713018/resolved-reference",
-      "resolved_time": "2.2607265",
+      "resolved_time": "11.30363252612",
       "resolved_jobs": {
         "base": {"id": 14713018, "state": "TIMEOUT_AFTER_CHECKPOINT"},
         "restart": {"id": 14730290, "state": "COMPLETED"}
       },
       "dbs_case": "archer_work/two_scale_dbs-upscaled_pe_10_14713019/dbs-upscaled",
-      "dbs_time": "2.03524081",
+      "dbs_time": "10.17678923502",
       "dbs_jobs": {
         "base": {"id": 14713019, "state": "TIMEOUT_AFTER_CHECKPOINT"},
         "restart": {"id": 14730292, "state": "COMPLETED"}

@@ -48,7 +48,7 @@ Current staged figures:
   - right: normalised incremental Surf_aCa⁺ and Surf_aSr⁺ domain-mean vs time
 - `fig09_two_scale_error_vs_peclet.png`
   - fully resolved versus DBS-upscaled inventory, placement, and map errors at
-    matched `x/L = 0.125` for Pe=0.1, 1, 3, and 10
+    matched `x/L = 0.625` for Pe=0.1, 1, 3, and 10
 - `fig10_two_scale_pe1_fields.png`
   - native 5 micrometre Pe=1 aqueous and sorbed Li fields at `x/L = 0.625`
   - resolved grains are masked and no display averaging is applied
