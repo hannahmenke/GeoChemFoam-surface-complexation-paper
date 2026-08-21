@@ -61,6 +61,14 @@ physically important for predicting effective retardation factors at the
 continuum scale, and it can only be captured by an image-based simulation that
 resolves the local connectivity.
 
+The direct resolved-to-DBS comparison shows that the coarse representation also
+preserves the bulk transport and sorption response over the tested range
+$\mathrm{Pe}=0.1$--$10$. Inventory differences remain below $0.9\%$ and
+profile errors below $5.8\%$. Profile and map errors rise modestly over the
+P\'{e}clet-number sweep. This establishes the tested range rather than a general
+asymptotic limit: higher P\'{e}clet numbers, different connectivity, or sharper
+kinetic fronts may still expose an upscaling failure.
+
 \subsection{Computational Cost and Scaling}
 
 PHREEQC is called once per active cell per timestep, with a full speciation
@@ -118,9 +126,18 @@ uses Lie splitting deliberately so that the conservative transport operator and
 the local PHREEQC chemistry operator can be validated first in their simplest
 combined form.
 
+Fourth, restart currently depends on the serialized PHREEQC state written with
+each complete checkpoint; the finite-volume \texttt{Surf\_*} fields alone are
+not sufficient to reconstruct that state. The production P\'{e}clet sweep used
+these checkpoints successfully across multiple restart jobs, but portability
+therefore requires the field data and its matching PHREEQC dump to be retained
+together.
+
 Finally, the present demonstrations use fixed surface area and equilibrium
-surface complexation. They do not yet cover evolving reactive area, mineral
-dissolution/precipitation feedbacks, or kinetic surface reactions. Those
-extensions are compatible with the same cell-based inventory structure, but
-they will require additional benchmark design to separate transport error,
-surface-area evolution, and reaction-model uncertainty.
+surface complexation. Although they include competitive multi-component
+examples and a Li-selective multi-ion brine, they do not cover evolving
+reactive area, mineral dissolution or precipitation, kinetic surface reactions,
+or the wider range of mineral surfaces and aqueous compositions encountered in
+natural systems. Extending the model to those systems will require benchmarks
+that separate transport error, surface-area evolution, and reaction-model
+uncertainty while retaining cell-level mass-balance checks.

@@ -241,49 +241,55 @@ def plot_error_summary(
         raise ValueError("At least one metric file is required")
     pe = np.array([row["pe"] for row in records])
 
-    aqueous_color = "#0072B2"
-    sorbed_color = "#CC79A7"
-    fig, axes = plt.subplots(1, 3, figsize=(7.5, 2.65), constrained_layout=True)
+    aqueous_color = "#0b4f6c"
+    sorbed_color = "#6b2c5f"
+    limit_color = "#6f8f72"
+    fig, axes = plt.subplots(1, 3, figsize=(9.2, 3.25), constrained_layout=True)
     series = (
         ("aqueous_inventory_percent", "sorbed_inventory_percent"),
         ("aqueous_profile_l1_percent", "sorbed_profile_l1_percent"),
         ("aqueous_map_dissimilarity", "sorbed_map_dissimilarity"),
     )
     for ax, (aq_key, sor_key) in zip(axes, series):
-        ax.plot(pe, [row[aq_key] for row in records], "o-", color=aqueous_color, label="Aqueous Li")
-        ax.plot(pe, [row[sor_key] for row in records], "s-", color=sorbed_color, label="Sorbed Li")
+        ax.plot(
+            pe, [row[aq_key] for row in records], "o-", color=aqueous_color,
+            linewidth=1.4, markersize=4.0, label="Aqueous Li",
+        )
+        ax.plot(
+            pe, [row[sor_key] for row in records], "s-", color=sorbed_color,
+            linewidth=1.4, markersize=4.0, label="Sorbed Li",
+        )
         ax.set_xscale("log")
         ax.set_xticks(pe)
         ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{value:g}"))
-        ax.grid(True, which="major", color="#d9d9d9", linewidth=0.7)
+        ax.grid(True, which="major", color="#d9d9d9", linewidth=0.6)
         ax.set_xlabel("Péclet number")
 
     inventory_limit = limits["inventory_percent_absolute"]
     profile_limit = limits["profile_l1_percent"]
     map_limit = limits["map_dissimilarity"]
-    axes[0].axhspan(
-        -inventory_limit, inventory_limit, color="#009E73", alpha=0.10, zorder=-2
-    )
-    axes[0].axhline(0, color="#555555", linewidth=0.8)
+    axes[0].axhline(-inventory_limit, color=limit_color, linestyle="--", linewidth=0.9)
+    axes[0].axhline(inventory_limit, color=limit_color, linestyle="--", linewidth=0.9)
+    axes[0].axhline(0, color="#777777", linewidth=0.7)
     axes[0].set_ylabel("Inventory difference [%]")
-    axes[0].set_title("a   Integrated inventory", loc="left", weight="semibold")
+    axes[0].set_title("Integrated inventory")
 
-    axes[1].axhspan(0, profile_limit, color="#009E73", alpha=0.10, zorder=-2)
-    axes[1].set_ylim(bottom=0)
+    axes[1].axhline(profile_limit, color=limit_color, linestyle="--", linewidth=0.9)
+    axes[1].set_ylim(0, profile_limit * 1.05)
     axes[1].set_ylabel("Normalized profile L1 [%]")
-    axes[1].set_title("b   Streamwise placement", loc="left", weight="semibold")
+    axes[1].set_title("Streamwise placement")
 
-    axes[2].axhspan(1.0e-8, map_limit, color="#009E73", alpha=0.10, zorder=-2)
-    axes[2].axhline(map_limit, color="#009E73", linestyle="--", linewidth=0.9)
+    axes[2].axhline(map_limit, color=limit_color, linestyle="--", linewidth=0.9)
     axes[2].set_yscale("log")
+    axes[2].set_ylim(1.0e-4, 2.0e-1)
     axes[2].set_ylabel("Map error (1 − cosine)", labelpad=3)
-    axes[2].set_title("c   Spatial overlap", loc="left", weight="semibold")
-    axes[0].legend(frameon=False, loc="best")
-    fig.suptitle(
-        rf"DBS error at $x/L={transits:g}$ relative to fully resolved",
-        weight="semibold",
-        fontsize=10.5,
-    )
+    axes[2].set_title("Spatial overlap")
+    for label, ax in zip("abc", axes):
+        ax.text(
+            0.025, 0.96, label, transform=ax.transAxes,
+            ha="left", va="top", fontsize=10, weight="bold",
+        )
+    axes[0].legend(loc="best", framealpha=0.9)
     save_figure(fig, output_dir / "paper_error_vs_peclet")
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -326,7 +332,7 @@ def main() -> None:
     parser.add_argument("--pe1-dbs-time", required=True)
     parser.add_argument("--metric", action="append", required=True, help="PE=metrics.json")
     parser.add_argument("--transits", type=float, default=0.125)
-    parser.add_argument("--metric-transits", type=float, default=0.125)
+    parser.add_argument("--metric-transits", type=float, default=0.625)
     parser.add_argument("--acceptance-config", type=Path, required=True)
     parser.add_argument("--field-stem", default="paper_pe1_resolved_vs_dbs_fields")
     parser.add_argument("--assert-acceptance", action="store_true")

@@ -281,7 +281,7 @@
 - content:
   - DBS-minus-resolved aqueous and sorbed Li inventory differences
   - normalized streamwise-profile L1 errors
-  - native-domain map dissimilarity at matched `x/L = 0.125`
+  - native-domain map dissimilarity at matched `x/L = 0.625`
   - production cases at Pe = 0.1, 1, 3, and 10
 - source case:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation`
