@@ -286,6 +286,7 @@ def render_geometry_image_matplotlib(image: np.ndarray) -> np.ndarray:
 def add_geometry_render(fig: plt.Figure, spec, image: np.ndarray) -> None:
     ax = fig.add_subplot(spec)
     ax.imshow(render_geometry_image(image))
+    ax.set_box_aspect(1)
     ax.set_title("external-surface geometry", fontsize=9, pad=1)
     ax.set_axis_off()
     panel_label(ax, "a")
@@ -306,13 +307,19 @@ def main() -> None:
     vmax = float(np.percentile(positive, 99.2))
     difference = projections["smooth"] - projections["snappy"]
     diff_lim = max(float(np.percentile(np.abs(difference), 99.0)), VOXEL_SIZE**2)
+    diff_scale = 1.0e-10
+    difference_scaled = difference / diff_scale
+    diff_lim_scaled = diff_lim / diff_scale
 
     area_cmap = colormaps["magma"].copy()
     area_cmap.set_bad("#e5e5e5")
     diff_cmap = colormaps["coolwarm"].copy()
 
-    fig = plt.figure(figsize=(10.8, 7.0), constrained_layout=True)
-    grid = fig.add_gridspec(2, 4, width_ratios=[1.1, 1, 1, 0.06])
+    # Give every scientific panel the same grid footprint.  The final cell is
+    # reserved for the two colour scales so neither map is compressed by an
+    # attached colourbar.
+    fig = plt.figure(figsize=(10.8, 6.8), constrained_layout=True)
+    grid = fig.add_gridspec(2, 3, width_ratios=[1, 1, 1], height_ratios=[1, 1])
     add_geometry_render(fig, grid[0, 0], image)
 
     extent_um = (0, NX * VOXEL_SIZE * 1e6, 0, NY * VOXEL_SIZE * 1e6)
@@ -330,43 +337,54 @@ def main() -> None:
             cmap=area_cmap,
         )
         ax.set_title(title, fontsize=9)
+        ax.set_box_aspect(1)
         ax.set_xlabel(r"$x$ [$\mu$m]")
         ax.set_ylabel(r"$y$ [$\mu$m]")
         panel_label(ax, label)
-    cbar = fig.colorbar(area_handle, cax=fig.add_subplot(grid[0, 3]))
-    cbar.set_label(r"projected external area [m$^2$]")
 
-    ax_diff = fig.add_subplot(grid[1, 0:2])
+    ax_diff = fig.add_subplot(grid[1, 0])
     diff_handle = ax_diff.imshow(
-        difference,
+        difference_scaled,
         origin="lower",
         extent=extent_um,
-        norm=TwoSlopeNorm(vmin=-diff_lim, vcenter=0.0, vmax=diff_lim),
+        norm=TwoSlopeNorm(vmin=-diff_lim_scaled, vcenter=0.0, vmax=diff_lim_scaled),
         cmap=diff_cmap,
     )
     ax_diff.set_title("DBS smooth interface $-$ snappyHexMesh")
+    ax_diff.set_box_aspect(1)
     ax_diff.set_xlabel(r"$x$ [$\mu$m]")
     ax_diff.set_ylabel(r"$y$ [$\mu$m]")
     panel_label(ax_diff, "d")
-    fig.colorbar(diff_handle, ax=ax_diff, label=r"projected area difference [m$^2$]")
 
-    ax_profile = fig.add_subplot(grid[1, 2:4])
+    ax_profile = fig.add_subplot(grid[1, 1])
     x_um = (np.arange(NX) + 0.5) * VOXEL_SIZE * 1e6
     ax_profile.plot(x_um, profiles["snappy"], color=SNAPPY_COLOR, lw=2.0, label="snappyHexMesh")
     ax_profile.plot(x_um, profiles["smooth"], color=SMOOTH_COLOR, lw=2.0, label="DBS smooth interface")
     ax_profile.set_xlabel(r"$x$ [$\mu$m]")
     ax_profile.set_ylabel(r"area per $x$ slice [m$^2$]")
+    ax_profile.set_box_aspect(1)
     ax_profile.grid(True, axis="y", color="#dddddd", lw=0.8)
     ax_profile.legend(frameon=False, fontsize=8)
     panel_label(ax_profile, "e")
+
+    ax_scales = fig.add_subplot(grid[1, 2])
+    ax_scales.set_axis_off()
+    area_cax = ax_scales.inset_axes([0.08, 0.63, 0.84, 0.075])
+    diff_cax = ax_scales.inset_axes([0.08, 0.25, 0.84, 0.075])
+    area_cbar = fig.colorbar(area_handle, cax=area_cax, orientation="horizontal")
+    area_cbar.set_label(r"projected external area [m$^2$]", fontsize=8)
+    diff_cbar = fig.colorbar(diff_handle, cax=diff_cax, orientation="horizontal")
+    diff_cbar.set_label(r"projected area difference [$10^{-10}$ m$^2$]", fontsize=8)
+    for cbar in (area_cbar, diff_cbar):
+        cbar.ax.tick_params(labelsize=7)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUTPUT, dpi=360)
     plt.close(fig)
 
     metrics = {
-        "output": str(OUTPUT),
-        "case_root": str(CASE_ROOT),
+        "output": str(OUTPUT.relative_to(REPO_ROOT)),
+        "case_root": str(CASE_ROOT.relative_to(REPO_ROOT)),
         "sigma_vox": SIGMA_VOX,
         "voxel_size": VOXEL_SIZE,
         "snappy_wall_faces": snappy_faces,

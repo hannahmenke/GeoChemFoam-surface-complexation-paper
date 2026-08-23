@@ -31,6 +31,8 @@
 ## Runtime Case
 
 - paper-local executable case:
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation`
+- reproducible entry point:
   - `runAll.sh`
 - draft mesh:
   - `250 x 250 x 1`

@@ -22,8 +22,10 @@
 ## Surface Model
 
 - two-site Dzombak-Morel hydrous ferric oxide (HFO) surface complexation
-- strong sites: `Hfo_s = 2e-7 mol/m2`
-- weak sites: `Hfo_w = 6e-6 mol/m2`
+- strong sites: `Hfo_s = 2e-7 kmol/m2` in the OpenFOAM dictionary,
+  equivalent to `2e-4 mol/m2`
+- weak sites: `Hfo_w = 6e-6 kmol/m2` in the OpenFOAM dictionary,
+  equivalent to `6e-3 mol/m2`
 - target species: Mn2+
 - competing background species: Mg2+
 - initial and inlet Mg2+: `1e-3 mol/L`
@@ -40,7 +42,9 @@ the injected Mn-bearing front is preferentially captured from Mg-rich water.
 
 ## Reproducibility
 
-Run the full case from this directory:
+The paper-local executable case is
+`tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`.
+Run the full case from that directory:
 
 ```bash
 ./runAll.sh

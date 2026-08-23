@@ -141,7 +141,12 @@ def main() -> None:
     points = read_points(mesh / "points")
     faces = read_faces(mesh / "faces")
     owner = read_labels(mesh / "owner")
-    volumes = read_scalar_field(time_dir / "V", int(owner.max()) + 1)
+    neighbour = read_labels(mesh / "neighbour")
+    # A decomposed partition can contain cells that appear only as the
+    # neighbour of internal faces and own none of the selected boundary faces.
+    # Infer the local cell count from both addressing lists.
+    n_cells = int(max(owner.max(), neighbour.max())) + 1
+    volumes = read_scalar_field(time_dir / "V", n_cells)
     area = np.zeros_like(volumes)
     selected = boundary_ranges(mesh / "boundary", re.compile(args.patch))
     for _, start, count in selected:

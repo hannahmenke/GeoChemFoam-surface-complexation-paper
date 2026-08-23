@@ -17,20 +17,18 @@
 - the binary pores-plus-solids variant is preserved separately in:
   - `cases/3d_estaillades_micropore_as_solid`
 
-## Planned Outputs
+## Production Outputs
 
 - angled 3D geometry overview
 - aqueous concentration volume render
 - surface-loading volume render
 - one summary performance/chemistry metric
 
-## Current Draft Figure Convention
+## Figure Convention
 
-- the current staged PNG is only a temporary geometry placeholder
-- the accepted final figure is a ParaView volume render of the real solver
-  fields
-- the final render should show the aqueous and adsorbed response in 3D rather
-  than a sliced diagnostic plane
+- the accepted figure is generated from the native-resolution solver fields
+- the render shows the aqueous and adsorbed response in 3D rather than a
+  sliced diagnostic plane
 
 ## Required Reported Metadata
 
@@ -51,7 +49,7 @@
   - `2 = micropores`
   - `3 = solid`
 
-## Planned Figure
+## Figures
 
 - `figures/png/fig04_3d_estaillades.png`
 - `figures/png/fig08_estaillades_temporal.png`
@@ -62,12 +60,39 @@ Regenerate both figures after a completed run with:
 ../../figures/scripts/render_estaillades_figures.sh
 ```
 
-## Current Runtime Status
+## Full-Resolution Production Configuration
 
-- the solver case configuration has now been corrected to the true
-  `Est_3phase500cubed4micron` image
-- the corrected `8`-rank chemistry run to `t = 400` now exists and is valid
-- any older reactive outputs generated before that correction must not be used
-  as paper results because they were produced from the wrong image setup
-- the draft manuscript now uses a true 3D volume-rendered field figure from the
-  corrected run
+- computational grid: `500 x 500 x 500` (125,000,000 cells)
+- chemistry-active cells: 94,031,005 (`eps > 1e-3`)
+- decomposition: `4 x 4 x 4` (64 MPI ranks)
+- reactive solver: `reactiveTransportDBSFoam`
+- surface-site density: `2.4e-9 kmol/m2` in the OpenFOAM dictionary,
+  equivalent to `2.4e-6 mol/m2`
+- reactive timestep: `2 s`; the implicit Euler/upwind transport discretisation
+  gives a face-flux Courant number of `63.400` maximum (`5.424` mean) on the
+  converged full-resolution flow field
+- transported-species linear solve: `tolerance 5e-7`, `relTol 0.001`; this
+  tighter relative criterion avoids the conservative-species overshoot seen
+  with the generic main-branch production setting at this case's larger Co
+- final time: `120 s`
+- write interval: `20 s`
+- OpenFOAM field output: binary
+
+The standalone paper repository must be pointed to the read-only GeoChemFoam
+runtime checkout before launch:
+
+```bash
+export GCFOAM_RUNTIME_ROOT=/path/to/GeoChemFoam
+./runAll.sh
+```
+
+Generated mesh, fields, and logs remain untracked. Older
+coarse-grid outputs must not be used for the full-resolution paper result.
+
+Launch the flow stage first, then evaluate its maximum velocity and Courant
+number before starting chemistry:
+
+```bash
+RUN_STAGE=flow ./runAll.sh
+RUN_STAGE=reactive RUN_TIMESTEP=2 ./runAll.sh
+```

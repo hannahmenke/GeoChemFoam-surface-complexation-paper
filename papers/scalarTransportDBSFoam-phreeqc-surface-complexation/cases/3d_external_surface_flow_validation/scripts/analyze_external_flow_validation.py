@@ -21,7 +21,7 @@ if str(PYTOOLS) not in sys.path:
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from measureSphereSurfaceArea import parse_boundary, parse_faces, parse_points, parse_scalar_field, patch_area, polygon_area
+from measureSphereSurfaceArea import parse_boundary, parse_faces, parse_points, parse_scalar_field, polygon_area
 from createASurfMarchingCubes import build_field, marching_cubes_for_pair
 
 
@@ -31,7 +31,8 @@ VOXEL_SIZE = 4e-6
 SIGMA_VOX = 0.74
 TRANSPORT_TIME = "2.5"
 DOMAIN_LENGTH = 128 * VOXEL_SIZE
-PRESSURE_DROP = 0.0112
+SNAPPY_PRESSURE_DROP = 0.0112
+DBS_PRESSURE_DROP = 0.00925406150930
 KINEMATIC_VISCOSITY = 1e-6
 
 
@@ -78,14 +79,14 @@ def smoothsurface_area(image: np.ndarray) -> tuple[float, int, str]:
     return float(np.sum(asurf) * VOXEL_SIZE**3), int(faces.shape[0]), used_mode
 
 
-def read_poro_perm(case_dir: Path) -> dict[str, float | None]:
+def read_poro_perm(case_dir: Path, pressure_drop: float) -> dict[str, float | None]:
     path = case_dir / "poroPerm.csv"
     if not path.exists():
-        return dbs_flow_metrics_from_fields(case_dir)
+        return dbs_flow_metrics_from_fields(case_dir, pressure_drop)
     with path.open() as handle:
         rows = [line.split() for line in handle if line.strip()]
     if len(rows) < 2:
-        return dbs_flow_metrics_from_fields(case_dir)
+        return dbs_flow_metrics_from_fields(case_dir, pressure_drop)
     header = rows[0]
     values = rows[-1]
     data = {key: float(value) for key, value in zip(header, values)}
@@ -118,7 +119,7 @@ def parse_vector_field(path: Path) -> np.ndarray:
     raise RuntimeError(f"Could not parse vector field {path}")
 
 
-def dbs_flow_metrics_from_fields(case_dir: Path) -> dict[str, float | None]:
+def dbs_flow_metrics_from_fields(case_dir: Path, pressure_drop: float) -> dict[str, float | None]:
     eps_paths = sorted(case_dir.glob("processor*/0/eps"))
     u_paths = sorted(case_dir.glob("processor*/0/U"))
     if not eps_paths or not u_paths or len(eps_paths) != len(u_paths):
@@ -146,7 +147,7 @@ def dbs_flow_metrics_from_fields(case_dir: Path) -> dict[str, float | None]:
     porosity = eps_sum / n_cells
     darcy_velocity = ux_sum / n_cells
     abs_darcy_velocity = abs(darcy_velocity)
-    pressure_gradient = PRESSURE_DROP / DOMAIN_LENGTH
+    pressure_gradient = pressure_drop / DOMAIN_LENGTH
     permeability = abs_darcy_velocity * KINEMATIC_VISCOSITY / pressure_gradient
     tau = (mag_u_sum / n_cells) / (abs_darcy_velocity + 1e-30)
     lpore = np.sqrt(8.0 * permeability / porosity) if porosity > 0 and permeability >= 0 else None
@@ -175,6 +176,39 @@ def processor_field_paths(case_dir: Path, time_name: str, field_name: str, fallb
     if paths:
         return paths
     return sorted(case_dir.glob(f"processor*/{fallback_time}/{field_name}"))
+
+
+def cell_reactive_area(case_dir: Path, time_name: str = "0") -> float:
+    """Return the area used by cell-based surface reactions: sum(aSurf * V)."""
+    cell_volume = VOXEL_SIZE**3
+    a_surf_paths = processor_field_paths(case_dir, time_name, "aSurf")
+    if a_surf_paths:
+        total = 0.0
+        for a_surf_path in a_surf_paths:
+            a_surf = parse_scalar_field(a_surf_path)
+            volume_path = a_surf_path.parent / "V"
+            if not volume_path.exists():
+                volume_path = a_surf_path.parents[1] / "0" / "V"
+            volumes = parse_scalar_field(volume_path) if volume_path.exists() else cell_volume
+            if volumes.size not in (1, a_surf.size):
+                raise RuntimeError(
+                    f"aSurf/V size mismatch in {a_surf_path.parent}: "
+                    f"{a_surf.size} != {volumes.size}"
+                )
+            total += float(np.sum(a_surf * volumes))
+        return total
+
+    a_surf_path = latest_field_path(case_dir, time_name, "aSurf")
+    if a_surf_path is None:
+        raise RuntimeError(f"No aSurf field found in {case_dir}")
+    a_surf = parse_scalar_field(a_surf_path)
+    volume_path = latest_field_path(case_dir, "0", "V")
+    volumes = parse_scalar_field(volume_path) if volume_path is not None else cell_volume
+    if volumes.size not in (1, a_surf.size):
+        raise RuntimeError(
+            f"aSurf/V size mismatch in {case_dir}: {a_surf.size} != {volumes.size}"
+        )
+    return float(np.sum(a_surf * volumes))
 
 
 def cell_sorbed_inventory(case_dir: Path, time_name: str = TRANSPORT_TIME) -> float | None:
@@ -283,12 +317,15 @@ def main() -> None:
     args = parse_args()
     image = load_phase_crop()
 
-    snappy_area = patch_area(CASE_ROOT / "snappy" / "constant" / "polyMesh", "solidwalls")
+    # Use the discretized area supplied to the chemistry rather than the sum of
+    # a triangle fan over each warped wall face. This is the same sum(aSurf*V)
+    # measure used to form the cell sorbed inventory below.
+    snappy_area = cell_reactive_area(CASE_ROOT / "snappy")
     smooth_area, triangles, used_mode = smoothsurface_area(image)
 
     flow = {
-        "snappy": read_poro_perm(CASE_ROOT / "snappy"),
-        "dbs-smoothsurface": read_poro_perm(CASE_ROOT / "dbs-smoothsurface"),
+        "snappy": read_poro_perm(CASE_ROOT / "snappy", SNAPPY_PRESSURE_DROP),
+        "dbs-smoothsurface": read_poro_perm(CASE_ROOT / "dbs-smoothsurface", DBS_PRESSURE_DROP),
     }
     sorbed_inventory = {
         "snappy": cell_sorbed_inventory(CASE_ROOT / "snappy"),
@@ -301,7 +338,7 @@ def main() -> None:
             "surface_area": snappy_area,
             "surface_area_relative_to_snappy": 0.0,
             "surface_triangles": None,
-            "surface_mode": "resolved-wall",
+            "surface_mode": "resolved-wall-cell-aSurf",
             "sorbed_sr_inventory": sorbed_inventory["snappy"],
             "sorbed_sr_inventory_relative_to_snappy": 0.0 if sorbed_inventory["snappy"] is not None else None,
             **flow["snappy"],
@@ -347,6 +384,10 @@ def main() -> None:
     metadata = {
         "voxel_size": VOXEL_SIZE,
         "smooth_sigma_vox": SIGMA_VOX,
+        "pressure_drop_pa": {
+            "snappy": SNAPPY_PRESSURE_DROP,
+            "dbs-smoothsurface": DBS_PRESSURE_DROP,
+        },
         "transport_time": TRANSPORT_TIME,
         "rows": rows,
     }

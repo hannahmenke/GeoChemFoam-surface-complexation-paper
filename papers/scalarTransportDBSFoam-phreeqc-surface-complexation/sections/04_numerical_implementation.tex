@@ -100,9 +100,10 @@ inputs subject to the configured mass-error limit, executes
 \texttt{runCells()}, and copies the updated aqueous and surface species back to
 the finite-volume fields.
 The porosity and flow fields are not advanced in this PHREEQC mode. At
-configured output times, the PHREEQCRM dump is prepared before the OpenFOAM
-field write and marked complete only after that write succeeds, yielding a
-matched restart pair. Conservation is assessed
+configured output times, the solver writes the OpenFOAM aqueous and surface
+fields after the chemistry update. If a run is restarted without a complete
+PHREEQCRM dump, \texttt{phreeqcMixture} reconstructs the chemistry state from
+the latest written fields. Conservation is assessed
 from the written fields using the domain-integrated bulk inventory
 $M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
 \left( \theta C + a_{\mathrm{surf}}\Gamma \right)$
@@ -125,9 +126,8 @@ composite implicit source term.
     state. Each timestep advances all aqueous species in conservative DBS
     form, after which \texttt{speciesMixture.correct()} transfers the aqueous
     and surface state to PHREEQCRM, executes \texttt{runCells()}, and returns
-    the updated species fields. At output times, the PHREEQCRM dump is written
-    before the OpenFOAM fields and marked complete only after the field write
-    succeeds.}
+    the updated species fields. At output times, the solver writes the updated
+    OpenFOAM aqueous and surface fields.}
     \label{fig:dbsWorkflow}
 \end{figure}
 

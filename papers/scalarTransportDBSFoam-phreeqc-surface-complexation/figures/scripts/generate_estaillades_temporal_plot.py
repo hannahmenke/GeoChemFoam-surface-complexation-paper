@@ -1,42 +1,52 @@
 #!/usr/bin/env python3
-"""Generate Estaillades domain-mean temporal evolution figure.
+"""Generate the weighted Estaillades temporal-evolution figure.
 
-Reads the parallel OpenFOAM field data at each saved timestep from the
-3DEstailladesSurfaceComplexation case and plots domain-mean dissolved Sr2+/Ca2+
-and incremental surface loadings Surf_aSr+/Surf_aCa+, illustrating the
-chromatographic exchange between the invading Sr plume and Ca-preloaded sites.
+Reads parallel ASCII or binary OpenFOAM fields from the full-resolution
+Estaillades case. Dissolved concentrations are averaged by pore volume and
+surface loadings by reactive area, so the plotted histories represent aqueous
+and sorbed inventories rather than unweighted voxel counts.
 """
 
 from __future__ import annotations
 
 import argparse
-import re
+import json
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+from openfoam_field_io import read_internal_scalar
 
-def parse_scalar_field_mean(path: Path) -> float:
-    text = path.read_text()
-    uniform_match = re.search(r"internalField\s+uniform\s+([^\n;]+)\s*;", text)
-    if uniform_match:
-        return float(uniform_match.group(1))
 
-    nonuniform_match = re.search(
-        r"internalField\s+nonuniform\s+List<scalar>\s*(\d+)\s*\((.*?)\)\s*;",
-        text,
-        re.S,
-    )
-    if not nonuniform_match:
-        raise RuntimeError(f"Unsupported scalar field format in {path}")
+def parse_weighted_moments(paths: tuple[Path, Path]) -> tuple[float, float]:
+    field_path, weight_path = paths
+    values = read_internal_scalar(field_path)
+    weights = read_internal_scalar(weight_path)
 
-    count = int(nonuniform_match.group(1))
-    values = np.fromstring(nonuniform_match.group(2), sep=" ", dtype=float)
-    if values.size != count:
-        raise RuntimeError(f"Value count mismatch in {path}")
-    return float(np.mean(values))
+    if isinstance(values, float) and isinstance(weights, float):
+        if not np.isfinite(values) or not np.isfinite(weights) or weights < 0.0:
+            raise RuntimeError(f"Invalid scalar data in {field_path} or {weight_path}")
+        return values * weights, weights
+    if isinstance(values, float):
+        assert isinstance(weights, np.ndarray)
+        if not np.isfinite(values) or not np.all(np.isfinite(weights)) or np.any(weights < 0.0):
+            raise RuntimeError(f"Invalid scalar data in {field_path} or {weight_path}")
+        return values * float(np.sum(weights)), float(np.sum(weights))
+    if isinstance(weights, float):
+        if not np.all(np.isfinite(values)) or not np.isfinite(weights) or weights < 0.0:
+            raise RuntimeError(f"Invalid scalar data in {field_path} or {weight_path}")
+        return float(np.sum(values)) * weights, values.size * weights
+    if values.size != weights.size:
+        raise RuntimeError(
+            f"Field/weight size mismatch: {field_path} and {weight_path}"
+        )
+    if not np.all(np.isfinite(values)):
+        raise RuntimeError(f"Non-finite values in {field_path}")
+    if not np.all(np.isfinite(weights)) or np.any(weights < 0.0):
+        raise RuntimeError(f"Invalid weights in {weight_path}")
+    return float(np.dot(values, weights)), float(np.sum(weights))
 
 
 def available_times(case_dir: Path) -> list[float]:
@@ -54,37 +64,48 @@ def available_times(case_dir: Path) -> list[float]:
     return sorted(times)
 
 
-def read_domain_mean(
-    case_dir: Path, time_name: str, field_name: str, max_workers: int
+def read_weighted_domain_mean(
+    case_dir: Path,
+    time_name: str,
+    field_name: str,
+    weight_name: str,
+    max_workers: int,
 ) -> float:
-    paths = []
+    paths: list[tuple[Path, Path]] = []
     for proc_dir in sorted(case_dir.glob("processor*")):
         field_path = proc_dir / time_name / field_name
+        weight_path = proc_dir / time_name / weight_name
         if not field_path.exists():
             raise FileNotFoundError(f"Missing field: {field_path}")
-        paths.append(field_path)
+        if not weight_path.exists():
+            raise FileNotFoundError(f"Missing weight field: {weight_path}")
+        paths.append((field_path, weight_path))
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        means = list(executor.map(parse_scalar_field_mean, paths, chunksize=1))
-    return float(np.mean(means))
+        moments = list(executor.map(parse_weighted_moments, paths, chunksize=1))
+    numerator = sum(item[0] for item in moments)
+    denominator = sum(item[1] for item in moments)
+    if denominator <= 0.0:
+        raise RuntimeError(f"Non-positive total {weight_name} at t={time_name}")
+    return numerator / denominator
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Plot domain-mean Sr2+/Ca2+ chromatographic exchange vs time for Estaillades case"
+        description="Plot weighted Sr2+/Ca2+ chromatographic exchange vs time for the Estaillades case"
     )
     parser.add_argument("--case-dir", type=Path, required=True)
     parser.add_argument(
         "--sr-in",
         type=float,
         default=1.0e-4,
-        help="Inlet Sr2+ concentration C_in [mol/m3]",
+        help="Inlet Sr2+ concentration C_in [mol/L]",
     )
     parser.add_argument(
         "--ca-init",
         type=float,
         default=1.0e-3,
-        help="Initial Ca2+ concentration C_init [mol/m3]",
+        help="Initial Ca2+ concentration C_init [mol/L]",
     )
     parser.add_argument(
         "--max-workers",
@@ -93,6 +114,12 @@ def main() -> None:
         help="Parallel workers used to read processor field files",
     )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--metrics-output",
+        type=Path,
+        default=None,
+        help="JSON output path (default: figure path with .json suffix)",
+    )
     args = parser.parse_args()
 
     times = available_times(args.case_dir)
@@ -106,13 +133,25 @@ def main() -> None:
     for time_value in times:
         time_name = str(int(time_value)) if time_value == int(time_value) else str(time_value)
         print(f"  Reading t = {time_name} ...")
-        ca_means.append(read_domain_mean(args.case_dir, time_name, "Ca+2", args.max_workers))
-        sr_means.append(read_domain_mean(args.case_dir, time_name, "Sr+2", args.max_workers))
+        ca_means.append(
+            read_weighted_domain_mean(
+                args.case_dir, time_name, "Ca+2", "eps", args.max_workers
+            )
+        )
+        sr_means.append(
+            read_weighted_domain_mean(
+                args.case_dir, time_name, "Sr+2", "eps", args.max_workers
+            )
+        )
         surf_ca_means.append(
-            read_domain_mean(args.case_dir, time_name, "Surf_aCa+", args.max_workers)
+            read_weighted_domain_mean(
+                args.case_dir, time_name, "Surf_aCa+", "aSurf", args.max_workers
+            )
         )
         surf_sr_means.append(
-            read_domain_mean(args.case_dir, time_name, "Surf_aSr+", args.max_workers)
+            read_weighted_domain_mean(
+                args.case_dir, time_name, "Surf_aSr+", "aSurf", args.max_workers
+            )
         )
 
     time_array = np.array(times)
@@ -149,7 +188,7 @@ def main() -> None:
         label="Sr$^{2+}$ / $C_{\\mathrm{in}}$",
     )
     ax1.set_xlabel("Time [s]")
-    ax1.set_ylabel("Domain-mean dissolved concentration")
+    ax1.set_ylabel("Porosity-weighted dissolved concentration")
     ax1.set_ylim(bottom=0.0)
     ax1.set_title("Dissolved species")
     ax1.legend(fontsize=9)
@@ -176,7 +215,7 @@ def main() -> None:
     )
     ax2.axhline(0.0, color="#666666", linewidth=0.8, alpha=0.6)
     ax2.set_xlabel("Time [s]")
-    ax2.set_ylabel("Normalised domain-mean $\\Delta$Surf loading")
+    ax2.set_ylabel("Normalised area-weighted $\\Delta$Surf loading")
     ax2.set_title("Surface exchange")
     ax2.legend(fontsize=9)
     ax2.grid(True, alpha=0.25)
@@ -184,7 +223,45 @@ def main() -> None:
     fig.tight_layout()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.output, dpi=200)
+    plt.close(fig)
+
+    metrics_path = args.metrics_output or args.output.with_suffix(".json")
+    repo_root = Path(__file__).resolve().parents[4]
+    case_path = args.case_dir.resolve()
+    try:
+        case_reference = str(case_path.relative_to(repo_root))
+    except ValueError:
+        case_reference = str(case_path)
+    metrics = {
+        "case": case_reference,
+        "weighting": {
+            "dissolved": "porosity-weighted domain mean",
+            "surface": "reactive-area-weighted domain mean",
+        },
+        "normalisation": {
+            "sr_in_mol_per_litre": args.sr_in,
+            "ca_init_mol_per_litre": args.ca_init,
+            "surface_delta_scale_kmol_per_square_metre": surf_scale,
+        },
+        "samples": [
+            {
+                "time_s": float(time_value),
+                "ca_mean_mol_per_litre": float(ca_means[index]),
+                "sr_mean_mol_per_litre": float(sr_means[index]),
+                "ca_over_c_init": float(ca_norm[index]),
+                "sr_over_c_in": float(sr_norm[index]),
+                "surface_ca_mean_kmol_per_square_metre": float(surf_ca[index]),
+                "surface_sr_mean_kmol_per_square_metre": float(surf_sr[index]),
+                "surface_ca_delta_normalised": float(surf_ca_norm[index]),
+                "surface_sr_delta_normalised": float(surf_sr_norm[index]),
+            }
+            for index, time_value in enumerate(times)
+        ],
+    }
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n")
     print(f"Wrote {args.output}")
+    print(f"Wrote {metrics_path}")
 
 
 if __name__ == "__main__":

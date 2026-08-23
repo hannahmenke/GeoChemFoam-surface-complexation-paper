@@ -8,6 +8,24 @@ png_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/f
 scripts_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts"
 connectivity_image="$repo_root/images/raw/Est_3phase500cubed4micron.raw.tar.gz"
 
+nx="$(<"$case_dir/system/Nx1")"
+ny="$(<"$case_dir/system/Ny1")"
+nz="$(<"$case_dir/system/Nz1")"
+npx="$(<"$case_dir/system/NPX")"
+npy="$(<"$case_dir/system/NPY")"
+npz="$(<"$case_dir/system/NPZ")"
+expected_ranks=$((npx * npy * npz))
+actual_ranks="$(find "$case_dir" -maxdepth 1 -type d -name 'processor*' | wc -l)"
+
+if [[ "$nx $ny $nz" != "500 500 500" ]]; then
+  echo "Refusing Estaillades render from non-production grid: $nx x $ny x $nz" >&2
+  exit 1
+fi
+if [[ "$expected_ranks" -ne 64 || "$actual_ranks" -ne 64 ]]; then
+  echo "Refusing Estaillades render: expected 64 complete processor directories, found $actual_ranks" >&2
+  exit 1
+fi
+
 if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
   set +e
   set +u
@@ -18,28 +36,34 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
   set -u
 fi
 
-required_fields=(
-  "$case_dir/processor0/40/Sr+2"
-  "$case_dir/processor0/40/Ca+2"
-  "$case_dir/processor0/40/Surf_aSr+"
-  "$case_dir/processor0/100/Sr+2"
-  "$case_dir/processor0/100/Ca+2"
-  "$case_dir/processor0/100/Surf_aSr+"
-  "$case_dir/processor0/100/Surf_aCa+"
-)
-
 missing=0
-for field in "${required_fields[@]}"; do
-  if [ ! -f "$field" ]; then
-    echo "Missing required Estaillades output field: $field" >&2
-    missing=1
-  fi
+for ((rank = 0; rank < expected_ranks; rank++)); do
+  for spec in \
+    '0:Surf_aSr+' '0:Surf_aCa+' \
+    '40:Sr+2' '40:Ca+2' '40:Surf_aSr+' '40:eps' '40:aSurf' \
+    '100:Sr+2' '100:Ca+2' '100:Surf_aSr+' '100:Surf_aCa+' '100:eps' '100:aSurf' \
+    '120:Sr+2' '120:Ca+2' '120:Surf_aSr+' '120:Surf_aCa+' '120:eps' '120:aSurf'; do
+    time_name="${spec%%:*}"
+    field_name="${spec#*:}"
+    field="$case_dir/processor$rank/$time_name/$field_name"
+    if [[ ! -s "$field" ]]; then
+      echo "Missing required Estaillades output field: $field" >&2
+      missing=1
+    fi
+  done
 done
 
 if [ "$missing" -ne 0 ]; then
   echo "Run $case_dir/runAll.sh to completion before regenerating Estaillades figures." >&2
   exit 1
 fi
+
+python "$scripts_dir/validate_estaillades_checkpoint.py" \
+  --case-dir "$case_dir" \
+  --times 20 40 60 80 100 120 \
+  --expected-ranks 64 \
+  --max-workers 8 \
+  --output "$png_dir/fig08_estaillades_concentration_bounds.json"
 
 "$scripts_dir/render_3d_volume_pyvista_egl.sh" \
   --case-dir "$case_dir" \
@@ -71,7 +95,10 @@ python "$scripts_dir/generate_estaillades_temporal_plot.py" \
   --sr-in 1e-4 \
   --ca-init 1e-3 \
   --max-workers 8 \
+  --metrics-output "$png_dir/fig08_estaillades_temporal.json" \
   --output "$png_dir/fig08_estaillades_temporal.png"
 
 echo "Wrote $png_dir/fig04_3d_estaillades.png"
 echo "Wrote $png_dir/fig08_estaillades_temporal.png"
+echo "Wrote $png_dir/fig08_estaillades_temporal.json"
+echo "Wrote $png_dir/fig08_estaillades_concentration_bounds.json"

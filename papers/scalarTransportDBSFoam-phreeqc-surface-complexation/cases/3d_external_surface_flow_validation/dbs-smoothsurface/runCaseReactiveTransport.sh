@@ -28,7 +28,8 @@ fi
 
 TotalTime="${TOTAL_TIME:-2.5}"
 WriteTimestep="${WRITE_TIMESTEP:-2.5}"
-runTimestep="${RUN_TIMESTEP:-0.01}"
+# Previous runs at 0.01 s reached max Co ~= 17 near the interface.
+runTimestep="${RUN_TIMESTEP:-0.00025}"
 
 cp system/controlDict1 system/controlDict
 sed -i "s/TotalTime/$TotalTime/g" system/controlDict

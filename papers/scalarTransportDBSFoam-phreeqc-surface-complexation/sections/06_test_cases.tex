@@ -103,9 +103,9 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
     $\mathrm{SiteOH} + \mathrm{M}^{n+} \rightleftharpoons \mathrm{SiteOM}^{(n-1)+} + \mathrm{H}^+$,
     so positive $\log K$ indicates sorption that is thermodynamically
     favourable at neutral pH relative to proton release.
-    Dzombak--Morel HFO site densities and $\log K$ values for
-    Pb$^{2+}$, Mn$^{2+}$, and Mg$^{2+}$ are taken from
-    \citet{dzombak1990surface}.
+    The two-site HFO reaction set and $\log K$ values for Pb$^{2+}$,
+    Mn$^{2+}$, and Mg$^{2+}$ follow \citet{dzombak1990surface}; the effective
+    site densities used in the simulations are reported below.
     \texttt{Surf\_a} equilibrium constants for Ca$^{2+}$ and
     Sr$^{2+}$ are from the \texttt{GeoChem.dat} database distributed with
     GeoChemFoam \citep{maes2021geochemfoam,parkhurst2013phreeqc}.
@@ -139,10 +139,10 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & Mn$^{2+}$, Mg$^{2+}$
             & Sr$^{2+}$, Ca$^{2+}$ \\
         Site density $s_k$ (mol\,m$^{-2}$)
-            & $2.4\times10^{-9}$
-            & Hfo$_s$: $2\times10^{-7}$;\enspace Hfo$_w$: $6\times10^{-6}$
-            & Hfo$_s$: $2\times10^{-7}$;\enspace Hfo$_w$: $6\times10^{-6}$
-            & $2.4\times10^{-9}$ \\
+            & $2.4\times10^{-6}$
+            & Hfo$_s$: $2\times10^{-4}$;\enspace Hfo$_w$: $6\times10^{-3}$
+            & Hfo$_s$: $2\times10^{-4}$;\enspace Hfo$_w$: $6\times10^{-3}$
+            & $2.4\times10^{-6}$ \\
         Surface $\log K$
             & Ca: $-5.85$
             & Pb/Hfo$_s$: $+4.65$;\enspace Pb/Hfo$_w$: $+0.30$
@@ -168,12 +168,12 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & $10^{-3}$
             & $10^{-3}$
             & $10^{-3}$ \\
-        $C_{\mathrm{in}}$ (mol\,m$^{-3}$)
+        $C_{\mathrm{in}}$ (mol\,L$^{-1}$)
             & Ca: $2\times10^{-9}$
-            & Pb: $10^{-5}$
+            & Pb: $10^{-3}$
             & Mn: $10^{-5}$;\enspace Mg: $10^{-3}$
             & Ca: $0$;\enspace Sr: $10^{-4}$ \\
-        $C_{\mathrm{init}}$ (mol\,m$^{-3}$)
+        $C_{\mathrm{init}}$ (mol\,L$^{-1}$)
             & Ca: $0$
             & $\approx 0$
             & Mn: $0$;\enspace Mg: $10^{-3}$
@@ -205,9 +205,9 @@ The chemistry models Pb$^{2+}$ sorption on hydrous ferric oxide (HFO) using the
 Dzombak--Morel two-site model \citep{dzombak1990surface}. Strong sites
 (Hfo$_s$) have intrinsic $\log K = +4.65$ (near-irreversible uptake at pH 7);
 weak sites (Hfo$_w$) have $\log K = +0.3$ (reversible bulk capacity). Site
-densities are $2 \times 10^{-7}$~mol~m$^{-2}$ (Hfo$_s$) and
-$6 \times 10^{-6}$~mol~m$^{-2}$ (Hfo$_w$). Inlet Pb$^{2+}$ concentration is
-$C_{\mathrm{in}} = 10^{-3}$~mol~m$^{-3}$ at pH~7; the initial domain is
+densities are $2 \times 10^{-4}$~mol~m$^{-2}$ (Hfo$_s$) and
+$6 \times 10^{-3}$~mol~m$^{-2}$ (Hfo$_w$). Inlet Pb$^{2+}$ concentration is
+$C_{\mathrm{in}} = 10^{-3}$~mol~L$^{-1}$ at pH~7; the initial domain is
 essentially Pb-free.
 
 The high conditional affinity of HFO for Pb$^{2+}$ at pH~7 still produces
@@ -266,12 +266,12 @@ complexing with strong sites:
     \mathrm{Hfo_wOH} + \mathrm{Mg^{2+}} &\rightleftharpoons \mathrm{Hfo_wOMg^{+}} + \mathrm{H^{+}}, \quad \log K = -4.60
 \end{align}
 The initial and inlet Mg$^{2+}$ concentration is
-$10^{-3}$~mol~m$^{-3}$; Mn$^{2+}$ is absent initially and enters at
-$10^{-5}$~mol~m$^{-3}$. Surface sites are equilibrated initially with the
+$10^{-3}$~mol~L$^{-1}$; Mn$^{2+}$ is absent initially and enters at
+$10^{-5}$~mol~L$^{-1}$. Surface sites are equilibrated initially with the
 Mg-bearing background water, after which incoming Mn$^{2+}$ accumulates on
 the HFO sites and displaces part of the Mg inventory.
-The strong- and weak-site densities are $2\times10^{-7}$ and
-$6\times10^{-6}$~mol~m$^{-2}$, respectively, and
+The strong- and weak-site densities are $2\times10^{-4}$ and
+$6\times10^{-3}$~mol~m$^{-2}$, respectively, and
 $a_{\mathrm{surf,intr}} = 10^{5}$~m$^{-1}$ in the micropore phase.
 
 Figure~\ref{fig:3DKelvin} shows the geometry and 3D volume renders of both
@@ -321,10 +321,10 @@ The large 3D porous-medium case uses an Estaillades-style three-phase
 segmented image \citep{menke2021upscaling} with dimensions
 $500 \times 500 \times 500$ and voxel size $4~\mu\mathrm{m}$. The three phases
 correspond to pore ($1$), micropore ($2$), and solid ($3$). The simulation is
-run on a $50 \times 50 \times 50$ coarse grid on eight MPI ranks. This case
-demonstrates nonlinear chromatographic exchange in a geologically realistic
-pore structure, motivated by radionuclide migration from nuclear-waste deep
-geological repositories.
+run at the native $500 \times 500 \times 500$ voxel resolution on 64 MPI
+ranks. This case demonstrates nonlinear chromatographic exchange in a
+geologically realistic pore structure, motivated by radionuclide migration
+from nuclear-waste deep geological repositories.
 
 The chemistry models Sr$^{2+}$ leachate from a waste package invading
 Ca$^{2+}$-bearing limestone formation water. Before transport begins, the
@@ -335,19 +335,19 @@ reactions are:
     \mathrm{Surf_a H} + \mathrm{Ca^{2+}} &\rightleftharpoons \mathrm{Surf_a Ca^{+}} + \mathrm{H^{+}}, \quad \log K = -5.85 \\
     \mathrm{Surf_a H} + \mathrm{Sr^{2+}} &\rightleftharpoons \mathrm{Surf_a Sr^{+}} + \mathrm{H^{+}}, \quad \log K = -5.5
 \end{align}
-Sr$^{2+}$ (site density $2.4\times10^{-9}$~mol~m$^{-2}$) binds slightly more
+Sr$^{2+}$ (site density $2.4\times10^{-6}$~mol~m$^{-2}$) binds slightly more
 strongly than Ca$^{2+}$. The initial and outlet-side condition is
-Ca$^{2+}$ = $10^{-3}$~mol~m$^{-3}$, Sr$^{2+}$ = 0; the inlet carries
-Sr$^{2+}$ = $10^{-4}$~mol~m$^{-3}$, Ca$^{2+}$ = 0 at pH~7.
+Ca$^{2+}$ = $10^{-3}$~mol~L$^{-1}$, Sr$^{2+}$ = 0; the inlet carries
+Sr$^{2+}$ = $10^{-4}$~mol~L$^{-1}$, Ca$^{2+}$ = 0 at pH~7.
 
 This produces a classic chromatographic exchange pattern: a Ca$^{2+}$
 desorption wave precedes the Sr$^{2+}$ adsorption front, and the effective
 retardation of Sr$^{2+}$ is lower than the single-species prediction because
 Ca$^{2+}$ still competes for sites ahead of the front. Over the saved output
-sequence used here ($t = 0, 20, 40, 60, 80, 100$~s), the domain-mean
-Sr$^{2+}$ rises from approximately $0.13$ to $0.53$ of
-$C_{\mathrm{in}}$, while the domain-mean Ca$^{2+}$ falls from approximately
-$0.85$ to $0.35$ of $C_{\mathrm{init}}$. Over the same interval,
+sequence ($t = 0, 20, \ldots, 120$~s), the porosity-weighted mean
+Sr$^{2+}$ concentration rises from effectively zero to $0.858$
+$C_{\mathrm{in}}$, while the corresponding Ca$^{2+}$ concentration falls
+from $1.000$ to $0.096$ $C_{\mathrm{init}}$. Over the same interval,
 \mbox{$\Delta$\texttt{Surf\_aSr+}} increases monotonically while
 \mbox{$\Delta$\texttt{Surf\_aCa+}} becomes progressively more negative,
 quantifying the net replacement of Ca$^{2+}$ by Sr$^{2+}$ on the reactive
@@ -356,7 +356,7 @@ reactive-surface field.
 
 Figure~\ref{fig:3DEstaillades} shows the geometry and 3D volume renders of the
 dissolved and adsorbed fields at $t = 40$~s.
-Figure~\ref{fig:EstailladesTemporal} summarises the corresponding domain-mean
+Figure~\ref{fig:EstailladesTemporal} summarises the corresponding weighted
 exchange history.
 
 \begin{figure}[htbp]
@@ -366,7 +366,7 @@ exchange history.
     (a)~Segmented geometry: micropore in blue, solid in red.
     (b)~Normalised dissolved Sr$^{2+}$ / $C_{\mathrm{in}}$; the plume advances
     from the inlet (left face).
-    (c)~Normalised dissolved Ca$^{2+}$ / $C_{\mathrm{init}}$ (log scale);
+    (c)~Normalised dissolved Ca$^{2+}$ / $C_{\mathrm{init}}$;
     the complementary depletion wave shows that Sr$^{2+}$ has displaced Ca$^{2+}$
     in the swept region.
     (d)~Incremental adsorbed Sr$^{2+}$ (\mbox{$\Delta$\texttt{Surf\_aSr+}},
@@ -377,13 +377,14 @@ exchange history.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig08_estaillades_temporal.png}
-    \caption{Temporal evolution of domain-mean fields for the Estaillades DGR
-    case ($t = 0$--$100$~s, writeInterval $= 20$~s).
-    Left: domain-mean dissolved Ca$^{2+}$ and Sr$^{2+}$ normalised by
+    \caption{Temporal evolution of weighted fields for the Estaillades DGR
+    case ($t = 0$--$120$~s, write interval $= 20$~s).
+    Left: porosity-weighted dissolved Ca$^{2+}$ and Sr$^{2+}$ normalised by
     $C_{\mathrm{init}}$ and $C_{\mathrm{in}}$, respectively.
-    Right: normalised incremental domain-mean adsorbed amount
+    Right: normalised incremental surface-area-weighted adsorbed amount
     (\mbox{$\Delta$\texttt{Surf\_aCa+}} and \mbox{$\Delta$\texttt{Surf\_aSr+}}),
-    defined relative to their values at $t = 0$.
+    defined relative to their values at $t = 0$ and divided by the largest
+    absolute surface-loading change over the plotted sequence.
     The curves make the chromatographic exchange explicit: Sr$^{2+}$ invades and
     accumulates on the surface while Ca$^{2+}$ is displaced from both the
     aqueous and sorbed phases.}

@@ -29,9 +29,9 @@ nlevel=0
 refineStokes=0
 dimension="3D"
 direction=0
-NPX=2
-NPY=2
-NPZ=2
+NPX="${GCFOAM_NPX:-2}"
+NPY="${GCFOAM_NPY:-2}"
+NPZ="${GCFOAM_NPZ:-2}"
 
 mkdir -p constant/polyMesh constant/triSurface 0
 cp ../shared/${Image_name}.raw constant/triSurface/.

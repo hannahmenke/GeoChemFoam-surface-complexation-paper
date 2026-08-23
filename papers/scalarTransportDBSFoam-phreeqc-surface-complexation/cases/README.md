@@ -2,9 +2,9 @@
 
 The cases are stored and run from this paper repository. Build the main-branch
 GeoChemFoam solver in a separate checkout and either place it beside this
-repository as `GeoChemFoam-main-runtime` or set `GCFOAM_RUNTIME_DIR` to that
-checkout. The case scripts source `etc/bashrc` from this repository and do not
-write to the solver checkout.
+repository as `GeoChemFoam-main-runtime` or set `GCFOAM_RUNTIME_ROOT` to that
+checkout. The case scripts use that checkout only as the solver runtime and do
+not write to it.
 
 The manuscript uses the following case ladder.
 
@@ -19,6 +19,8 @@ The manuscript uses the following case ladder.
 
 ## Simple 2D
 
+- tracked case:
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation`
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 - metadata:
@@ -30,6 +32,8 @@ The manuscript uses the following case ladder.
 
 ## Simple 3D
 
+- tracked case:
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`
 - source asset:
   - `images/raw/Kelvin1-200x200x200.raw.tar.gz`
 - metadata:
@@ -41,6 +45,8 @@ The manuscript uses the following case ladder.
 
 ## Large 3D Porous Media
 
+- tracked case:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades`
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
 - metadata:

@@ -13,7 +13,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from generate_estaillades_temporal_plot import available_times, read_domain_mean
+from generate_estaillades_temporal_plot import (
+    available_times,
+    read_weighted_domain_mean,
+)
 
 
 def compute_temporal_data(case_dir: Path, max_workers: int) -> dict[str, np.ndarray]:
@@ -26,10 +29,26 @@ def compute_temporal_data(case_dir: Path, max_workers: int) -> dict[str, np.ndar
 
     for time_value in times:
         time_name = str(int(time_value)) if time_value == int(time_value) else str(time_value)
-        ca_means.append(read_domain_mean(case_dir, time_name, "Ca+2", max_workers))
-        sr_means.append(read_domain_mean(case_dir, time_name, "Sr+2", max_workers))
-        surf_ca_means.append(read_domain_mean(case_dir, time_name, "Surf_aCa+", max_workers))
-        surf_sr_means.append(read_domain_mean(case_dir, time_name, "Surf_aSr+", max_workers))
+        ca_means.append(
+            read_weighted_domain_mean(
+                case_dir, time_name, "Ca+2", "eps", max_workers
+            )
+        )
+        sr_means.append(
+            read_weighted_domain_mean(
+                case_dir, time_name, "Sr+2", "eps", max_workers
+            )
+        )
+        surf_ca_means.append(
+            read_weighted_domain_mean(
+                case_dir, time_name, "Surf_aCa+", "aSurf", max_workers
+            )
+        )
+        surf_sr_means.append(
+            read_weighted_domain_mean(
+                case_dir, time_name, "Surf_aSr+", "aSurf", max_workers
+            )
+        )
 
     time_array = np.array(times)
     ca_norm = np.array(ca_means) / 1.0e-3

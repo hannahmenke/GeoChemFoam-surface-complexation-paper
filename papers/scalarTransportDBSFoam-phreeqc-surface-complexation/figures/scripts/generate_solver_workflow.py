@@ -3,9 +3,9 @@
 
 The sequence is traced against GeoChemFoam commit c51d4e34 using
 reactiveTransportDBSFoam.C, createFields.H, YiEqn.H, and
-phreeqcMixture.C.  In particular, YiEqn.H calls speciesMixture.correct()
-once after all aqueous transport solves, and phreeqcMixture::correct()
-owns the PHREEQCRM push/runCells/pull sequence and checkpoint preparation.
+phreeqcMixture.C. In particular, YiEqn.H calls speciesMixture.correct() once
+after all aqueous transport solves, and phreeqcMixture::correct() owns the
+PHREEQCRM push/runCells/pull sequence.
 """
 
 from __future__ import annotations
@@ -151,8 +151,8 @@ def main() -> None:
     b7_y = 0.018; b7_h = 0.072
     add_box(ax, (mid_x, b7_y), w, b7_h,
             u"⑤ At output times\n"
-            "PHREEQCRM dump → OpenFOAM fields\n"
-            "→ completion marker",
+            "Write OpenFOAM aqueous and surface fields\n"
+            "then advance to the next timestep",
             fc="#e8e8e8", fontsize=8.5)
 
     add_arrow(ax, (cx, b6_y), (cx, b7_y + b7_h))   # ④ → ⑤

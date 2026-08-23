@@ -3,7 +3,9 @@
 ## Source
 
 - paper-local executable case:
-  - `runAll.sh`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
+- reproducible entry point:
+  - `runPhase8AnalyticalBenchmark.sh`
 
 ## Paper Role
 

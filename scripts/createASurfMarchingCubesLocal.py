@@ -135,20 +135,34 @@ def is_owner_at(point: np.ndarray, image: np.ndarray, owner_label: int, res: flo
 
 
 def choose_owner_point(centroid: np.ndarray, unit_normal: np.ndarray, image: np.ndarray, owner_label: int, res: float) -> np.ndarray:
-    epsilon = 0.25 * res
-    plus = centroid + epsilon * unit_normal
-    minus = centroid - epsilon * unit_normal
-    plus_owner = is_owner_at(plus, image, owner_label, res)
-    minus_owner = is_owner_at(minus, image, owner_label, res)
+    # Gaussian smoothing can move the reconstructed interface well inside the
+    # non-owner phase. Search far enough to recover the pore-side owner cell.
+    for epsilon_vox in (0.2, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0):
+        epsilon = epsilon_vox * res
+        plus = centroid + epsilon * unit_normal
+        minus = centroid - epsilon * unit_normal
+        plus_owner = is_owner_at(plus, image, owner_label, res)
+        minus_owner = is_owner_at(minus, image, owner_label, res)
 
-    if plus_owner and not minus_owner:
-        return plus
-    if minus_owner and not plus_owner:
-        return minus
-    if plus_owner:
-        return plus
-    if minus_owner:
-        return minus
+        if plus_owner and not minus_owner:
+            return plus
+        if minus_owner and not plus_owner:
+            return minus
+        if plus_owner:
+            return plus
+        if minus_owner:
+            return minus
+
+    k0, j0, i0 = point_to_fine_index(centroid, image.shape, res)
+    for radius in range(1, 5):
+        k1, k2 = max(0, k0 - radius), min(image.shape[0], k0 + radius + 1)
+        j1, j2 = max(0, j0 - radius), min(image.shape[1], j0 + radius + 1)
+        i1, i2 = max(0, i0 - radius), min(image.shape[2], i0 + radius + 1)
+        owners = np.argwhere(image[k1:k2, j1:j2, i1:i2] == owner_label)
+        if owners.size:
+            owners += np.array([k1, j1, i1])
+            centres = (owners.astype(np.float64) + 0.5) * res
+            return centres[np.argmin(np.sum((centres - centroid) ** 2, axis=1))]
     return centroid
 
 

@@ -31,7 +31,8 @@ fi
 ## Define the total time of the simulation and how often to output concentration fields
 TotalTime="${TOTAL_TIME:-2.5}"
 WriteTimestep="${WRITE_TIMESTEP:-2.5}"
-runTimestep="${RUN_TIMESTEP:-0.01}"
+# Previous runs at 0.01 s reached max Co ~= 19 on snapped cells.
+runTimestep="${RUN_TIMESTEP:-0.00025}"
 
 #### END OF USER INPUT #######################################################
 

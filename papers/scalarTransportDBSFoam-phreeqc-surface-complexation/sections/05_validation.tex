@@ -135,7 +135,7 @@ Two dilute initial concentrations are tested on the
 $\theta = 0.5$ and $a_{\mathrm{surf}} = 10^5\,\mathrm{m^{-1}}$ using the same
 Ca$^{2+}$--\texttt{Surf\_a} surface chemistry as in Section~\ref{sec:1D}.
 The domains are initialised at $C_0=10^{-9}$ and
-$2\times10^{-9}$~mol\,m$^{-3}$ with the surface equilibrated against the
+$2\times10^{-9}$~mol\,L$^{-1}$ with the surface equilibrated against the
 specified initial solution. A single PHREEQC call then partitions Ca$^{2+}$
 between the pore fluid and surface.
 The relative inventory drift
@@ -215,11 +215,11 @@ reactive area is $1.65 \times 10^{-5}$~m$^2$, compared with
 $1.67 \times 10^{-5}$~m$^2$ for DBS \texttt{smoothSurface}, an error of
 $+1.48\%$. The separately calibrated pressure drops give inlet volumetric
 fluxes that agree within $0.004\%$. At $t=200$~s, the dissolved inventory
-differs by $-0.04\%$ and the streamwise aqueous-profile L1 error is $0.51\%$.
-The DBS sorbed inventory is nevertheless $35.7\%$ lower. Thus agreement in
-integrated area and bulk aqueous transport does not by itself ensure equal
-sorption: the local overlap between reactive area and the geometry-dependent
-flow paths remains important.
+differs by $-0.07\%$ and the streamwise aqueous-profile L1 error is $0.48\%$.
+The DBS sorbed inventory differs by $+1.68\%$. The close agreement across
+integrated area, aqueous transport, and sorbed inventory shows that the
+cell-based smooth-interface representation reproduces the resolved-wall
+surface-complexation response on this image-based geometry.
 
 \begin{figure}[htbp]
     \centering
@@ -256,7 +256,7 @@ streamwise concentration profiles averaged across the transverse direction.
         \toprule
         Method & \shortstack{Dissolved\\inventory [\%]} & \shortstack{Surface\\area [\%]} & \shortstack{Sorbed\\inventory [\%]} & \shortstack{Aqueous\\profile\\L1 norm [\%]} \\
         \midrule
-        DBS \texttt{smoothSurface} & $-0.04$ & $+1.48$ & $-35.73$ & $0.51$ \\
+        DBS \texttt{smoothSurface} & $-0.07$ & $+1.48$ & $+1.68$ & $0.48$ \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -268,8 +268,9 @@ streamwise concentration profiles averaged across the transverse direction.
 A third validation step tests the same resolved-wall/DBS comparison in a
 three-dimensional image crop. A $128^3$-voxel Estaillades subvolume is used,
 with the micropore label remapped to solid so that the comparison isolates the
-external pore--grain surface. The two cases use the same pressure drop and
-Sr$^{2+}$/Ca$^{2+}$ surface-complexation chemistry: a resolved-wall
+external pore--grain surface. The two cases use the same
+Sr$^{2+}$/Ca$^{2+}$ surface-complexation chemistry and separately calibrated
+pressure drops to match the Darcy velocity: a resolved-wall
 \texttt{snappyHexMesh} reference and DBS \texttt{smoothSurface}. The
 reactive-transport comparison is made at
 $t = 2.5$~s, for which the advective front has traversed approximately half
@@ -279,13 +280,12 @@ $\sigma = 0.74$ voxels.
 
 The 3D benchmark separates three quantities that affect the reactive result:
 the integrated external area, the DBS flow field, and the local overlap between
-aqueous Sr$^{2+}$ and reactive surface area. With \texttt{smoothSurface}, the
-integrated area differs from the resolved-wall
-area by only $-0.17\%$, and the sorbed-inventory error is reduced to
-$-25.6\%$. The remaining sorbed-inventory difference, despite the close
-agreement in total area, indicates that the spatial distribution of
-$a_{\mathrm{surf}}$ and the DBS flow representation also control the
-surface-complexation response.
+aqueous Sr$^{2+}$ and reactive surface area. The calibrated Darcy velocities
+agree within $1.12\%$. With \texttt{smoothSurface}, the integrated reactive
+area is $1.52\%$ greater than the resolved-wall value and the sorbed Sr$^{2+}$
+inventory is $1.84\%$ lower. This agreement in both integrated area and sorbed
+inventory shows that the cell-based reconstruction preserves the external-
+surface-complexation response in the three-dimensional image crop.
 
 \begin{figure}[htbp]
     \centering
@@ -314,7 +314,7 @@ surface-complexation response.
         \toprule
         Method & \shortstack{Surface\\area [\%]} & \shortstack{Sorbed Sr\\inventory [\%]} \\
         \midrule
-        DBS \texttt{smoothSurface} & $-0.17$ & $-25.64$ \\
+        DBS \texttt{smoothSurface} & $+1.52$ & $-1.84$ \\
         \bottomrule
     \end{tabular}
 \end{table}

@@ -11,9 +11,9 @@
   - cell-averaged analytical retarded reference
   - normalized surface-loading profile
 - source case:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
 - reproducible entry point:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/runAll.sh`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation/runPhase8AnalyticalBenchmark.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_retardation_plot.py`
 - repeatable command:
@@ -31,14 +31,14 @@
   - log-scale Hfo_sOPb⁺/Hfo_s,total strong-site occupancy at `t = 20000`
 - chemistry:
   - Pb²⁺ on Dzombak–Morel two-site HFO (Hfo_s + Hfo_w)
-  - higher-load Pb injection (`C_in = 10^-3 mol m^-3`) with strong but incomplete retardation
+  - higher-load Pb injection (`C_in = 10^-3 mol L^-1`) with strong but incomplete retardation
   - fracture vs. micropore transport contrast visible
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 - source case:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation`
 - reproducible entry point:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation/runAll.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py`
 - repeatable command:
@@ -58,9 +58,11 @@
   - Mn²⁺ + Mg²⁺ competing for two-site Dzombak-Morel HFO sites
   - Mn²⁺ log_k values: Hfo_s −0.40, Hfo_w −3.50
   - Mg²⁺ log_k value: Hfo_w −4.60
-  - Mg²⁺ uniform background (1×10⁻³ mol/m³); Mn²⁺ inlet 1×10⁻⁵ mol/m³
+  - Mg²⁺ uniform background (1×10⁻³ mol/L); Mn²⁺ inlet 1×10⁻⁵ mol/L
 - source case:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_kelvin`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`
+- reproducible entry point:
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation/runAll.sh`
 - reported time:
   - `t = 120`
 - renderer:
@@ -102,7 +104,7 @@
   - Numerical Implementation
 - content:
   - source-traced operator-splitting loop between aqueous transport and PHREEQCRM
-  - initialization, `speciesMixture.correct()` push/run/pull sequence, and matched checkpoint ordering
+  - initialization, `speciesMixture.correct()` push/run/pull sequence, and OpenFOAM field-write ordering
 - source implementation:
   - GeoChemFoam commit `c51d4e34`
   - `applications/solvers/reactiveTransport/reactiveTransportDBSFoam/{reactiveTransportDBSFoam.C,createFields.H,YiEqn.H}`
@@ -123,9 +125,9 @@
   - Ogata-Banks analytical reference curves for both cases
   - breakthrough time markers
 - source case:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
 - reproducible entry point:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/runAll.sh`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation/runPhase8AnalyticalBenchmark.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_breakthrough_plot.py`
 - repeatable command:
@@ -144,7 +146,9 @@
 - chemistry:
   - Mg²⁺ background at inlet and initial; Mn²⁺ inlet only; competing for HFO sites
 - source case:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_kelvin`
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`
+- reproducible entry point:
+  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation/runAll.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_kelvin_temporal_plot.py`
 - repeatable command:
@@ -157,9 +161,9 @@
 - section:
   - Test Cases / Large 3D Porous Media
 - content:
-  - left panel: domain-mean Ca²⁺/C_init and Sr²⁺/C_in vs time
-  - right panel: normalised incremental domain-mean Surf_aCa⁺ and Surf_aSr⁺ vs time
-  - 6 time points: t = 0, 20, 40, 60, 80, 100
+  - left panel: pore-volume-weighted Ca²⁺/C_init and Sr²⁺/C_in vs time
+  - right panel: incremental surface-area-weighted Surf_aCa⁺ and Surf_aSr⁺ vs time, normalised by the largest absolute change over the plotted sequence
+  - 7 time points: t = 0, 20, 40, 60, 80, 100, 120
 - chemistry:
   - Sr²⁺ leachate displacing Ca²⁺ from pre-loaded Surf_a sites in Estaillades micropores
 - source case:
@@ -168,6 +172,9 @@
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/runAll.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_estaillades_temporal_plot.py`
+- numerical acceptance check:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/validate_estaillades_checkpoint.py`
+  - finite Cl⁻ and Sr²⁺ fields with at most 0.1% overshoot in chemistry-active cells ($\theta>10^{-3}$) at each saved transport checkpoint
 - repeatable command:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh`
 

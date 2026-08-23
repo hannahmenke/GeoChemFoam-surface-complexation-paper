@@ -1,0 +1,91 @@
+{
+  "case": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades",
+  "weighting": {
+    "dissolved": "porosity-weighted domain mean",
+    "surface": "reactive-area-weighted domain mean"
+  },
+  "normalisation": {
+    "sr_in_mol_per_litre": 0.0001,
+    "ca_init_mol_per_litre": 0.001,
+    "surface_delta_scale_kmol_per_square_metre": 5.5025933658018566e-11
+  },
+  "samples": [
+    {
+      "time_s": 0.0,
+      "ca_mean_mol_per_litre": 0.0010000000000000002,
+      "sr_mean_mol_per_litre": 1.0000000000000002e-12,
+      "ca_over_c_init": 1.0000000000000002,
+      "sr_over_c_in": 1.0000000000000002e-08,
+      "surface_ca_mean_kmol_per_square_metre": 6.732800000000001e-11,
+      "surface_sr_mean_kmol_per_square_metre": 1.5084e-19,
+      "surface_ca_delta_normalised": 0.0,
+      "surface_sr_delta_normalised": 0.0
+    },
+    {
+      "time_s": 20.0,
+      "ca_mean_mol_per_litre": 0.0007761584586488643,
+      "sr_mean_mol_per_litre": 2.057996672747004e-05,
+      "ca_over_c_init": 0.7761584586488643,
+      "sr_over_c_in": 0.20579966727470037,
+      "surface_ca_mean_kmol_per_square_metre": 5.806715563138582e-11,
+      "surface_sr_mean_kmol_per_square_metre": 1.0162275912389992e-11,
+      "surface_ca_delta_normalised": -0.16829963170038217,
+      "surface_sr_delta_normalised": 0.18468156896178553
+    },
+    {
+      "time_s": 40.0,
+      "ca_mean_mol_per_litre": 0.000576951616184947,
+      "sr_mean_mol_per_litre": 3.839161352329904e-05,
+      "ca_over_c_init": 0.576951616184947,
+      "sr_over_c_in": 0.38391613523299034,
+      "surface_ca_mean_kmol_per_square_metre": 4.858903219094332e-11,
+      "surface_sr_mean_kmol_per_square_metre": 2.0551394415346346e-11,
+      "surface_ca_delta_normalised": -0.34054793009997353,
+      "surface_sr_delta_normalised": 0.3734856075724492
+    },
+    {
+      "time_s": 60.0,
+      "ca_mean_mol_per_litre": 0.00039261730707063124,
+      "sr_mean_mol_per_litre": 5.502352329408899e-05,
+      "ca_over_c_init": 0.39261730707063125,
+      "sr_over_c_in": 0.5502352329408898,
+      "surface_ca_mean_kmol_per_square_metre": 3.93765973737757e-11,
+      "surface_sr_mean_kmol_per_square_metre": 3.0640679819282506e-11,
+      "surface_ca_delta_normalised": -0.5079678029625062,
+      "surface_sr_delta_normalised": 0.5568407045825281
+    },
+    {
+      "time_s": 80.0,
+      "ca_mean_mol_per_litre": 0.0002486687377451476,
+      "sr_mean_mol_per_litre": 6.878499531564433e-05,
+      "ca_over_c_init": 0.24866873774514758,
+      "sr_over_c_in": 0.6878499531564433,
+      "surface_ca_mean_kmol_per_square_metre": 3.0876680094242604e-11,
+      "surface_sr_mean_kmol_per_square_metre": 3.9942962655183245e-11,
+      "surface_ca_delta_normalised": -0.6624389171167766,
+      "surface_sr_delta_normalised": 0.7258934078717376
+    },
+    {
+      "time_s": 100.0,
+      "ca_mean_mol_per_litre": 0.0001534723724695898,
+      "sr_mean_mol_per_litre": 7.891839571017123e-05,
+      "ca_over_c_init": 0.15347237246958978,
+      "sr_over_c_in": 0.7891839571017123,
+      "surface_ca_mean_kmol_per_square_metre": 2.330657236187676e-11,
+      "surface_sr_mean_kmol_per_square_metre": 4.8204198948516104e-11,
+      "surface_ca_delta_normalised": -0.8000123707434502,
+      "surface_sr_delta_normalised": 0.8760269130054393
+    },
+    {
+      "time_s": 120.0,
+      "ca_mean_mol_per_litre": 9.606948381423364e-05,
+      "sr_mean_mol_per_litre": 8.578545939208578e-05,
+      "ca_over_c_init": 0.09606948381423364,
+      "sr_over_c_in": 0.8578545939208577,
+      "surface_ca_mean_kmol_per_square_metre": 1.7022421233104442e-11,
+      "surface_sr_mean_kmol_per_square_metre": 5.502593380885856e-11,
+      "surface_ca_delta_normalised": -0.9142158146655067,
+      "surface_sr_delta_normalised": 1.0
+    }
+  ]
+}

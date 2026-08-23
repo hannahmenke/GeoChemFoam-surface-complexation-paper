@@ -7,5 +7,5 @@ location    "system";
 object      postProcessDict;
 }
 
-poro 0.263546 ;
-perm 1.32925e-12 ;
+poro 0.263582 ;
+perm 1.34647e-12 ;

@@ -2,8 +2,8 @@
   "time_s": 200.0,
   "resolved_snappy": {
     "surface_area_m2": 1.6475328828944807e-05,
-    "sorbed_inventory_kmol": 1.1359768285061272e-16,
-    "dissolved_inventory_kmol": 4.985676665438518e-14
+    "sorbed_inventory_kmol": 7.180250897690083e-17,
+    "dissolved_inventory_kmol": 4.987508212413653e-14
   },
   "dbs_smoothsurface": {
     "surface_area_m2": 1.6718655022662604e-05,
@@ -12,8 +12,8 @@
   },
   "relative_errors_percent": {
     "surface_area_m2": 1.4769125171590316,
-    "sorbed_inventory_kmol": -35.73313642316504,
-    "dissolved_inventory_kmol": -0.03819113261026274
+    "sorbed_inventory_kmol": 1.6756502026066213,
+    "dissolved_inventory_kmol": -0.07489979370166622
   },
-  "aqueous_profile_l1_percent": 0.5079491791282995
+  "aqueous_profile_l1_percent": 0.4809816278105188
 }

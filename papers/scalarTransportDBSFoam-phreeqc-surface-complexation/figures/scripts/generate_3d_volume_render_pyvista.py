@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import re
 import tarfile
 from pathlib import Path
 
@@ -16,6 +15,8 @@ import vtk
 import pyvista.plotting._vtk as _pv_vtk
 _pv_vtk.vtkRenderWindow = vtk.vtkEGLRenderWindow
 import pyvista as pv
+
+from openfoam_field_io import read_internal_scalar
 
 
 SOFT_BLUE_CMAP = LinearSegmentedColormap.from_list(
@@ -48,28 +49,6 @@ AQUEOUS_OPACITY_FLAT = [0.015, 0.020, 0.030, 0.045, 0.065, 0.090, 0.120, 0.160]
 AQUEOUS_OPACITY_DENSE = [0.040, 0.055, 0.075, 0.100, 0.130, 0.165, 0.205, 0.250]
 
 
-def parse_scalar_field(path: Path) -> list[float]:
-    text = path.read_text()
-
-    uniform_match = re.search(r"internalField\s+uniform\s+([^\n;]+)\s*;", text)
-    if uniform_match:
-        return [float(uniform_match.group(1))]
-
-    nonuniform_match = re.search(
-        r"internalField\s+nonuniform\s+List<scalar>\s*(\d+)\s*\((.*?)\)\s*;",
-        text,
-        re.S,
-    )
-    if not nonuniform_match:
-        raise RuntimeError(f"Unsupported scalar field format in {path}")
-
-    count = int(nonuniform_match.group(1))
-    values = [float(item) for item in nonuniform_match.group(2).split()]
-    if len(values) != count:
-        raise RuntimeError(f"Value count mismatch in {path}")
-    return values
-
-
 def partition_sizes(total: int, n_parts: int) -> tuple[list[int], list[int]]:
     base = total // n_parts
     rem = total % n_parts
@@ -98,13 +77,13 @@ def stitch_parallel_scalar(
     size_y, start_y = partition_sizes(ny, npy)
     size_z, start_z = partition_sizes(nz, npz)
 
-    global_values = [0.0] * (nx * ny * nz)
+    global_values = np.empty((nx, ny, nz), dtype=np.float64, order="F")
 
     for pz in range(npz):
         for py in range(npy):
             for px in range(npx):
                 pid = px + npx * (py + npy * pz)
-                local_values = parse_scalar_field(
+                local_values = read_internal_scalar(
                     case_dir / f"processor{pid}" / time_name / field_name
                 )
 
@@ -112,27 +91,30 @@ def stitch_parallel_scalar(
                 local_ny = size_y[py]
                 local_nz = size_z[pz]
                 expected = local_nx * local_ny * local_nz
-                if len(local_values) == 1:
-                    local_values = local_values * expected
-                elif len(local_values) != expected:
+                if isinstance(local_values, float):
+                    local_array = np.full(
+                        (local_nx, local_ny, local_nz),
+                        local_values,
+                        dtype=np.float64,
+                        order="F",
+                    )
+                elif local_values.size != expected:
                     raise RuntimeError(
                         f"{field_name} length mismatch in processor{pid}: "
-                        f"expected {expected}, got {len(local_values)}"
+                        f"expected {expected}, got {local_values.size}"
+                    )
+                else:
+                    local_array = np.asarray(local_values, dtype=np.float64).reshape(
+                        (local_nx, local_ny, local_nz), order="F"
                     )
 
-                idx = 0
-                for kk in range(local_nz):
-                    for jj in range(local_ny):
-                        for ii in range(local_nx):
-                            gi = start_x[px] + ii
-                            gj = start_y[py] + jj
-                            gk = start_z[pz] + kk
-                            global_idx = gi + nx * (gj + ny * gk)
-                            global_values[global_idx] = local_values[idx]
-                            idx += 1
+                global_values[
+                    start_x[px] : start_x[px] + local_nx,
+                    start_y[py] : start_y[py] + local_ny,
+                    start_z[pz] : start_z[pz] + local_nz,
+                ] = local_array
 
-    array = np.asarray(global_values, dtype=float).reshape((nx, ny, nz), order="F")
-    return array, nx, ny, nz
+    return global_values, nx, ny, nz
 
 
 def normalized_field(

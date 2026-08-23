@@ -23,7 +23,7 @@ n_y=128
 n_z=128
 n_level=0
 direction=0
-NP=8
+NP="${NPROCS:-8}"
 
 mkdir -p constant/triSurface
 cp ../shared/${Image_name}.raw constant/triSurface/.

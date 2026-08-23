@@ -43,11 +43,36 @@ copy_reactive_fields() {
     cp 0_orig/Surf_aH "$target_dir"/.
     cp 0_orig/Surf_a "$target_dir"/.
 
-    sed -i "s/cinternal/$Ca2plus_internal/g; s/cinlet/$Ca2plus_inlet/g" "$target_dir"/Ca+2
-    sed -i "s/cinternal/$Sr2plus_internal/g; s/cinlet/$Sr2plus_inlet/g" "$target_dir"/Sr+2
-    sed -i "s/cinternal/$Clminus_internal/g; s/cinlet/$Clminus_inlet/g" "$target_dir"/Cl-
-    sed -i "s/cinternal/$Hplus_internal/g; s/cinlet/$Hplus_inlet/g" "$target_dir"/H+
-    sed -i "s/cinternal/$OHminus_internal/g; s/cinlet/$OHminus_inlet/g" "$target_dir"/OH-
+    python - \
+        "$target_dir/Ca+2" "$Ca2plus_internal" \
+        "$target_dir/Sr+2" "$Sr2plus_internal" \
+        "$target_dir/Cl-" "$Clminus_internal" \
+        "$target_dir/H+" "$Hplus_internal" \
+        "$target_dir/OH-" "$OHminus_internal" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+arguments = sys.argv[1:]
+for field_name, value in zip(arguments[0::2], arguments[1::2]):
+    path = Path(field_name)
+    text = path.read_text()
+    updated, count = re.subn(
+        r"internalField\s+uniform\s+[^;]+;",
+        f"internalField   uniform {value};",
+        text,
+        count=1,
+    )
+    if count != 1:
+        raise RuntimeError(f"Expected one uniform internalField in {path}")
+    path.write_text(updated)
+PY
+
+    sed -i "s/cinlet/$Ca2plus_inlet/g" "$target_dir"/Ca+2
+    sed -i "s/cinlet/$Sr2plus_inlet/g" "$target_dir"/Sr+2
+    sed -i "s/cinlet/$Clminus_inlet/g" "$target_dir"/Cl-
+    sed -i "s/cinlet/$Hplus_inlet/g" "$target_dir"/H+
+    sed -i "s/cinlet/$OHminus_inlet/g" "$target_dir"/OH-
     sed -i "s/SurfDen/$Surf_aminus/g" "$target_dir"/Surf_a-
     sed -i "s/SurfDen/$Surf_aCaplus/g" "$target_dir"/Surf_aCa+
     sed -i "s/SurfDen/$Surf_aSrplus/g" "$target_dir"/Surf_aSr+

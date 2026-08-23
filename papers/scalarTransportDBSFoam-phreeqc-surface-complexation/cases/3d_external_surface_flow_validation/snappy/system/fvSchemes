@@ -34,7 +34,10 @@ divSchemes
 
 laplacianSchemes
 {
-    default         Gauss linear corrected;
+    // The explicit non-orthogonal correction creates undershoots at the
+    // initially sharp Sr inlet front on this snapped mesh.  The orthogonal
+    // contribution is monotone with the bounded upwind advection scheme.
+    default         Gauss linear uncorrected;
 }
 
 interpolationSchemes

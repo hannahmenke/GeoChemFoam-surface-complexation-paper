@@ -179,20 +179,35 @@ def is_owner_at(point):
 
 
 def choose_owner_point(centroid, unit_normal):
-    epsilon = 0.25 * _WORKER_RES
-    plus = centroid + epsilon * unit_normal
-    minus = centroid - epsilon * unit_normal
-    plus_owner = is_owner_at(plus)
-    minus_owner = is_owner_at(minus)
+    # A smoothed reconstruction can lie more than a quarter voxel from the
+    # binary interface. Search along the normal until the pore-side owner cell
+    # is found so reactive area is never deposited in the inactive solid.
+    for epsilon_vox in (0.2, 0.4, 0.6, 0.8, 1.0, 1.25, 1.5, 2.0, 2.5, 3.0):
+        epsilon = epsilon_vox * _WORKER_RES
+        plus = centroid + epsilon * unit_normal
+        minus = centroid - epsilon * unit_normal
+        plus_owner = is_owner_at(plus)
+        minus_owner = is_owner_at(minus)
 
-    if plus_owner and not minus_owner:
-        return plus
-    if minus_owner and not plus_owner:
-        return minus
-    if plus_owner:
-        return plus
-    if minus_owner:
-        return minus
+        if plus_owner and not minus_owner:
+            return plus
+        if minus_owner and not plus_owner:
+            return minus
+        if plus_owner:
+            return plus
+        if minus_owner:
+            return minus
+
+    k0, j0, i0 = point_to_fine_index(centroid)
+    for radius in range(1, 5):
+        k1, k2 = max(0, k0 - radius), min(_WORKER_IMAGE.shape[0], k0 + radius + 1)
+        j1, j2 = max(0, j0 - radius), min(_WORKER_IMAGE.shape[1], j0 + radius + 1)
+        i1, i2 = max(0, i0 - radius), min(_WORKER_IMAGE.shape[2], i0 + radius + 1)
+        owners = np.argwhere(_WORKER_IMAGE[k1:k2, j1:j2, i1:i2] == _WORKER_OWNER_LABEL)
+        if owners.size:
+            owners += np.array([k1, j1, i1])
+            centres = (owners.astype(np.float64) + 0.5) * _WORKER_RES
+            return centres[np.argmin(np.sum((centres - centroid) ** 2, axis=1))]
     return centroid
 
 
