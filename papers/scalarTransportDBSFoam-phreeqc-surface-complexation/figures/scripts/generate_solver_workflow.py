@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Generate the source-traced solver-workflow figure for the paper.
 
-The sequence is traced against GeoChemFoam commit c51d4e34 using
-reactiveTransportDBSFoam.C, createFields.H, YiEqn.H, and
-phreeqcMixture.C. In particular, YiEqn.H calls speciesMixture.correct() once
-after all aqueous transport solves, and phreeqcMixture::correct() owns the
-PHREEQCRM push/runCells/pull sequence.
+The sequence is traced against GeoChemFoam upstream/main commit ae6026e3 using
+reactiveTransportDBSFoam.C, createFields.H, YiEqn.H, and phreeqcMixture.C.
+For the fixed-porosity PHREEQC mode used in this paper, YiEqn.H advances every
+aqueous species and then calls phreeqcMixture::correct(), which owns the
+field-to-module transfer, runCells(), and module-to-field transfer.
 """
 
 from __future__ import annotations
@@ -16,165 +16,151 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT  = ROOT / "png" / "fig05_solver_workflow.png"
+OUT = ROOT / "png" / "fig05_solver_workflow.png"
+INK = "#292929"
 
 
-def add_box(ax, xy, width, height, text, *, fc, ec="#1f1f1f", fontsize=11):
+def add_box(ax, xy, width, height, text, *, fc, fontsize=11.2):
+    """Draw a process box above the connectors."""
     x, y = xy
-    ax.add_patch(FancyBboxPatch(
-        (x, y), width, height,
-        boxstyle="round,pad=0.01,rounding_size=0.03",
-        linewidth=1.4, facecolor=fc, edgecolor=ec,
-    ))
+    ax.add_patch(
+        FancyBboxPatch(
+            (x, y), width, height,
+            boxstyle="round,pad=0.008,rounding_size=0.018",
+            linewidth=1.5, facecolor=fc, edgecolor=INK, zorder=3,
+        )
+    )
     ax.text(
         x + width / 2, y + height / 2, text,
-        ha="center", va="center", fontsize=fontsize,
-        color="#111111", wrap=True,
+        ha="center", va="center", fontsize=fontsize, color="#111111",
+        linespacing=1.25, zorder=4,
     )
 
 
-def add_arrow(ax, start, end, *,
-              arrowstyle="-|>", shrinkA=4, shrinkB=4,
-              text=None, text_xy=None):
-    ax.add_patch(FancyArrowPatch(
-        start, end,
-        arrowstyle=arrowstyle, mutation_scale=14,
-        linewidth=1.4, color="#2b2b2b",
-        shrinkA=shrinkA, shrinkB=shrinkB,
-    ))
-    if text and text_xy:
-        ax.text(*text_xy, text,
-                ha="center", va="center", fontsize=9, color="#444444")
-
-
-def add_elbow(ax, start, corner, end, *, shrinkB=4):
-    """L-shaped connector: plain line from start→corner, arrow corner→end."""
-    ax.plot(
-        [start[0], corner[0]], [start[1], corner[1]],
-        color="#2b2b2b", linewidth=1.4, solid_capstyle="round", zorder=5,
+def add_arrow(ax, start, end, *, shrink_a=1, shrink_b=2):
+    ax.add_patch(
+        FancyArrowPatch(
+            start, end, arrowstyle="-|>", mutation_scale=17,
+            linewidth=1.55, color=INK, shrinkA=shrink_a,
+            shrinkB=shrink_b, zorder=2,
+        )
     )
-    add_arrow(ax, corner, end, shrinkA=0, shrinkB=shrinkB)
+
+
+def add_route(ax, points):
+    """Draw an orthogonal route, with an arrowhead on its final segment."""
+    for start, end in zip(points[:-2], points[1:-1]):
+        ax.plot(
+            [start[0], end[0]], [start[1], end[1]],
+            color=INK, linewidth=1.55, solid_capstyle="round", zorder=1,
+        )
+    add_arrow(ax, points[-2], points[-1], shrink_a=0, shrink_b=2)
 
 
 def main() -> None:
-    fig = plt.figure(figsize=(12.4, 10.0), dpi=220)
-    ax  = fig.add_axes([0.03, 0.03, 0.94, 0.94])
+    # At 0.96\linewidth, the 8-inch source is scaled by 0.751. The minimum
+    # source label (10.8 pt) therefore prints at 8.1 pt in the manuscript.
+    fig = plt.figure(figsize=(8.0, 7.0), dpi=240)
+    ax = fig.add_axes([0.025, 0.025, 0.95, 0.95])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
     fig.patch.set_facecolor("white")
     ax.set_facecolor("white")
 
-    # ── layout constants ───────────────────────────────────────────────────────
-    mid_x   = 0.375
-    left_x  = 0.04
-    right_x = 0.71
-    w       = 0.24    # box width (all boxes share the same width)
-    cx      = mid_x + w / 2   # x-centre of the middle column  (= 0.495)
+    # Initialisation: OpenFOAM state is read before the runtime-selected
+    # mixture constructs and initialises/restores its PHREEQCRM state.
+    init_y, init_h, init_w = 0.84, 0.12, 0.43
+    add_box(
+        ax, (0.035, init_y), init_w, init_h,
+        "Read mesh and OpenFOAM fields\n"
+        r"$p$, $\mathbf{U}$, $\varepsilon$, $a_{\mathrm{surf}}$, $\phi$" "\n"
+        "Aqueous and surface species",
+        fc="#d9e8fb",
+    )
+    add_box(
+        ax, (0.535, init_y), init_w, init_h,
+        "Construct phreeqcMixture\n"
+        "Map active cells and cache surface data\n"
+        "Initialise or restore PHREEQCRM",
+        fc="#d9e8fb", fontsize=11.0,
+    )
+    add_arrow(ax, (0.465, 0.90), (0.535, 0.90))
 
-    # ── initialisation blocks ─────────────────────────────────────────────────
-    #  b0 – read case
-    b0_y = 0.855; b0_h = 0.11
-    add_box(ax, (mid_x, b0_y), w, b0_h,
-            "Read mesh and OpenFOAM fields\n"
-            r"$p$, $\mathbf{U}$, $\varepsilon$, $a_{\mathrm{surf}}$," + "\n"
-            "aqueous and surface species; construct " + r"$\phi$",
-            fc="#d9e8fb", fontsize=9)
+    # Timestep controller. The entry route uses the clear gutter between rows.
+    ctrl_x, ctrl_y, ctrl_w, ctrl_h = 0.31, 0.68, 0.38, 0.09
+    add_box(
+        ax, (ctrl_x, ctrl_y), ctrl_w, ctrl_h,
+        "Advance time and enter timestep\n(current time < end time)",
+        fc="#e8e8e8",
+    )
+    add_route(ax, [(0.75, init_y), (0.75, 0.805), (0.50, 0.805), (0.50, 0.77)])
 
-    #  b1 – initialise PHREEQC
-    b1_y = 0.685; b1_h = 0.11
-    add_box(ax, (mid_x, b1_y), w, b1_h,
-            "Construct phreeqcMixture\n"
-            "Map active cells; cache surface data\n"
-            "Load inputs; initialise or restore PHREEQCRM",
-            fc="#d9e8fb", fontsize=9)
+    # Fixed-porosity PHREEQC loop used by the reported cases.
+    stage_h, stage_w = 0.18, 0.40
+    left_x, right_x = 0.04, 0.56
+    upper_y, lower_y = 0.42, 0.18
+    add_box(
+        ax, (left_x, upper_y), stage_w, stage_h,
+        "① Conservative DBS transport\n"
+        "Solve every aqueous species\n"
+        r"$\partial_t(\varepsilon C_i)+\nabla\!\cdot(\phi C_i)$" "\n"
+        r"$-\nabla\!\cdot(\varepsilon D_i\nabla C_i)=0$",
+        fc="#dff3df", fontsize=10.8,
+    )
+    add_box(
+        ax, (right_x, upper_y), stage_w, stage_h,
+        "② Prepare PHREEQCRM input\n"
+        "Copy aqueous and surface state\n"
+        "Refresh porosity; clip negative\n"
+        "aqueous concentrations",
+        fc="#fff1cc", fontsize=10.8,
+    )
+    add_box(
+        ax, (right_x, lower_y), stage_w, stage_h,
+        "③ PHREEQCRM runCells()\n"
+        "Cell-local aqueous speciation\n"
+        "and surface complexation",
+        fc="#ffd9cc", fontsize=11.0,
+    )
+    add_box(
+        ax, (left_x, lower_y), stage_w, stage_h,
+        "④ Return PHREEQCRM results\n"
+        "Update OpenFOAM aqueous\n"
+        "and surface fields",
+        fc="#fff1cc", fontsize=11.0,
+    )
 
-    add_arrow(ax, (cx, b0_y), (cx, b1_y + b1_h))   # b0 bottom → b1 top
+    add_route(ax, [(0.50, ctrl_y), (0.50, 0.64), (0.24, 0.64), (0.24, 0.60)])
+    add_arrow(ax, (left_x + stage_w, upper_y + stage_h / 2),
+              (right_x, upper_y + stage_h / 2))
+    add_arrow(ax, (right_x + stage_w / 2, upper_y),
+              (right_x + stage_w / 2, lower_y + stage_h))
+    add_arrow(ax, (right_x, lower_y + stage_h / 2),
+              (left_x + stage_w, lower_y + stage_h / 2))
 
-    # ── timestep loop control ─────────────────────────────────────────────────
-    b2_y = 0.535; b2_h = 0.075
+    # Output and loop-back routes stay in dedicated gutters and never cross a
+    # process connector.
+    out_x, out_y, out_w, out_h = 0.31, 0.015, 0.38, 0.105
+    add_box(
+        ax, (out_x, out_y), out_w, out_h,
+        "⑤ At scheduled output times\n"
+        "Write fields; complete the PHREEQCRM\n"
+        "checkpoint when enabled",
+        fc="#e8e8e8", fontsize=10.8,
+    )
+    add_route(ax, [(0.24, lower_y), (0.24, 0.145), (0.50, 0.145), (0.50, 0.12)])
+    add_route(
+        ax,
+        [(0.50, out_y), (0.50, 0.002), (0.985, 0.002), (0.985, 0.725), (0.69, 0.725)],
+    )
+    ax.text(
+        0.835, 0.742, r"next $\Delta t$",
+        ha="center", va="bottom", fontsize=10.8, color="#444444", zorder=4,
+    )
 
-    add_arrow(ax, (cx, b1_y), (cx, b2_y + b2_h))   # b1 bottom → b2 top
-    add_box(ax, (mid_x, b2_y), w, b2_h,
-            "Advance time and enter timestep\n(current time < end time)",
-            fc="#e8e8e8", fontsize=10)
-
-    # ── main loop: three columns ──────────────────────────────────────────────
-    h3  = 0.135
-    col_y = 0.275
-
-    add_box(ax, (left_x,  col_y), w, h3,
-            u"① Conservative DBS\ntransport\n"
-            r"$\partial_t(\varepsilon C_i)+\nabla\!\cdot(\phi C_i)$" + "\n"
-            r"$-\nabla\!\cdot(\varepsilon D_i\nabla C_i)=0$",
-            fc="#dff3df", fontsize=9)
-
-    add_box(ax, (mid_x,   col_y), w, h3,
-            u"② Prepare PHREEQCRM input\n"
-            "Copy aqueous and surface fields;\n"
-            r"refresh fixed $\varepsilon$; clip negative" + "\n"
-            "aqueous values; push state",
-            fc="#fff1cc", fontsize=8.5)
-
-    add_box(ax, (right_x, col_y), w, h3,
-            u"③ PHREEQCRM runCells()\n"
-            "Cell-local aqueous speciation\n"
-            "and surface complexation",
-            fc="#ffd9cc", fontsize=9)
-
-    col_cy = col_y + h3 / 2   # vertical centre of the three boxes
-
-    # loop entry: b2 bottom → ① top (diagonal)
-    add_arrow(ax, (cx, b2_y), (left_x + w / 2, col_y + h3))
-
-    # ① → ②  and  ② → ③
-    add_arrow(ax, (left_x + w, col_cy), (mid_x,   col_cy))
-    add_arrow(ax, (mid_x  + w, col_cy), (right_x, col_cy))
-
-    # ── ③ → ④ : L-shaped (straight down, then left) ───────────────────────────
-    b5_bot   = (right_x + w / 2, col_y)          # ③ bottom centre
-    b6_y     = 0.125; b6_h = 0.115
-    b6_cy    = b6_y + b6_h / 2                   # ④ vertical centre  (= 0.1825)
-    b6_right = (mid_x + w, b6_cy)                # ④ right edge at that height
-    corner   = (b5_bot[0], b6_cy)                # turn point
-
-    add_elbow(ax, b5_bot, corner, b6_right)
-
-    # ── pull-back box ─────────────────────────────────────────────────────────
-    add_box(ax, (mid_x, b6_y), w, b6_h,
-            u"④ Return PHREEQCRM results\n"
-            "Copy updated aqueous and surface\n"
-            "species to OpenFOAM fields",
-            fc="#fff1cc", fontsize=9)
-
-    # ── write / advance box ───────────────────────────────────────────────────
-    b7_y = 0.018; b7_h = 0.072
-    add_box(ax, (mid_x, b7_y), w, b7_h,
-            u"⑤ At output times\n"
-            "Write OpenFOAM aqueous and surface fields\n"
-            "then advance to the next timestep",
-            fc="#e8e8e8", fontsize=8.5)
-
-    add_arrow(ax, (cx, b6_y), (cx, b7_y + b7_h))   # ④ → ⑤
-
-    # ── loop-back arrow ───────────────────────────────────────────────────────
-    lx         = 0.668
-    b7_right_y = b7_y + b7_h / 2      # = 0.054
-    b2_right_y = b2_y + b2_h / 2      # = 0.5275
-
-    ax.plot([mid_x + w, lx], [b7_right_y, b7_right_y],
-            color="#2b2b2b", linewidth=1.4)
-    ax.plot([lx, lx], [b7_right_y, b2_right_y],
-            color="#2b2b2b", linewidth=1.4)
-    add_arrow(ax, (lx, b2_right_y), (mid_x + w, b2_right_y))
-
-    # label placed in the clear gap between b2 bottom and the three-column tops
-    ax.text(lx + 0.013, 0.44, r"next $\Delta t$",
-            ha="left", va="center", fontsize=9, color="#444444")
-
-    # ── save ──────────────────────────────────────────────────────────────────
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT, dpi=220, facecolor="white")
+    fig.savefig(OUT, dpi=240, facecolor="white")
     plt.close(fig)
 
 
