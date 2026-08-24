@@ -1,8 +1,9 @@
 \begin{abstract}
 We present a conservative Darcy-Brinkman-Stokes (DBS) formulation for
 PHREEQC-coupled reactive transport with cell-based surface complexation in
-image-based porous media. The formulation transports dissolved species in the
-physical mobile-water fraction, stores adsorbed species as conservative
+image-based porous media. Implemented in GeoChemFoam, an OpenFOAM-based
+reactive-transport framework, the formulation transports dissolved species in
+the physical mobile-water fraction, stores adsorbed species as conservative
 cell-scale surface inventories, and couples each reactive cell to PHREEQC
 without ad hoc clipping or source redistribution. This provides a direct way to
 represent unresolved internal reactive area in segmented microporous phases,
