@@ -149,6 +149,7 @@ def circular_post_series(
 
 def plot_sphere_render(ax, case_dir: Path) -> None:
     """Render the exterior faces of the voxelized sphere."""
+    ax.computed_zorder = False
     volume, meta = load_generated_case(case_dir)
     solid_mask = volume == int(meta["solid_value"])
     cropped, (z0, y0, x0) = crop_mask(solid_mask, pad=1)
@@ -162,6 +163,7 @@ def plot_sphere_render(ax, case_dir: Path) -> None:
             edgecolors="#56636c",
             linewidths=0.08,
             zsort="average",
+            zorder=2,
         )
     )
 
@@ -169,6 +171,22 @@ def plot_sphere_render(ax, case_dir: Path) -> None:
     cx = meta["nx"] / 2.0 - x0
     cy = meta["ny"] / 2.0 - y0
     cz = meta["nz"] / 2.0 - z0
+    u = np.linspace(0.0, 2.0 * np.pi, 49)
+    v = np.linspace(0.0, np.pi, 25)
+    sphere_x = cx + radius * np.outer(np.cos(u), np.sin(v))
+    sphere_y = cy + radius * np.outer(np.sin(u), np.sin(v))
+    sphere_z = cz + radius * np.outer(np.ones_like(u), np.cos(v))
+    ax.plot_surface(
+        sphere_x,
+        sphere_y,
+        sphere_z,
+        color="#d32f2f",
+        alpha=0.20,
+        linewidth=0.0,
+        antialiased=True,
+        shade=True,
+        zorder=4,
+    )
     margin = 1.5
     ax.set_xlim(cx - radius - margin, cx + radius + margin)
     ax.set_ylim(cy - radius - margin, cy + radius + margin)
