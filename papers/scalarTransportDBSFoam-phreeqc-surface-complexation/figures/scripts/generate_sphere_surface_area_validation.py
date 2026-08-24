@@ -10,9 +10,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import ListedColormap
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Circle
 from matplotlib.ticker import FuncFormatter
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -37,6 +39,8 @@ METHOD_STYLE = {
         "linestyle": "-",
     },
 }
+
+GEOMETRY_CMAP = ListedColormap(["#7d8b94", "#ffffff"])
 
 def percent_fmt(value: float, _: int) -> str:
     return f"{100.0 * value:.0f}%"
@@ -73,27 +77,34 @@ def load_generated_case(case_dir: Path) -> tuple[np.ndarray, dict]:
     return volume, meta
 
 
-def boundary_mask(mask: np.ndarray) -> np.ndarray:
-    interior = mask.copy()
-    for axis in range(3):
-        forward = np.roll(mask, -1, axis=axis)
-        backward = np.roll(mask, 1, axis=axis)
-        slicer_first = [slice(None)] * 3
-        slicer_last = [slice(None)] * 3
-        slicer_first[axis] = 0
-        slicer_last[axis] = -1
-        forward[tuple(slicer_last)] = False
-        backward[tuple(slicer_first)] = False
-        interior &= forward & backward
-    return mask & ~interior
-
-
 def crop_mask(mask: np.ndarray, pad: int = 1) -> tuple[np.ndarray, tuple[int, int, int]]:
     coords = np.argwhere(mask)
     mins = np.maximum(coords.min(axis=0) - pad, 0)
     maxs = np.minimum(coords.max(axis=0) + pad + 1, mask.shape)
     cropped = mask[mins[0]:maxs[0], mins[1]:maxs[1], mins[2]:maxs[2]]
     return cropped, (int(mins[0]), int(mins[1]), int(mins[2]))
+
+
+def exposed_voxel_faces(mask_xyz: np.ndarray) -> tuple[list[list[tuple[float, float, float]]], list[str]]:
+    """Return only exterior voxel faces, avoiding mplot3d cutaway artefacts."""
+    faces: list[list[tuple[float, float, float]]] = []
+    colors: list[str] = []
+    directions = (
+        ((-1, 0, 0), lambda x, y, z: [(x, y, z), (x, y + 1, z), (x, y + 1, z + 1), (x, y, z + 1)], "#73818a"),
+        ((1, 0, 0), lambda x, y, z: [(x + 1, y, z), (x + 1, y, z + 1), (x + 1, y + 1, z + 1), (x + 1, y + 1, z)], "#97a4ac"),
+        ((0, -1, 0), lambda x, y, z: [(x, y, z), (x, y, z + 1), (x + 1, y, z + 1), (x + 1, y, z)], "#68767f"),
+        ((0, 1, 0), lambda x, y, z: [(x, y + 1, z), (x + 1, y + 1, z), (x + 1, y + 1, z + 1), (x, y + 1, z + 1)], "#8997a0"),
+        ((0, 0, -1), lambda x, y, z: [(x, y, z), (x + 1, y, z), (x + 1, y + 1, z), (x, y + 1, z)], "#5f6c75"),
+        ((0, 0, 1), lambda x, y, z: [(x, y, z + 1), (x, y + 1, z + 1), (x + 1, y + 1, z + 1), (x + 1, y, z + 1)], "#aab5bc"),
+    )
+    nx, ny, nz = mask_xyz.shape
+    for x, y, z in np.argwhere(mask_xyz):
+        for (dx, dy, dz), vertices, color in directions:
+            xn, yn, zn = x + dx, y + dy, z + dz
+            if not (0 <= xn < nx and 0 <= yn < ny and 0 <= zn < nz) or not mask_xyz[xn, yn, zn]:
+                faces.append(vertices(float(x), float(y), float(z)))
+                colors.append(color)
+    return faces, colors
 
 
 def make_circle_image(radius_over_dx: float, sigma_vox: float = 1.5) -> tuple[np.ndarray, dict[str, float]]:
@@ -136,50 +147,42 @@ def circular_post_series(
     return series
 
 
-def plot_center_slice(ax, case_dir: Path) -> None:
+def plot_sphere_render(ax, case_dir: Path) -> None:
+    """Render the exterior faces of the voxelized sphere."""
     volume, meta = load_generated_case(case_dir)
     solid_mask = volume == int(meta["solid_value"])
-    zc = meta["nz"] // 2
-    slice_mask = solid_mask[zc, :, :]
-    cropped, (_, y0, x0) = crop_mask(slice_mask[np.newaxis, :, :], pad=2)
-    slice_crop = cropped[0]
+    cropped, (z0, y0, x0) = crop_mask(solid_mask, pad=1)
+    solid_xyz = np.transpose(cropped, (2, 1, 0))
 
-    ny, nx = slice_crop.shape
-    extent = (0, nx, 0, ny)
-    image = np.where(slice_crop, 0.0, 1.0)
-    ax.imshow(
-        image,
-        cmap="gray",
-        origin="lower",
-        interpolation="nearest",
-        extent=extent,
-        vmin=0.0,
-        vmax=1.0,
-    )
-
-    cx = meta["nx"] / 2.0 - x0
-    cy = meta["ny"] / 2.0 - y0
-    radius_vox = float(meta["radius_over_dx"])
-    ax.add_patch(
-        Circle(
-            (cx, cy),
-            radius_vox,
-            facecolor="none",
-            edgecolor="#c62828",
-            linewidth=2.0,
+    faces, facecolors = exposed_voxel_faces(solid_xyz)
+    ax.add_collection3d(
+        Poly3DCollection(
+            faces,
+            facecolors=facecolors,
+            edgecolors="#56636c",
+            linewidths=0.08,
+            zsort="average",
         )
     )
 
-    ax.set_xlim(0, nx)
-    ax.set_ylim(0, ny)
-    ax.set_aspect("equal")
+    radius = float(meta["radius_over_dx"])
+    cx = meta["nx"] / 2.0 - x0
+    cy = meta["ny"] / 2.0 - y0
+    cz = meta["nz"] / 2.0 - z0
+    margin = 1.5
+    ax.set_xlim(cx - radius - margin, cx + radius + margin)
+    ax.set_ylim(cy - radius - margin, cy + radius + margin)
+    ax.set_zlim(cz - radius - margin, cz + radius + margin)
+    ax.set_box_aspect((1, 1, 1), zoom=1.35)
+    ax.set_proj_type("ortho")
+    ax.view_init(elev=24, azim=-52)
     ax.set_axis_off()
-    ax.text(
+    ax.text2D(
         0.03,
         0.92,
         rf"$R/\Delta x = {int(meta['radius_over_dx'])}$",
         transform=ax.transAxes,
-        fontsize=9,
+        fontsize=10.5,
         bbox=dict(facecolor="white", edgecolor="#cccccc", alpha=0.92, boxstyle="round,pad=0.25"),
     )
 
@@ -193,7 +196,7 @@ def plot_circle_slice(ax, radius_over_dx: int, sigma_vox: float = 1.5) -> None:
     image = np.where(circle_crop, 0.0, 1.0)
     ax.imshow(
         image,
-        cmap="gray",
+        cmap=GEOMETRY_CMAP,
         origin="lower",
         interpolation="nearest",
         extent=(0, nx, 0, ny),
@@ -222,7 +225,7 @@ def plot_circle_slice(ax, radius_over_dx: int, sigma_vox: float = 1.5) -> None:
         0.92,
         rf"$R/\Delta x = {radius_over_dx}$",
         transform=ax.transAxes,
-        fontsize=9,
+        fontsize=10.5,
         bbox=dict(facecolor="white", edgecolor="#cccccc", alpha=0.92, boxstyle="round,pad=0.25"),
     )
 
@@ -236,7 +239,7 @@ def plot_error_series(
     ylabel: str,
     ylim: tuple[float, float],
 ) -> None:
-    ax.axhline(0.0, color="#666666", lw=1.0, ls="--", zorder=0)
+    ax.axhline(0.0, color="#8a8a8a", lw=0.9, ls=(0, (4, 3)), zorder=0)
     for method in method_order:
         if method not in series:
             continue
@@ -261,9 +264,13 @@ def plot_error_series(
     ax.set_ylabel(ylabel)
     ax.yaxis.set_major_formatter(FuncFormatter(percent_fmt_decimal))
     ax.set_ylim(*ylim)
-    ax.grid(True, axis="y", color="#dddddd", lw=0.8)
-    ax.grid(False, axis="x")
-    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.grid(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#4a4a4a")
+    ax.spines["bottom"].set_color("#4a4a4a")
+    ax.tick_params(direction="out", length=4, width=0.8, colors="#333333")
+    ax.set_title(title, fontsize=11.5, fontweight="bold", pad=8)
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -276,12 +283,21 @@ def main() -> None:
     series = load_series_from_results(args.results_dir)
     circle_series = circular_post_series(snappy_csv=args.circular_post_snappy_csv)
 
-    fig = plt.figure(figsize=(13.4, 10.0), constrained_layout=True)
+    plt.rcParams.update(
+        {
+            "font.size": 10.5,
+            "axes.labelsize": 10.5,
+            "xtick.labelsize": 9.5,
+            "ytick.labelsize": 9.5,
+            "legend.fontsize": 10.0,
+        }
+    )
+    fig = plt.figure(figsize=(8.0, 6.2), constrained_layout=True)
     grid = GridSpec(
         3,
         3,
         figure=fig,
-        width_ratios=[1.0, 1.0, 1.7],
+        width_ratios=[1.0, 1.0, 1.65],
         height_ratios=[1.0, 1.0, 0.08],
     )
 
@@ -290,14 +306,14 @@ def main() -> None:
         circle_ax = fig.add_subplot(post_grid[0, col])
         plot_circle_slice(circle_ax, radius)
         if col == 0:
-            circle_ax.set_title("2D circular-post slices", fontsize=10, fontweight="bold", pad=10)
+            circle_ax.set_title("2D circular-post slices", fontsize=11.5, fontweight="bold", pad=10)
 
     sphere_grid = grid[1, 0:2].subgridspec(1, 2, wspace=0.08)
     for col, level in enumerate(("sphere_r08", "sphere_r16")):
-        sphere_ax = fig.add_subplot(sphere_grid[0, col])
-        plot_center_slice(sphere_ax, args.generated_dir / level)
+        sphere_ax = fig.add_subplot(sphere_grid[0, col], projection="3d")
+        plot_sphere_render(sphere_ax, args.generated_dir / level)
         if col == 0:
-            sphere_ax.set_title("3D sphere centre slices", fontsize=10, fontweight="bold", pad=10)
+            sphere_ax.set_title("3D voxelized spheres", fontsize=11.5, fontweight="bold", pad=10)
 
     circle_error_ax = fig.add_subplot(grid[0, 2])
     plot_error_series(
@@ -307,7 +323,7 @@ def main() -> None:
         "2D circular-post area error",
         r"Post resolution $R / \Delta x$",
         "Relative error",
-        (-0.01, 0.01),
+        (-0.0025, 0.0025),
     )
 
     sphere_error_ax = fig.add_subplot(grid[1, 2])
@@ -318,15 +334,13 @@ def main() -> None:
         "3D sphere area error",
         r"Sphere resolution $R / \Delta x$",
         "Relative error",
-        (-0.04, 0.03),
+        (-0.028, 0.012),
     )
 
     legend_ax = fig.add_subplot(grid[2, :])
     legend_ax.set_axis_off()
     handles, labels = circle_error_ax.get_legend_handles_labels()
-    legend = legend_ax.legend(handles, labels, loc="center", ncol=len(labels), frameon=True)
-    legend.get_frame().set_edgecolor("#cccccc")
-    legend.get_frame().set_alpha(0.95)
+    legend_ax.legend(handles, labels, loc="center", ncol=len(labels), frameon=False)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.output, dpi=360)
