@@ -10,9 +10,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap, to_hex, to_rgb
 from matplotlib.gridspec import GridSpec
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Patch
 from matplotlib.ticker import FuncFormatter
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
@@ -41,6 +41,9 @@ METHOD_STYLE = {
 }
 
 GEOMETRY_CMAP = ListedColormap(["#7d8b94", "#ffffff"])
+VOXEL_OUTSIDE_COLOR = "#35789a"
+VOXEL_INSIDE_COLOR = "#d99a32"
+ANALYTIC_SPHERE_COLOR = "#c62828"
 
 def percent_fmt(value: float, _: int) -> str:
     return f"{100.0 * value:.0f}%"
@@ -85,25 +88,38 @@ def crop_mask(mask: np.ndarray, pad: int = 1) -> tuple[np.ndarray, tuple[int, in
     return cropped, (int(mins[0]), int(mins[1]), int(mins[2]))
 
 
-def exposed_voxel_faces(mask_xyz: np.ndarray) -> tuple[list[list[tuple[float, float, float]]], list[str]]:
-    """Return only exterior voxel faces, avoiding mplot3d cutaway artefacts."""
+def exposed_voxel_faces(
+    mask_xyz: np.ndarray,
+    center: tuple[float, float, float],
+    radius: float,
+) -> tuple[list[list[tuple[float, float, float]]], list[str]]:
+    """Return exterior faces colored by signed offset from the exact sphere."""
     faces: list[list[tuple[float, float, float]]] = []
     colors: list[str] = []
     directions = (
-        ((-1, 0, 0), lambda x, y, z: [(x, y, z), (x, y + 1, z), (x, y + 1, z + 1), (x, y, z + 1)], "#73818a"),
-        ((1, 0, 0), lambda x, y, z: [(x + 1, y, z), (x + 1, y, z + 1), (x + 1, y + 1, z + 1), (x + 1, y + 1, z)], "#97a4ac"),
-        ((0, -1, 0), lambda x, y, z: [(x, y, z), (x, y, z + 1), (x + 1, y, z + 1), (x + 1, y, z)], "#68767f"),
-        ((0, 1, 0), lambda x, y, z: [(x, y + 1, z), (x + 1, y + 1, z), (x + 1, y + 1, z + 1), (x, y + 1, z + 1)], "#8997a0"),
-        ((0, 0, -1), lambda x, y, z: [(x, y, z), (x + 1, y, z), (x + 1, y + 1, z), (x, y + 1, z)], "#5f6c75"),
-        ((0, 0, 1), lambda x, y, z: [(x, y, z + 1), (x, y + 1, z + 1), (x + 1, y + 1, z + 1), (x + 1, y, z + 1)], "#aab5bc"),
+        ((-1, 0, 0), lambda x, y, z: [(x, y, z), (x, y + 1, z), (x, y + 1, z + 1), (x, y, z + 1)], 0.86),
+        ((1, 0, 0), lambda x, y, z: [(x + 1, y, z), (x + 1, y, z + 1), (x + 1, y + 1, z + 1), (x + 1, y + 1, z)], 1.06),
+        ((0, -1, 0), lambda x, y, z: [(x, y, z), (x, y, z + 1), (x + 1, y, z + 1), (x + 1, y, z)], 0.78),
+        ((0, 1, 0), lambda x, y, z: [(x, y + 1, z), (x + 1, y + 1, z), (x + 1, y + 1, z + 1), (x, y + 1, z + 1)], 0.96),
+        ((0, 0, -1), lambda x, y, z: [(x, y, z), (x + 1, y, z), (x + 1, y + 1, z), (x, y + 1, z)], 0.72),
+        ((0, 0, 1), lambda x, y, z: [(x, y, z + 1), (x, y + 1, z + 1), (x + 1, y + 1, z + 1), (x + 1, y, z + 1)], 1.15),
     )
+    center_array = np.asarray(center)
     nx, ny, nz = mask_xyz.shape
     for x, y, z in np.argwhere(mask_xyz):
-        for (dx, dy, dz), vertices, color in directions:
+        for (dx, dy, dz), vertices, light_factor in directions:
             xn, yn, zn = x + dx, y + dy, z + dz
             if not (0 <= xn < nx and 0 <= yn < ny and 0 <= zn < nz) or not mask_xyz[xn, yn, zn]:
-                faces.append(vertices(float(x), float(y), float(z)))
-                colors.append(color)
+                face = vertices(float(x), float(y), float(z))
+                face_center = np.mean(face, axis=0)
+                base_color = (
+                    VOXEL_OUTSIDE_COLOR
+                    if np.linalg.norm(face_center - center_array) >= radius
+                    else VOXEL_INSIDE_COLOR
+                )
+                shaded = np.clip(np.asarray(to_rgb(base_color)) * light_factor, 0.0, 1.0)
+                faces.append(face)
+                colors.append(to_hex(shaded))
     return faces, colors
 
 
@@ -155,7 +171,11 @@ def plot_sphere_render(ax, case_dir: Path) -> None:
     cropped, (z0, y0, x0) = crop_mask(solid_mask, pad=1)
     solid_xyz = np.transpose(cropped, (2, 1, 0))
 
-    faces, facecolors = exposed_voxel_faces(solid_xyz)
+    radius = float(meta["radius_over_dx"])
+    cx = meta["nx"] / 2.0 - x0
+    cy = meta["ny"] / 2.0 - y0
+    cz = meta["nz"] / 2.0 - z0
+    faces, facecolors = exposed_voxel_faces(solid_xyz, (cx, cy, cz), radius)
     ax.add_collection3d(
         Poly3DCollection(
             faces,
@@ -167,10 +187,6 @@ def plot_sphere_render(ax, case_dir: Path) -> None:
         )
     )
 
-    radius = float(meta["radius_over_dx"])
-    cx = meta["nx"] / 2.0 - x0
-    cy = meta["ny"] / 2.0 - y0
-    cz = meta["nz"] / 2.0 - z0
     u = np.linspace(0.0, 2.0 * np.pi, 49)
     v = np.linspace(0.0, np.pi, 25)
     sphere_x = cx + radius * np.outer(np.cos(u), np.sin(v))
@@ -180,8 +196,8 @@ def plot_sphere_render(ax, case_dir: Path) -> None:
         sphere_x,
         sphere_y,
         sphere_z,
-        color="#d32f2f",
-        alpha=0.20,
+        color=ANALYTIC_SPHERE_COLOR,
+        alpha=0.14,
         linewidth=0.0,
         antialiased=True,
         shade=True,
@@ -310,13 +326,13 @@ def main() -> None:
             "legend.fontsize": 10.0,
         }
     )
-    fig = plt.figure(figsize=(8.0, 6.2), constrained_layout=True)
+    fig = plt.figure(figsize=(8.0, 6.4), constrained_layout=True)
     grid = GridSpec(
         3,
         3,
         figure=fig,
         width_ratios=[1.0, 1.0, 1.65],
-        height_ratios=[1.0, 1.0, 0.08],
+        height_ratios=[1.0, 1.0, 0.24],
     )
 
     post_grid = grid[0, 0:2].subgridspec(1, 2, wspace=0.08)
@@ -358,7 +374,30 @@ def main() -> None:
     legend_ax = fig.add_subplot(grid[2, :])
     legend_ax.set_axis_off()
     handles, labels = circle_error_ax.get_legend_handles_labels()
-    legend_ax.legend(handles, labels, loc="center", ncol=len(labels), frameon=False)
+    geometry_handles = [
+        Patch(facecolor=VOXEL_OUTSIDE_COLOR, label="outside sphere"),
+        Patch(facecolor=VOXEL_INSIDE_COLOR, label="inside sphere"),
+        Patch(facecolor=ANALYTIC_SPHERE_COLOR, alpha=0.22, label="analytic sphere"),
+    ]
+    geometry_legend = legend_ax.legend(
+        handles=geometry_handles,
+        loc="center",
+        bbox_to_anchor=(0.5, 0.75),
+        ncol=3,
+        frameon=False,
+        columnspacing=1.2,
+        handlelength=1.3,
+        fontsize=9.2,
+    )
+    legend_ax.add_artist(geometry_legend)
+    legend_ax.legend(
+        handles,
+        labels,
+        loc="center",
+        bbox_to_anchor=(0.5, 0.18),
+        ncol=len(labels),
+        frameon=False,
+    )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(args.output, dpi=360)
