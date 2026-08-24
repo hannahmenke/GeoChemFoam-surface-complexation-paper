@@ -6,7 +6,6 @@ repo_root="$(cd "$(dirname "$0")"/../../../.. && pwd)"
 case_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades"
 png_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png"
 scripts_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts"
-connectivity_image="$repo_root/images/raw/Est_3phase500cubed4micron.raw.tar.gz"
 
 nx="$(<"$case_dir/system/Nx1")"
 ny="$(<"$case_dir/system/Ny1")"
@@ -68,10 +67,11 @@ python "$scripts_dir/validate_estaillades_checkpoint.py" \
 "$scripts_dir/render_3d_volume_pyvista_egl.sh" \
   --case-dir "$case_dir" \
   --time-name 40 \
+  --geometry-render-mode exterior_faces \
   --aqueous-field Sr+2 \
   --aqueous-scale 1e-4 \
-  --aqueous-mask-to-pore \
-  --aqueous-cmap yellow_fade \
+  --aqueous-mask-to-mobile \
+  --aqueous-cmap cividis \
   --aqueous-title "Sr+2 / C_in" \
   --aqueous-no-shade \
   --aqueous-opacity-profile soft \
@@ -79,15 +79,12 @@ python "$scripts_dir/validate_estaillades_checkpoint.py" \
   --second-aqueous-scale 1e-3 \
   --second-aqueous-title "Ca+2 / C_init" \
   --second-aqueous-cmap soft_blues \
+  --second-aqueous-no-shade \
   --surface-field Surf_aSr+ \
   --surface-baseline-time 0 \
-  --surface-mask-field aSurf \
-  --connectivity-image "$connectivity_image" \
-  --connectivity-pore-value 1 \
-  --surface-render-mode interface_surface \
-  --surface-interface-clip-fraction 0.60 \
-  --surface-log-scale \
-  --surface-title "Surf_aSr+" \
+  --surface-render-mode volume \
+  --surface-normalize-to-max \
+  --surface-title "Norm. ΔSurf_aSr+" \
   --output "$png_dir/fig04_3d_estaillades.png"
 
 python "$scripts_dir/generate_estaillades_temporal_plot.py" \

@@ -6,8 +6,9 @@ import argparse
 import tarfile
 from pathlib import Path
 
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 from scipy.ndimage import gaussian_filter
 from scipy import ndimage as ndi
 from scipy.spatial import cKDTree
@@ -43,10 +44,59 @@ YELLOW_FADE_CMAP = LinearSegmentedColormap.from_list(
         "#f4c400",
     ],
 )
+PHASE_GREYS_CMAP = ListedColormap(["#fafafa", "#9a9a9a", "#111111"])
 SECOND_AQUEOUS_OPACITY = [0.0, 0.0, 0.004, 0.010, 0.022, 0.045, 0.085, 0.140]
 AQUEOUS_OPACITY_SOFT = [0.0, 0.002, 0.006, 0.015, 0.035, 0.070, 0.120, 0.180]
 AQUEOUS_OPACITY_FLAT = [0.015, 0.020, 0.030, 0.045, 0.065, 0.090, 0.120, 0.160]
 AQUEOUS_OPACITY_DENSE = [0.040, 0.055, 0.075, 0.100, 0.130, 0.165, 0.205, 0.250]
+
+
+def overlay_grayscale_geometry_legend(image_path: Path) -> None:
+    image = Image.open(image_path).convert("RGB")
+    draw = ImageDraw.Draw(image)
+    if image.width == image.height:
+        panel_width = image.width // 2
+        panel_height = image.height // 2
+    else:
+        panel_width = image.width // 3
+        panel_height = image.height
+    scale = min(panel_width, panel_height) / 1600.0
+    try:
+        font = ImageFont.truetype("DejaVuSansMono.ttf", max(20, round(46 * scale)))
+    except OSError:
+        font = ImageFont.load_default()
+
+    box_x = round(82 * scale)
+    box_size = round(44 * scale)
+    text_x = box_x + box_size + round(18 * scale)
+    top_y = panel_height - round(270 * scale)
+    line_gap = round(66 * scale)
+    entries = [
+        ("#fafafa", "Solid"),
+        ("#9a9a9a", "Micropore"),
+        ("#111111", "Pore"),
+    ]
+    draw.rounded_rectangle(
+        (
+            round(50 * scale),
+            top_y - round(30 * scale),
+            round(455 * scale),
+            top_y + 3 * line_gap + round(18 * scale),
+        ),
+        radius=max(3, round(10 * scale)),
+        fill=(255, 255, 255),
+    )
+    for idx, (fill, label) in enumerate(entries):
+        y = top_y + idx * line_gap
+        draw.rectangle(
+            (box_x, y, box_x + box_size, y + box_size),
+            fill=fill,
+            outline="#000000",
+            width=2,
+        )
+        draw.text((text_x, y - 2), label, fill="#000000", font=font)
+
+    image.save(image_path)
 
 
 def partition_sizes(total: int, n_parts: int) -> tuple[list[int], list[int]]:
@@ -260,6 +310,37 @@ def classify_geometry(
     return labels
 
 
+def make_exterior_face_mesh(
+    labels_2d: np.ndarray,
+    axis: str,
+    index: int,
+    nx: int,
+    ny: int,
+    nz: int,
+) -> pv.StructuredGrid:
+    if axis == "x":
+        y, z = np.meshgrid(np.arange(ny + 1), np.arange(nz + 1), indexing="ij")
+        x = np.full_like(y, index, dtype=np.float32)
+        y = y.astype(np.float32)
+        z = z.astype(np.float32)
+    elif axis == "y":
+        x, z = np.meshgrid(np.arange(nx + 1), np.arange(nz + 1), indexing="ij")
+        y = np.full_like(x, index, dtype=np.float32)
+        x = x.astype(np.float32)
+        z = z.astype(np.float32)
+    elif axis == "z":
+        x, y = np.meshgrid(np.arange(nx + 1), np.arange(ny + 1), indexing="ij")
+        z = np.full_like(x, index, dtype=np.float32)
+        x = x.astype(np.float32)
+        y = y.astype(np.float32)
+    else:
+        raise ValueError(axis)
+
+    grid = pv.StructuredGrid(x, y, z)
+    grid.cell_data["phase"] = labels_2d.astype(float).flatten(order="F")
+    return grid
+
+
 def add_geometry_panel(
     plotter: pv.Plotter,
     labels: np.ndarray,
@@ -268,42 +349,73 @@ def add_geometry_panel(
     ny: int,
     nz: int,
     panel_label: str = "a",
+    render_mode: str = "translucent_volume",
 ) -> None:
     plotter.subplot(*subplot)
     plotter.set_background("white")
 
-    image = pv.ImageData(dimensions=(nx + 1, ny + 1, nz + 1))
-    image.cell_data["phase"] = labels.flatten(order="F")
-
-    phase_defs = [
-        (0, "Solid", "#c94f4f", 0.28),
-        (1, "Micropore", "#1a5caa", 0.22),
-        (2, "Pore", "#555555", 0.14),
-    ]
-
-    present_phases = []
-    for phase_value, name, color, opacity in phase_defs:
-        thresholded = image.threshold(
-            [phase_value - 0.1, phase_value + 0.1],
-            scalars="phase",
-            preference="cell",
-        )
-        if thresholded.n_cells == 0:
-            continue
-        present_phases.append((name, color))
-        plotter.add_mesh(
-            thresholded.extract_surface(algorithm="dataset_surface"),
-            color=color,
-            opacity=opacity,
-            smooth_shading=False,
-            show_scalar_bar=False,
-            ambient=0.35,
-            diffuse=0.75,
-            specular=0.05,
-        )
+    if render_mode == "exterior_faces":
+        faces = [
+            make_exterior_face_mesh(labels[0, :, :], "x", 0, nx, ny, nz),
+            make_exterior_face_mesh(labels[nx - 1, :, :], "x", nx, nx, ny, nz),
+            make_exterior_face_mesh(labels[:, 0, :], "y", 0, nx, ny, nz),
+            make_exterior_face_mesh(labels[:, ny - 1, :], "y", ny, nx, ny, nz),
+            make_exterior_face_mesh(labels[:, :, 0], "z", 0, nx, ny, nz),
+            make_exterior_face_mesh(labels[:, :, nz - 1], "z", nz, nx, ny, nz),
+        ]
+        for face in faces:
+            plotter.add_mesh(
+                face,
+                scalars="phase",
+                categories=True,
+                cmap=PHASE_GREYS_CMAP,
+                clim=(0.0, 2.0),
+                opacity=1.0,
+                show_scalar_bar=False,
+                smooth_shading=False,
+                show_edges=False,
+                ambient=0.35,
+                diffuse=0.75,
+                specular=0.02,
+            )
+        present_phases = [
+            ("Solid", "#fafafa"),
+            ("Micropore", "#9a9a9a"),
+            ("Pore", "#111111"),
+        ]
+        outline = pv.Cube(bounds=(0.0, nx, 0.0, ny, 0.0, nz))
+    else:
+        image = pv.ImageData(dimensions=(nx + 1, ny + 1, nz + 1))
+        image.cell_data["phase"] = labels.flatten(order="F")
+        phase_defs = [
+            (0, "Solid", "#c94f4f", 0.28),
+            (1, "Micropore", "#1a5caa", 0.22),
+            (2, "Pore", "#555555", 0.14),
+        ]
+        present_phases = []
+        for phase_value, name, color, opacity in phase_defs:
+            thresholded = image.threshold(
+                [phase_value - 0.1, phase_value + 0.1],
+                scalars="phase",
+                preference="cell",
+            )
+            if thresholded.n_cells == 0:
+                continue
+            present_phases.append((name, color))
+            plotter.add_mesh(
+                thresholded.extract_surface(algorithm="dataset_surface"),
+                color=color,
+                opacity=opacity,
+                smooth_shading=False,
+                show_scalar_bar=False,
+                ambient=0.35,
+                diffuse=0.75,
+                specular=0.05,
+            )
+        outline = image.outline()
 
     plotter.add_mesh(
-        image.outline(),
+        outline,
         color="#444444",
         line_width=1.0,
         opacity=0.35,
@@ -318,15 +430,16 @@ def add_geometry_panel(
     # "■ Solid"=8, "■ Micropore"=12, "■ Pore"=7 chars in Courier monospace.
     # Equal visual gap between end-of-item and start-of-next.
     legend_items = present_phases
-    plotter.add_legend(
-        labels=[[name, color] for name, color in legend_items],
-        face="rectangle",
-        bcolor=(0.96, 0.96, 0.96),
-        border=False,
-        size=(0.22, 0.12),
-        loc="lower left",
-        font_family="courier",
-    )
+    if render_mode != "exterior_faces":
+        plotter.add_legend(
+            labels=[[name, color] for name, color in legend_items],
+            face="rectangle",
+            bcolor=(0.96, 0.96, 0.96),
+            border=False,
+            size=(0.22, 0.12),
+            loc="lower left",
+            font_family="courier",
+        )
     plotter.show_bounds(
         grid="back",
         location="outer",
@@ -733,6 +846,7 @@ def main() -> None:
     parser.add_argument("--aqueous-field", default="Ca+2")
     parser.add_argument("--aqueous-scale", type=float, default=None)
     parser.add_argument("--aqueous-mask-to-pore", action="store_true")
+    parser.add_argument("--aqueous-mask-to-mobile", action="store_true")
     parser.add_argument("--aqueous-log-scale", action="store_true")
     parser.add_argument("--aqueous-normalized-floor", type=float, default=0.0)
     parser.add_argument(
@@ -754,8 +868,14 @@ def main() -> None:
     parser.add_argument("--lower-quantile", type=float, default=0.01)
     parser.add_argument("--upper-quantile", type=float, default=0.995)
     parser.add_argument("--surface-log-scale", action="store_true")
+    parser.add_argument("--surface-normalize-to-max", action="store_true")
     parser.add_argument("--solid-threshold", type=float, default=1.0e-3)
     parser.add_argument("--pore-threshold", type=float, default=0.9)
+    parser.add_argument(
+        "--geometry-render-mode",
+        choices=("translucent_volume", "exterior_faces"),
+        default="translucent_volume",
+    )
     parser.add_argument("--aqueous-title", default=None)
     parser.add_argument("--aqueous-cmap", default="cividis")
     parser.add_argument("--aqueous-no-shade", action="store_true")
@@ -779,6 +899,11 @@ def main() -> None:
     parser.add_argument("--second-aqueous-cmap", default="soft_blues")
     parser.add_argument("--second-aqueous-no-shade", action="store_true")
     args = parser.parse_args()
+
+    if args.aqueous_mask_to_pore and args.aqueous_mask_to_mobile:
+        parser.error("choose only one aqueous support mask")
+    if args.surface_log_scale and args.surface_normalize_to_max:
+        parser.error("surface log scaling and max normalization are mutually exclusive")
 
     pv.OFF_SCREEN = True
 
@@ -816,7 +941,12 @@ def main() -> None:
         surface = np.where(surface >= args.surface_floor, surface, 0.0)
 
     pore_mask = geometry_field >= args.pore_threshold
-    if args.aqueous_mask_to_pore:
+    mobile_mask = geometry_field > args.solid_threshold
+    if args.aqueous_mask_to_mobile:
+        aqueous = np.where(mobile_mask, aqueous, 0.0)
+        if second_aqueous is not None:
+            second_aqueous = np.where(mobile_mask, second_aqueous, 0.0)
+    elif args.aqueous_mask_to_pore:
         aqueous = np.where(pore_mask, aqueous, 0.0)
         if second_aqueous is not None:
             second_aqueous = np.where(pore_mask, second_aqueous, 0.0)
@@ -829,7 +959,7 @@ def main() -> None:
             lower_q=args.lower_quantile,
             upper_q=args.upper_quantile,
             log_scale=args.aqueous_log_scale,
-            zero_mask=args.aqueous_mask_to_pore,
+            zero_mask=args.aqueous_mask_to_pore or args.aqueous_mask_to_mobile,
         )
     if args.aqueous_normalized_floor > 0.0:
         aqueous_display = np.where(
@@ -843,13 +973,20 @@ def main() -> None:
             aqueous_active = pore_mask
         else:
             aqueous_active = np.isfinite(aqueous_display)
-    surface_display, surface_clim = prepared_field(
-        surface,
-        lower_q=args.lower_quantile,
-        upper_q=args.upper_quantile,
-        log_scale=args.surface_log_scale,
-        zero_mask=True,
-    )
+    if args.surface_normalize_to_max:
+        surface_max = float(np.max(surface))
+        if surface_max <= 0.0:
+            raise RuntimeError("surface increment has no positive values")
+        surface_display = np.clip(surface / surface_max, 0.0, 1.0)
+        surface_clim = (0.0, 1.0)
+    else:
+        surface_display, surface_clim = prepared_field(
+            surface,
+            lower_q=args.lower_quantile,
+            upper_q=args.upper_quantile,
+            log_scale=args.surface_log_scale,
+            zero_mask=True,
+        )
     geometry_labels = classify_geometry(
         geometry_field,
         solid_threshold=args.solid_threshold,
@@ -928,6 +1065,7 @@ def main() -> None:
         ny=ny,
         nz=nz,
         panel_label="(a)",
+        render_mode=args.geometry_render_mode,
     )
 
     aq_title = args.aqueous_title if args.aqueous_title else f"{args.aqueous_field} / C_in"
@@ -988,7 +1126,7 @@ def main() -> None:
                 lower_q=args.lower_quantile,
                 upper_q=args.upper_quantile,
                 log_scale=args.second_aqueous_log_scale,
-                zero_mask=args.aqueous_mask_to_pore,
+                zero_mask=args.aqueous_mask_to_pore or args.aqueous_mask_to_mobile,
             )
         if args.second_aqueous_normalized_floor > 0.0:
             second_display = np.where(
@@ -1001,7 +1139,9 @@ def main() -> None:
         second_display = np.power(second_display, 2.0)
         second_active = np.isfinite(second_display)
         if args.aqueous_render_mode == "cells":
-            if args.aqueous_mask_to_pore:
+            if args.aqueous_mask_to_mobile:
+                second_active = mobile_mask
+            elif args.aqueous_mask_to_pore:
                 second_active = pore_mask
             else:
                 second_active = np.isfinite(second_display)
@@ -1068,6 +1208,7 @@ def main() -> None:
                 nz=nz,
                 panel_label="(d)",
                 scalar_bar_fmt="%.0f" if args.surface_log_scale else "%.1f",
+                opacity=AQUEOUS_OPACITY_DENSE if args.surface_normalize_to_max else None,
             )
         else:
             add_volume_panel(
@@ -1114,6 +1255,7 @@ def main() -> None:
                 nz=nz,
                 panel_label="(c)",
                 scalar_bar_fmt="%.0f" if args.surface_log_scale else "%.1f",
+                opacity=AQUEOUS_OPACITY_DENSE if args.surface_normalize_to_max else None,
             )
         else:
             add_volume_panel(
@@ -1133,6 +1275,8 @@ def main() -> None:
 
     plotter.link_views()
     plotter.screenshot(str(args.output))
+    if args.geometry_render_mode == "exterior_faces":
+        overlay_grayscale_geometry_legend(args.output)
 
 
 if __name__ == "__main__":

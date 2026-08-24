@@ -77,9 +77,9 @@
 - section:
   - Test Cases / Large 3D Porous Media
 - content:
-  - geometry panel
-  - true 3D volume render of dissolved Sr²⁺ or Ca²⁺ (DGR scenario)
-  - true 3D volume render of adsorbed Surf_aSr⁺
+  - opaque exterior view of the three-phase segmented geometry
+  - 3D volume renders of dissolved Sr²⁺ and Ca²⁺ over the pore and micropore mobile-water domain
+  - 3D volume render of incremental adsorbed Surf_aSr⁺, normalised by its maximum at `t = 40`
 - chemistry:
   - Sr²⁺ leachate (0.1 mM inlet) invading Ca²⁺-bearing formation water (1 mM initial)
   - surface sites pre-loaded with Ca²⁺; Sr displaces Ca in chromatographic exchange

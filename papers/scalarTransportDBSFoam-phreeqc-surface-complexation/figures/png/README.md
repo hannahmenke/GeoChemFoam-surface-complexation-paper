@@ -40,7 +40,8 @@ Current staged figures:
   - lower 2x2: dissolved Mn²⁺, dissolved Mg²⁺, ΔHFO-Mn, and displaced HFO-Mg
 - `fig04_3d_estaillades.png`
   - native-500³, 64-rank 3D volume renders at t = 40 s
-  - segmented geometry, dissolved Sr²⁺ and Ca²⁺, and incremental adsorbed Sr (Surf_aSr⁺)
+  - grayscale segmented exterior, dissolved Sr²⁺ and Ca²⁺ over pore and micropore water,
+    and max-normalised incremental adsorbed Sr (Surf_aSr⁺) in the reactive phase
 - `fig07_kelvin_temporal.png`
   - two-panel temporal evolution for Kelvin Mn²⁺/Mg²⁺ competitive sorption
   - left: domain-mean Mg²⁺ excess above background and Mn²⁺/C_in vs time
