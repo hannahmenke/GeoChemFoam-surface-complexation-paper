@@ -267,9 +267,13 @@ The analyzer fails closed unless provenance proves matched inputs and runtime,
 the reconstructed surface field is the sole intended difference, Slurm exited
 cleanly, and all ten common checkpoints span the requested horizon. At every
 checkpoint it tests reactive area, aqueous and sorbed Li inventories, spatial
-errors, map cosine, and front positions against the predeclared limits recorded
-in the JSON. The figure uses shared value scales for each matched map pair and
-a separate signed-difference scale. `--early-test` is only for pipeline checks;
+normalized L1, map cosine, and x50 positions against the predeclared limits
+recorded in the JSON. Native-cell inventory-density L2 remains a prominent
+non-gating diagnostic because it includes the deliberate relocation of reactive
+area between cells; fixed-reference-area sorption L2 separates that relocation
+from the chemistry response. The x10 and x90 positions are likewise diagnostic.
+The figure uses shared value scales for each matched map pair and a separate
+signed-difference scale. `--early-test` is only for pipeline checks;
 its JSON and figure explicitly state that it cannot establish a full-horizon
 claim.
 

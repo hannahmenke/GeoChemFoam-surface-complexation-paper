@@ -128,24 +128,39 @@ class CheckpointTests(unittest.TestCase):
 
 
 class AcceptanceTests(unittest.TestCase):
-    def test_rejects_field_l2_above_one_percent(self) -> None:
-        comparison = {
+    def passing_comparison(self) -> dict[str, object]:
+        return {
             "reactive_area_relative_difference": 0.0001,
             "aqueous_li_inventory_relative_difference": 0.001,
             "sorbed_li_inventory_relative_difference": 0.001,
             "aqueous_li_normalized_l1": 0.001,
             "sorbed_li_normalized_l1": 0.001,
             "aqueous_li_field_relative_l2": 0.001,
-            "sorbed_li_field_relative_l2": 0.0101,
+            "sorbed_li_field_relative_l2": 0.045,
             "aqueous_li_cosine": 0.999,
             "sorbed_li_cosine": 0.999,
-            "aqueous_front_shift_m": {"x10": 0.0, "x50": 0.0, "x90": 5e-6},
-            "sorbed_front_shift_m": {"x10": 0.0, "x50": 0.0, "x90": 0.0},
+            "aqueous_front_shift_m": {"x10": 15e-6, "x50": 5e-6, "x90": -10e-6},
+            "sorbed_front_shift_m": {"x10": -15e-6, "x50": 0.0, "x90": 10e-6},
         }
+
+    def test_l2_and_outer_front_diagnostics_do_not_fail(self) -> None:
+        comparison = self.passing_comparison()
         checks = acceptance_checks(comparison, 5e-6)
-        self.assertTrue(checks["all_front_shifts_within_one_cell"])
-        self.assertFalse(checks["sorbed_field_l2_below_1_percent"])
+        self.assertNotIn("sorbed_field_l2_below_1_percent", checks)
+        self.assertTrue(all(checks.values()))
+
+    def test_rejects_prospective_inventory_criterion(self) -> None:
+        comparison = self.passing_comparison()
+        comparison["sorbed_li_inventory_relative_difference"] = 0.0101
+        checks = acceptance_checks(comparison, 5e-6)
+        self.assertFalse(checks["sorbed_inventory_below_1_percent"])
         self.assertFalse(all(checks.values()))
+
+    def test_rejects_x50_shift_above_one_cell(self) -> None:
+        comparison = self.passing_comparison()
+        comparison["aqueous_front_shift_m"]["x50"] = 5.01e-6
+        checks = acceptance_checks(comparison, 5e-6)
+        self.assertFalse(checks["aqueous_x50_shift_within_one_cell"])
 
 
 if __name__ == "__main__":
