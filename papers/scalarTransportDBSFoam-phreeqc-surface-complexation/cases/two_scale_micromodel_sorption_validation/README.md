@@ -251,6 +251,28 @@ surface-field hashes, runtime and solver identity, Slurm stages, and complete
 final checkpoint fields. The jobs must use the same clean paper and runtime
 commits and differ only in `ASURF_SURFACE_MODE` and their labels.
 
+After both Pe=1 DBS jobs finish cleanly, verify the complete matched pair with:
+
+```bash
+python3 scripts/analyze_matched_reconstruction_pair.py \
+  --supported-case /archive/supported/dbs-upscaled \
+  --legacy-reference-case /archive/legacy-reference/dbs-upscaled \
+  --supported-provenance /archive/supported/results/matched_run_provenance_supported.json \
+  --legacy-reference-provenance /archive/legacy-reference/results/matched_run_provenance_legacy-reference.json \
+  --output-json results/matched_reconstruction_full_horizon.json \
+  --output-figure results/matched_reconstruction_full_horizon.png
+```
+
+The analyzer fails closed unless provenance proves matched inputs and runtime,
+the reconstructed surface field is the sole intended difference, Slurm exited
+cleanly, and all ten common checkpoints span the requested horizon. At every
+checkpoint it tests reactive area, aqueous and sorbed Li inventories, spatial
+errors, map cosine, and front positions against the predeclared limits recorded
+in the JSON. The figure uses shared value scales for each matched map pair and
+a separate signed-difference scale. `--early-test` is only for pipeline checks;
+its JSON and figure explicitly state that it cannot establish a full-horizon
+claim.
+
 Preview the three `sbatch` commands without submitting with
 `SUBMIT_DRY_RUN=1 ./submit_archer_two_scale_all.sh`.
 The sweep refuses inherited smoke/restart controls such as `RT_TOTAL_TIME`,

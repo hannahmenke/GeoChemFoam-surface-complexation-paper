@@ -172,6 +172,12 @@ sync_back() {
         --include='*.out' \
         --include='poroPerm.csv' \
         --include='system/controlDict' \
+        --include='system/Nx1' \
+        --include='system/Ny1' \
+        --include='system/NPX' \
+        --include='system/NPY' \
+        --include='system/NPZ' \
+        --include='system/cellSize' \
         --exclude='*' \
         "$work_dir/$case_dir/" "$archive_dir/$case_dir/" || true
       if [ "$archive_mode" = "selected" ]; then
@@ -182,6 +188,7 @@ sync_back() {
         --include='processor*/[0-9]*/K+' \
         --include='processor*/[0-9]*/Mg+2' \
         --include='processor*/[0-9]*/Cl-' \
+        --include='processor*/[0-9]*/eps' \
         --include='processor*/[0-9]*/*aLi' \
         --include='processor*/[0-9]*/*aNa' \
         --include='processor*/[0-9]*/*aK' \
