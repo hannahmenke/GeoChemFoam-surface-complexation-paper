@@ -25,6 +25,12 @@ cases="${CASE_SWEEP:-dbs-upscaled}"
 submit_script="${SUBMIT_SCRIPT:-submit_archer_two_scale_case.slurm}"
 account="${GCFOAM_SLURM_ACCOUNT:-n03-hw}"
 qos="${GCFOAM_SLURM_QOS:-standard}"
+surface_mode="${ASURF_SURFACE_MODE:-occupancyGaussian}"
+run_label="${SURFACE_RECONSTRUCTION_LABEL:-production}"
+if [[ ! "$run_label" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+  echo "Invalid SURFACE_RECONSTRUCTION_LABEL=$run_label" >&2
+  exit 2
+fi
 
 for pe in $pes; do
   pe_tag="${pe//./p}"
@@ -42,11 +48,11 @@ for pe in $pes; do
         resolved_npy="${RESOLVED_NPY:-24}"
       fi
       tasks=$((resolved_npx * resolved_npy * ${RESOLVED_NPZ:-1}))
-      export_args="TARGET_CASE=${case_name},TARGET_PE=${pe},RESOLVED_COARSEN_FACTOR=${resolved_factor},RESOLVED_NPX=${resolved_npx},RESOLVED_NPY=${resolved_npy},RESOLVED_NPZ=${RESOLVED_NPZ:-1}"
+      export_args="TARGET_CASE=${case_name},TARGET_PE=${pe},SURFACE_RECONSTRUCTION_LABEL=${run_label},ASURF_SURFACE_MODE=${surface_mode},RESOLVED_COARSEN_FACTOR=${resolved_factor},RESOLVED_NPX=${resolved_npx},RESOLVED_NPY=${resolved_npy},RESOLVED_NPZ=${RESOLVED_NPZ:-1}"
     elif [ "$case_name" = "dbs-upscaled" ]; then
       nodes="${DBS_NODES:-2}"
       tasks=$(( ${DBS_NPX:-32} * ${DBS_NPY:-8} * ${DBS_NPZ:-1} ))
-      export_args="TARGET_CASE=${case_name},TARGET_PE=${pe},DBS_NPX=${DBS_NPX:-32},DBS_NPY=${DBS_NPY:-8},DBS_NPZ=${DBS_NPZ:-1}"
+      export_args="TARGET_CASE=${case_name},TARGET_PE=${pe},SURFACE_RECONSTRUCTION_LABEL=${run_label},ASURF_SURFACE_MODE=${surface_mode},DBS_NPX=${DBS_NPX:-32},DBS_NPY=${DBS_NPY:-8},DBS_NPZ=${DBS_NPZ:-1}"
     else
       echo "Unknown case in CASE_SWEEP: ${case_name}" >&2
       exit 2
@@ -56,9 +62,9 @@ for pe in $pes; do
       exit 2
     fi
     tasks_per_node=$((tasks / nodes))
-    echo "Submitting ${case_name} Pe=${pe} on ${nodes} nodes"
+    echo "Submitting ${case_name} Pe=${pe}, label=${run_label} on ${nodes} nodes"
     sbatch_args=(
-      --job-name="ts_${case_tag}_${pe_tag}" \
+      --job-name="ts_${case_tag}_${pe_tag}_${run_label}" \
       --account="$account" \
       --qos="$qos" \
       --nodes="$nodes" \

@@ -22,6 +22,14 @@ RT_LOCAL_VELOCITY_FACTOR="${RT_LOCAL_VELOCITY_FACTOR:-0}"
 RT_FACE_VELOCITY_SAFETY="${RT_FACE_VELOCITY_SAFETY:-1.25}"
 RT_TIMESTEP_MAX="${RT_TIMESTEP_MAX:-0}"
 RT_CHECKPOINT_COUNT="${RT_CHECKPOINT_COUNT:-10}"
+ASURF_SURFACE_MODE="${ASURF_SURFACE_MODE:-occupancyGaussian}"
+SURFACE_RECONSTRUCTION_LABEL="${SURFACE_RECONSTRUCTION_LABEL:-production}"
+PAPER_SOURCE_COMMIT="${PAPER_SOURCE_COMMIT:-$(git -C "$repo_root" rev-parse HEAD)}"
+
+if [[ ! "$SURFACE_RECONSTRUCTION_LABEL" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+  echo "SURFACE_RECONSTRUCTION_LABEL must contain only lowercase letters, digits, and hyphens." >&2
+  exit 2
+fi
 
 case "$TARGET_CASE" in
   resolved-reference|dbs-upscaled) ;;
@@ -31,7 +39,8 @@ case "$TARGET_CASE" in
     ;;
 esac
 
-export TARGET_PE DIFFUSION
+export TARGET_PE DIFFUSION ASURF_SURFACE_MODE SURFACE_RECONSTRUCTION_LABEL
+export PAPER_SOURCE_COMMIT
 
 mkdir -p results
 
@@ -113,6 +122,8 @@ fi
 echo "=== Single-case run configuration ==="
 echo "TARGET_CASE=${TARGET_CASE}"
 echo "TARGET_PE=${TARGET_PE}"
+echo "SURFACE_RECONSTRUCTION_LABEL=${SURFACE_RECONSTRUCTION_LABEL}"
+echo "ASURF_SURFACE_MODE=${ASURF_SURFACE_MODE}"
 echo "RT_TOTAL_TIME=${RT_TOTAL_TIME}"
 echo "RT_WRITE_TIMESTEP=${RT_WRITE_TIMESTEP}"
 echo "RT_TIMESTEP=${RT_TIMESTEP}"
@@ -120,6 +131,9 @@ echo "RT_TIMESTEP=${RT_TIMESTEP}"
 {
   echo "TARGET_CASE=${TARGET_CASE}"
   echo "TARGET_PE=${TARGET_PE}"
+  echo "SURFACE_RECONSTRUCTION_LABEL=${SURFACE_RECONSTRUCTION_LABEL}"
+  echo "ASURF_SURFACE_MODE=${ASURF_SURFACE_MODE}"
+  echo "PAPER_SOURCE_COMMIT=${PAPER_SOURCE_COMMIT}"
   echo "DIFFUSION=${DIFFUSION}"
   echo "RT_TOTAL_TIME=${RT_TOTAL_TIME}"
   echo "RT_WRITE_TIMESTEP=${RT_WRITE_TIMESTEP}"
@@ -225,6 +239,13 @@ PY
     echo "Recomputed reactive timestep from the final flow-rate velocity field: $RT_TIMESTEP"
   fi
   ./initCaseReactiveTransport.sh
+  if [ "$TARGET_CASE" = "dbs-upscaled" ]; then
+    python ../scripts/write_matched_run_provenance.py \
+      --phase initial \
+      --case-dir . \
+      --run-config ../results/current_run_config.env \
+      --output "../results/matched_run_provenance_${SURFACE_RECONSTRUCTION_LABEL}.json"
+  fi
   if [ "${RT_INIT_ONLY:-0}" = "1" ]; then
     echo "=== Reactive-transport initialization complete; stopping because RT_INIT_ONLY=1 ==="
     exit 0
@@ -250,6 +271,9 @@ cp results/preflight_summary.md "$out_dir/"
 cp results/matched_pe_flow_rates.json "$out_dir/"
 cp results/matched_pe_flow_rates.env "$out_dir/"
 cp results/reactive_timestep.json "$out_dir/" 2>/dev/null || true
+if [ "$TARGET_CASE" = "dbs-upscaled" ]; then
+  cp "results/matched_run_provenance_${SURFACE_RECONSTRUCTION_LABEL}.json" "$out_dir/"
+fi
 cp "$TARGET_CASE"/poroPerm.csv "$out_dir/" 2>/dev/null || true
 cp "$TARGET_CASE"/simpleDBSFoam.out "$out_dir/" 2>/dev/null || true
 cp "$TARGET_CASE"/simpleDBSFoamFlow.out "$out_dir/" 2>/dev/null || true

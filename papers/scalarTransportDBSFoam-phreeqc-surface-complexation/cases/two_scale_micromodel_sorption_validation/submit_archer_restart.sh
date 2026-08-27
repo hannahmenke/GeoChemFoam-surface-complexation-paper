@@ -60,6 +60,9 @@ config_file="$(dirname "$work_case_dir")/results/current_run_config.env"
 source "$config_file"
 : "${RT_TIMESTEP:?Missing RT_TIMESTEP in $config_file}"
 : "${RT_WRITE_TIMESTEP:?Missing RT_WRITE_TIMESTEP in $config_file}"
+: "${ASURF_SURFACE_MODE:?Missing ASURF_SURFACE_MODE in $config_file}"
+: "${SURFACE_RECONSTRUCTION_LABEL:?Missing SURFACE_RECONSTRUCTION_LABEL in $config_file}"
+: "${PAPER_SOURCE_COMMIT:?Missing PAPER_SOURCE_COMMIT in $config_file}"
 
 expected=1
 if [ -d "$work_case_dir/processor0" ]; then
@@ -81,8 +84,8 @@ if [ -z "$restart_time" ]; then
     if [ "$expected" -gt 1 ]; then
         while read -r candidate; do
             [ -n "$candidate" ] || continue
-            dumps="$(find "$work_case_dir"/processor* -path "*/$candidate/phreeqcDBS.dmp" -type f | wc -l)"
-            markers="$(find "$work_case_dir"/processor* -path "*/$candidate/phreeqcDBS.complete" -type f | wc -l)"
+            dumps="$(find "$work_case_dir"/processor* -path "*/$candidate/phreeqc.dmp" -type f | wc -l)"
+            markers="$(find "$work_case_dir"/processor* -path "*/$candidate/phreeqc.complete" -type f | wc -l)"
             if [ "$dumps" -eq "$expected" ] && [ "$markers" -eq "$expected" ]; then
                 restart_time="$candidate"
                 break
@@ -90,8 +93,8 @@ if [ -z "$restart_time" ]; then
         done < <(find "$work_case_dir/processor0" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -gr)
     else
         while read -r candidate; do
-            if [ -f "$work_case_dir/$candidate/phreeqcDBS.dmp" ] \
-                && [ -f "$work_case_dir/$candidate/phreeqcDBS.complete" ]; then
+            if [ -f "$work_case_dir/$candidate/phreeqc.dmp" ] \
+                && [ -f "$work_case_dir/$candidate/phreeqc.complete" ]; then
                 restart_time="$candidate"
                 break
             fi
@@ -103,11 +106,11 @@ fi
     exit 5
 }
 if [ "$expected" -gt 1 ]; then
-    dumps="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqcDBS.dmp" -type f | wc -l)"
-    markers="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqcDBS.complete" -type f | wc -l)"
+    dumps="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqc.dmp" -type f | wc -l)"
+    markers="$(find "$work_case_dir"/processor* -path "*/$restart_time/phreeqc.complete" -type f | wc -l)"
 else
-    dumps="$([ -f "$work_case_dir/$restart_time/phreeqcDBS.dmp" ] && echo 1 || echo 0)"
-    markers="$([ -f "$work_case_dir/$restart_time/phreeqcDBS.complete" ] && echo 1 || echo 0)"
+    dumps="$([ -f "$work_case_dir/$restart_time/phreeqc.dmp" ] && echo 1 || echo 0)"
+    markers="$([ -f "$work_case_dir/$restart_time/phreeqc.complete" ] && echo 1 || echo 0)"
 fi
 if [ "$dumps" -ne "$expected" ] || [ "$markers" -ne "$expected" ]; then
     echo "Requested restart checkpoint $restart_time is incomplete: dumps=$dumps markers=$markers expected=$expected" >&2
@@ -151,7 +154,7 @@ else
     exit 2
 fi
 
-export_values="ALL${environment_export},PLATFORM=ARCHER2,RT_RESTART=1,RT_RESTART_TIME=$restart_time,RT_TOTAL_TIME=$final_end_time,RT_WRITE_TIMESTEP=$restart_write_timestep,RT_TIMESTEP=$RT_TIMESTEP,RT_REQUIRE_FINAL_CHECKPOINT=1"
+export_values="ALL${environment_export},PLATFORM=ARCHER2,RT_RESTART=1,RT_RESTART_TIME=$restart_time,RT_TOTAL_TIME=$final_end_time,RT_WRITE_TIMESTEP=$restart_write_timestep,RT_TIMESTEP=$RT_TIMESTEP,RT_REQUIRE_FINAL_CHECKPOINT=1,ASURF_SURFACE_MODE=$ASURF_SURFACE_MODE,SURFACE_RECONSTRUCTION_LABEL=$SURFACE_RECONSTRUCTION_LABEL,PAPER_SOURCE_COMMIT=$PAPER_SOURCE_COMMIT"
 
 echo "Submitting restart: case=$case_name ranks=$expected nodes=$nodes final_end_time=$final_end_time"
 echo "work_case_dir=$work_case_dir"

@@ -52,16 +52,16 @@ if [ "${RT_RESTART:-0}" = "1" ]; then
     if [ -d processor0 ]; then
         expected="$(find processor* -maxdepth 0 -type d | wc -l)"
         if [ -n "$requested_time" ]; then
-            dumps="$(find processor* -path "*/$requested_time/phreeqcDBS.dmp" -type f | wc -l)"
-            markers="$(find processor* -path "*/$requested_time/phreeqcDBS.complete" -type f | wc -l)"
+            dumps="$(find processor* -path "*/$requested_time/phreeqc.dmp" -type f | wc -l)"
+            markers="$(find processor* -path "*/$requested_time/phreeqc.complete" -type f | wc -l)"
             if [ "$dumps" -eq "$expected" ] && [ "$markers" -eq "$expected" ]; then
                 latest_time="$requested_time"
             fi
         else
             while read -r candidate; do
                 [ -n "$candidate" ] || continue
-                dumps="$(find processor* -path "*/$candidate/phreeqcDBS.dmp" -type f | wc -l)"
-                markers="$(find processor* -path "*/$candidate/phreeqcDBS.complete" -type f | wc -l)"
+                dumps="$(find processor* -path "*/$candidate/phreeqc.dmp" -type f | wc -l)"
+                markers="$(find processor* -path "*/$candidate/phreeqc.complete" -type f | wc -l)"
                 if [ "$dumps" -eq "$expected" ] && [ "$markers" -eq "$expected" ]; then
                     latest_time="$candidate"
                     break
@@ -69,14 +69,14 @@ if [ "${RT_RESTART:-0}" = "1" ]; then
             done < <(find processor0 -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -gr)
         fi
     elif [ -n "$requested_time" ]; then
-        if [ -f "$requested_time/phreeqcDBS.dmp" ] \
-            && [ -f "$requested_time/phreeqcDBS.complete" ]; then
+        if [ -f "$requested_time/phreeqc.dmp" ] \
+            && [ -f "$requested_time/phreeqc.complete" ]; then
             latest_time="$requested_time"
         fi
     else
         while read -r candidate; do
-            if [ -f "$candidate/phreeqcDBS.dmp" ] \
-                && [ -f "$candidate/phreeqcDBS.complete" ]; then
+            if [ -f "$candidate/phreeqc.dmp" ] \
+                && [ -f "$candidate/phreeqc.complete" ]; then
                 latest_time="$candidate"
                 break
             fi
@@ -132,14 +132,14 @@ if [ "${RT_DRY_RUN_ONLY:-0}" != "1" ] && [ "${RT_REQUIRE_FINAL_CHECKPOINT:-1}" =
         final_time="$(find processor0 -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -gr | head -1)"
         expected="$NP"
         fields="$(find processor* -path "*/$final_time/Li+" -type f | wc -l)"
-        dumps="$(find processor* -path "*/$final_time/phreeqcDBS.dmp" -type f | wc -l)"
-        markers="$(find processor* -path "*/$final_time/phreeqcDBS.complete" -type f | wc -l)"
+        dumps="$(find processor* -path "*/$final_time/phreeqc.dmp" -type f | wc -l)"
+        markers="$(find processor* -path "*/$final_time/phreeqc.complete" -type f | wc -l)"
     else
         final_time="$(foamListTimes | sort -gr | head -1)"
         expected=1
         fields="$([ -f "$final_time/Li+" ] && echo 1 || echo 0)"
-        dumps="$([ -f "$final_time/phreeqcDBS.dmp" ] && echo 1 || echo 0)"
-        markers="$([ -f "$final_time/phreeqcDBS.complete" ] && echo 1 || echo 0)"
+        dumps="$([ -f "$final_time/phreeqc.dmp" ] && echo 1 || echo 0)"
+        markers="$([ -f "$final_time/phreeqc.complete" ] && echo 1 || echo 0)"
     fi
     python3 - <<'PY' "$final_time" "$TotalTime" "$runTimestep"
 import math
@@ -157,4 +157,14 @@ PY
         exit 7
     fi
     echo "Verified complete final checkpoint at time $final_time on $expected partition(s)."
+fi
+
+if [ "${RT_DRY_RUN_ONLY:-0}" != "1" ] \
+    && [ "${RT_REQUIRE_FINAL_CHECKPOINT:-1}" = "1" ] \
+    && [ -n "${SURFACE_RECONSTRUCTION_LABEL:-}" ]; then
+    python ../scripts/write_matched_run_provenance.py \
+        --phase final \
+        --case-dir . \
+        --run-config ../results/current_run_config.env \
+        --output "../results/matched_run_provenance_${SURFACE_RECONSTRUCTION_LABEL}.json"
 fi

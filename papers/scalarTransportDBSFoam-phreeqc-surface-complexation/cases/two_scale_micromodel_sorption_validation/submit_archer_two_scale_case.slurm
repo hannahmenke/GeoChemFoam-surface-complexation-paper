@@ -15,7 +15,18 @@ set -Eeuo pipefail
 : "${TARGET_PE:?Set TARGET_PE to the requested Peclet number}"
 
 submit_dir="$SLURM_SUBMIT_DIR"
-case_root_name="two_scale_${TARGET_CASE}_pe_${TARGET_PE}_${SLURM_JOB_ID}"
+ASURF_SURFACE_MODE="${ASURF_SURFACE_MODE:-occupancyGaussian}"
+SURFACE_RECONSTRUCTION_LABEL="${SURFACE_RECONSTRUCTION_LABEL:-production}"
+if [[ ! "$SURFACE_RECONSTRUCTION_LABEL" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+  echo "Invalid SURFACE_RECONSTRUCTION_LABEL=$SURFACE_RECONSTRUCTION_LABEL" >&2
+  exit 2
+fi
+PAPER_SOURCE_COMMIT="$(git -C "$submit_dir" rev-parse HEAD)"
+if [ -n "$(git -C "$submit_dir" status --porcelain --untracked-files=no)" ]; then
+  echo "Production submission requires a clean paper checkout." >&2
+  exit 2
+fi
+case_root_name="two_scale_${TARGET_CASE}_pe_${TARGET_PE}_${SURFACE_RECONSTRUCTION_LABEL}_${SLURM_JOB_ID}"
 # The run directory must be visible from every compute node. ARCHER2's /tmp is
 # node-local, so do not default to TMPDIR for MPI jobs.
 scratch_parent="${TWO_SCALE_WORK_PARENT:-${SCRATCH:-$submit_dir/archer_work}}"
@@ -171,10 +182,10 @@ sync_back() {
         --include='processor*/[0-9]*/K+' \
         --include='processor*/[0-9]*/Mg+2' \
         --include='processor*/[0-9]*/Cl-' \
-        --include='processor*/[0-9]*/Sor_aLi' \
-        --include='processor*/[0-9]*/Sor_aNa' \
-        --include='processor*/[0-9]*/Sor_aK' \
-        --include='processor*/[0-9]*/Sor_aMg+' \
+        --include='processor*/[0-9]*/*aLi' \
+        --include='processor*/[0-9]*/*aNa' \
+        --include='processor*/[0-9]*/*aK' \
+        --include='processor*/[0-9]*/*aMg+' \
         --include='processor*/[0-9]*/theta' \
         --include='processor*/[0-9]*/aSurf' \
         --exclude='*' \
@@ -225,8 +236,8 @@ else
   echo "Using the inherited GeoChemFoam/OpenFOAM environment."
 fi
 
-export TARGET_CASE
-export TARGET_PE
+export TARGET_CASE TARGET_PE ASURF_SURFACE_MODE SURFACE_RECONSTRUCTION_LABEL
+export PAPER_SOURCE_COMMIT
 
 # The submit-all helper overrides node count by case: native 1 um resolved jobs
 # use 128 nodes, coarsened resolved jobs use 8 nodes, and DBS jobs use 2 nodes.
@@ -250,6 +261,9 @@ echo "work_dir=$work_dir"
 echo "archive_dir=$archive_dir"
 echo "TARGET_CASE=$TARGET_CASE"
 echo "TARGET_PE=$TARGET_PE"
+echo "SURFACE_RECONSTRUCTION_LABEL=$SURFACE_RECONSTRUCTION_LABEL"
+echo "ASURF_SURFACE_MODE=$ASURF_SURFACE_MODE"
+echo "PAPER_SOURCE_COMMIT=$PAPER_SOURCE_COMMIT"
 echo "SLURM_NNODES=${SLURM_NNODES:-unknown}"
 echo "SLURM_NTASKS=${SLURM_NTASKS:-unknown}"
 

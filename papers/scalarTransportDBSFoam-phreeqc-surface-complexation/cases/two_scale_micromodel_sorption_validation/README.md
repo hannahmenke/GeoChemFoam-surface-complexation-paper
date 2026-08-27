@@ -194,7 +194,7 @@ the reported Courant number from the short resolved run to adjust
 timings to choose the smallest node count that can finish the required Pe case
 within the site wall-time limit.
 
-Reactive writes include a `phreeqcDBS.dmp` checkpoint containing the complete
+Reactive writes include a `phreeqc.dmp` checkpoint containing the complete
 aqueous and surface state. To continue an existing case without rerunning mesh,
 flow, or reactive initialization, enter its `resolved-reference` or
 `dbs-upscaled` directory and run:
@@ -203,8 +203,8 @@ flow, or reactive initialization, enter its `resolved-reference` or
 RT_RESTART=1 RT_TOTAL_TIME=<new-absolute-end-time> ./runCaseReactiveTransport.sh
 ```
 
-The runner selects the newest time containing both `phreeqcDBS.dmp` and the
-`phreeqcDBS.complete` marker written only after the matching OpenFOAM fields
+The runner selects the newest time containing both `phreeqc.dmp` and the
+`phreeqc.complete` marker written only after the matching OpenFOAM fields
 have succeeded. Set `RT_RESTART_TIME=<time>` to select a specific complete
 checkpoint instead; an incomplete or missing requested checkpoint is rejected.
 Checkpoints are intentionally complete and can be large. The
@@ -228,6 +228,28 @@ On ARCHER2, the safe default submits only the validated DBS cases for
 ```bash
 ./submit_archer_two_scale_all.sh
 ```
+
+For a matched surface-reconstruction sensitivity pair, give each job an
+explicit nontechnical label and select its reconstruction through the case
+environment:
+
+```bash
+SURFACE_RECONSTRUCTION_LABEL=supported \
+ASURF_SURFACE_MODE=occupancyGaussian \
+TWO_SCALE_ARCHIVE_MODE=selected \
+PE_SWEEP=1 CASE_SWEEP=dbs-upscaled ./submit_archer_two_scale_all.sh
+
+SURFACE_RECONSTRUCTION_LABEL=legacy-reference \
+ASURF_SURFACE_MODE="$LEGACY_REFERENCE_MODE" \
+TWO_SCALE_ARCHIVE_MODE=selected \
+PE_SWEEP=1 CASE_SWEEP=dbs-upscaled ./submit_archer_two_scale_all.sh
+```
+
+The label is included in the scratch/archive directory and Slurm job name.
+`results/matched_run_provenance_<label>.json` records the matched input hashes,
+surface-field hashes, runtime and solver identity, Slurm stages, and complete
+final checkpoint fields. The jobs must use the same clean paper and runtime
+commits and differ only in `ASURF_SURFACE_MODE` and their labels.
 
 Preview the three `sbatch` commands without submitting with
 `SUBMIT_DRY_RUN=1 ./submit_archer_two_scale_all.sh`.

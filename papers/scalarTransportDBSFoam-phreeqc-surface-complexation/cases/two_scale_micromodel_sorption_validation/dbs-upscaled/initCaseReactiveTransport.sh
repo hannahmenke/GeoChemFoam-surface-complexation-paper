@@ -39,6 +39,7 @@ oh_internal="1.069e-7"
 rt_diffusion="${RT_DIFFUSION:-${DIFFUSION:-1e-9}}"
 
 export GCFOAM_ASURF_PROCS="${GCFOAM_ASURF_PROCS:-1}"
+asurf_surface_mode="${ASURF_SURFACE_MODE:-occupancyGaussian}"
 
 cp constant/thermoPhysicalProperties1 constant/thermoPhysicalProperties
 sed -i "s/Diff/$rt_diffusion/g" constant/transportProperties
@@ -83,7 +84,7 @@ then
         python "$repo_root/scripts/createASurfMarchingCubesLocal.py" \
             "$x_dim" "$y_dim" 1 0 "$x_dim" 0 "$y_dim" 0 1 \
             "$COARSE_NX" "$COARSE_NY" "$COARSE_NZ" "$res" \
-            dbs_full_upscaled_phase 255 0 2D aSurf signedDistanceGaussian 0.90 \
+            dbs_full_upscaled_phase 255 0 2D aSurf "$asurf_surface_mode" 0.90 \
             "" "" false 0 "$proc_index" eps > "createASurfReactive.proc${proc_index}.out"
     done
 else
@@ -91,7 +92,7 @@ else
     python "$repo_root/scripts/createASurfMarchingCubes.py" \
         "$x_dim" "$y_dim" 1 0 "$x_dim" 0 "$y_dim" 0 1 \
         "$COARSE_NX" "$COARSE_NY" "$COARSE_NZ" "$res" \
-        dbs_full_upscaled_phase 255 0 2D aSurf signedDistanceGaussian 0.90 \
+        dbs_full_upscaled_phase 255 0 2D aSurf "$asurf_surface_mode" 0.90 \
         "" "" false 0 > createASurfReactive.out
 fi
 

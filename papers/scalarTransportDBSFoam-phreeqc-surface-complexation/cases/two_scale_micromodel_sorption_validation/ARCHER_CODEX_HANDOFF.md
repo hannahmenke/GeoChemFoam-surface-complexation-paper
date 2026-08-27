@@ -24,7 +24,7 @@ physical domain at multiple Peclet numbers.
 
 ## Important Rules
 
-- Restart only from a written time containing `phreeqcDBS.dmp`; run
+- Restart only from a written time containing `phreeqc.dmp`; run
   `RT_RESTART=1 RT_TOTAL_TIME=<new-absolute-end-time>
   ./runCaseReactiveTransport.sh` inside the case directory.
 - Preserve the pressure-corrected `phi` produced by the completed flow solve.
