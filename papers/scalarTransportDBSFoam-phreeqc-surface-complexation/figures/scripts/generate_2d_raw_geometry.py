@@ -12,6 +12,11 @@ import numpy as np
 from matplotlib.colors import BoundaryNorm, ListedColormap, LogNorm
 
 
+def log_scale_label(quantity: str) -> str:
+    """Label raw values displayed through a logarithmic normalization."""
+    return f"{quantity} (log scale)"
+
+
 def parse_size(metadata_path: Path) -> tuple[int, int, int]:
     text = metadata_path.read_text()
     match = re.search(r"Size:\s+(\d+)\s+(\d+)\s+(\d+)", text)
@@ -320,7 +325,7 @@ def main() -> None:
                 extent=mm_extent,
             )
             axes[1].set_title(f"{aq_lbl} / C$_{{in}}$ (log scale, {args.time_label})")
-            cbar1_label = f"log$_{{10}}$ Normalized {aq_lbl}"
+            cbar1_label = log_scale_label(f"Normalized {aq_lbl}")
         else:
             field1 = axes[1].imshow(
                 ca_norm,
@@ -368,7 +373,7 @@ def main() -> None:
                 extent=mm_extent,
             )
             axes[2].set_title(f"{surface_title} (log scale, {args.time_label})")
-            cbar2_label = f"log$_{{10}}$ {cbar2_label_raw}"
+            cbar2_label = log_scale_label(cbar2_label_raw)
         else:
             field2 = axes[2].imshow(
                 surf_norm,
