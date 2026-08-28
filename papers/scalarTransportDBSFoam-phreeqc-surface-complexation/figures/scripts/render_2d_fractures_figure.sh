@@ -12,6 +12,8 @@ figure_manifest="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-comple
 numerical_validator="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py"
 validation_metrics="$png_dir/fig02_item2_validation_metrics.json"
 validator_sha256="85754589f4e398173664e09aa3435541e5db1c9cc17b8ea4f9ddf04bd23da718"
+renderer_commit="$(git -C "$repo_root" rev-parse HEAD)"
+renderer_repository="$(git -C "$repo_root" remote get-url origin)"
 
 required_fields=(
   "$case_dir/processor0/20000/Pb+2"
@@ -95,6 +97,8 @@ python "$scripts_dir/generate_2d_raw_geometry.py" \
 
 python "$provenance_tool" record-figure \
   --manifest "$run_manifest" \
+  --case-dir "$case_dir" \
+  --paper-root "$repo_root" \
   --figure "$png_dir/fig02_2d_fractures.png" \
   --time 20000 \
   --figure-input "$scripts_dir/render_2d_fractures_figure.sh" \
@@ -104,6 +108,12 @@ python "$provenance_tool" record-figure \
   --figure-input "$validation_metrics" \
   --figure-input "$repo_root/images/raw/4StraightFractures.raw.tar.gz" \
   --figure-input "$repo_root/images/raw/4StraightFractures.txt" \
+  --renderer-source "$scripts_dir/render_2d_fractures_figure.sh" \
+  --renderer-source "$scripts_dir/generate_2d_raw_geometry.py" \
+  --renderer-source "$provenance_tool" \
+  --renderer-source "$numerical_validator" \
+  --renderer-repository "$renderer_repository" \
+  --renderer-commit "$renderer_commit" \
   --output "$figure_manifest"
 
 echo "Wrote $png_dir/fig02_2d_fractures.png"

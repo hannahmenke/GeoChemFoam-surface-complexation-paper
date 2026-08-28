@@ -203,8 +203,17 @@ def main() -> None:
     coarse_labels = downsample_labels(image, args.coarse_ny, args.coarse_nx)
     mm_extent = extent_mm(args.coarse_nx, args.coarse_ny, args.res_m, raw_nx, raw_ny)
 
-    geometry_cmap = ListedColormap(["#c94f4f", "#4f8fd6", "#ffffff"])
-    geometry_norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5], geometry_cmap.N)
+    # Do not reserve colour-bar space for phases absent from the evidence.
+    present_phases = set(int(value) for value in np.unique(coarse_labels))
+    phase_labels = {0: "solid", 1: "micropore", 2: "pore"}
+    if 0 in present_phases:
+        geometry_cmap = ListedColormap(["#c94f4f", "#4f8fd6", "#ffffff"])
+        geometry_norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5], geometry_cmap.N)
+    else:
+        geometry_cmap = ListedColormap(["#4f8fd6", "#ffffff"])
+        geometry_norm = BoundaryNorm([0.5, 1.5, 2.5], geometry_cmap.N)
+    geometry_ticks = sorted(present_phases)
+    geometry_ticklabels = [phase_labels[value] for value in geometry_ticks]
 
     if args.ca_field and args.surf_field:
         ca_values = parse_scalar_field(args.ca_field).reshape((args.coarse_ny, args.coarse_nx))
@@ -287,7 +296,17 @@ def main() -> None:
         surf_scale = max(float(surf_scale), 1.0e-30)
         surf_norm = np.clip(surf_metric / surf_scale, 0.0, 1.0)
 
-        fig, axes = plt.subplots(1, 3, figsize=(13.2, 4.4), sharey=True)
+        # The manuscript includes this image at 0.9 of a 6.27-inch text width.
+        # A near-final-size canvas and explicit type sizes keep all text above
+        # 8 pt after inclusion instead of shrinking a wide presentation canvas.
+        plt.rcParams.update({
+            "font.size": 9.0,
+            "axes.titlesize": 9.0,
+            "axes.labelsize": 9.0,
+            "xtick.labelsize": 9.0,
+            "ytick.labelsize": 9.0,
+        })
+        fig, axes = plt.subplots(1, 3, figsize=(6.2, 2.25), sharey=True)
 
         mesh = axes[0].imshow(
             coarse_labels,
@@ -297,11 +316,11 @@ def main() -> None:
             interpolation="nearest",
             extent=mm_extent,
         )
-        axes[0].set_title("Geometry")
+        axes[0].set_title("(a) Geometry")
         axes[0].set_xlabel("x [mm]")
         axes[0].set_ylabel("y [mm]")
-        cbar0 = fig.colorbar(mesh, ax=axes[0], ticks=[0, 1, 2], fraction=0.046, pad=0.04)
-        cbar0.ax.set_yticklabels(["solid", "micropore", "pore"])
+        cbar0 = fig.colorbar(mesh, ax=axes[0], ticks=geometry_ticks, fraction=0.046, pad=0.04)
+        cbar0.ax.set_yticklabels(geometry_ticklabels)
 
         axes[1].imshow(
             coarse_labels,
@@ -324,7 +343,7 @@ def main() -> None:
                 interpolation="nearest",
                 extent=mm_extent,
             )
-            axes[1].set_title(f"{aq_lbl} / C$_{{in}}$ (log scale, {args.time_label})")
+            axes[1].set_title(f"(b) {aq_lbl} / C$_{{in}}$\n(log scale, {args.time_label})")
             cbar1_label = log_scale_label(f"Normalized {aq_lbl}")
         else:
             field1 = axes[1].imshow(
@@ -336,7 +355,7 @@ def main() -> None:
                 vmin=0.0,
                 vmax=1.0,
             )
-            axes[1].set_title(f"{aq_lbl} / C$_{{in}}$ ({args.time_label})")
+            axes[1].set_title(f"(b) {aq_lbl} / C$_{{in}}$\n({args.time_label})")
             cbar1_label = f"Normalized {aq_lbl}"
         axes[1].contour(
             coarse_labels,
@@ -372,7 +391,7 @@ def main() -> None:
                 interpolation="nearest",
                 extent=mm_extent,
             )
-            axes[2].set_title(f"{surface_title} (log scale, {args.time_label})")
+            axes[2].set_title(f"(c) {surface_title}\n(log scale, {args.time_label})")
             cbar2_label = log_scale_label(cbar2_label_raw)
         else:
             field2 = axes[2].imshow(
@@ -384,7 +403,7 @@ def main() -> None:
                 vmin=0.0,
                 vmax=1.0,
             )
-            axes[2].set_title(f"{surface_title} / P99 ({args.time_label})")
+            axes[2].set_title(f"(c) {surface_title} / P99\n({args.time_label})")
             cbar2_label = "Normalized surface loading"
         axes[2].contour(
             coarse_labels,
@@ -402,7 +421,6 @@ def main() -> None:
         cbar2 = fig.colorbar(field2, ax=axes[2], fraction=0.046, pad=0.04)
         cbar2.set_label(cbar2_label)
 
-        fig.suptitle(args.title)
     else:
         fig, ax = plt.subplots(figsize=(6.2, 6.2))
         mesh = ax.imshow(
@@ -416,12 +434,12 @@ def main() -> None:
         ax.set_xlabel("x voxel")
         ax.set_ylabel("y voxel")
 
-        colorbar = fig.colorbar(mesh, ax=ax, ticks=[0, 1, 2], fraction=0.046, pad=0.04)
-        colorbar.ax.set_yticklabels(["solid", "micropore", "pore"])
+        colorbar = fig.colorbar(mesh, ax=ax, ticks=geometry_ticks, fraction=0.046, pad=0.04)
+        colorbar.ax.set_yticklabels(geometry_ticklabels)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.95) if args.ca_field and args.surf_field else None)
-    fig.savefig(args.output, dpi=220)
+    fig.tight_layout()
+    fig.savefig(args.output, dpi=300)
 
 
 if __name__ == "__main__":

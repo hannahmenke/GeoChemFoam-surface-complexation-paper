@@ -13,6 +13,8 @@ from pathlib import Path
 
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 FINAL_FIELDS = ("Pb+2", "Cl-", "H+", "OH-", "Surf_sOPb+", "Surf_wOPb+")
+SUPPORT_FIELDS = ("eps", "aSurf", "Surf_s", "Surf_w")
+PATH_KEYS = {"path", "root", "figure_path", "run_manifest_path", "solver_executable"}
 
 
 def sha256(path: Path) -> str:
@@ -42,6 +44,68 @@ def verify_records(records: object, label: str, minimum: int = 1) -> list[dict[s
         require(isinstance(record, dict), f"Invalid {label} record {index}")
         verify_file(record, f"{label} record {index}")
     return records
+
+
+def portable_path(path: Path, roots: dict[str, Path]) -> str:
+    resolved = path.resolve()
+    candidates = sorted(roots.items(), key=lambda item: len(str(item[1])), reverse=True)
+    for label, root in candidates:
+        root = root.resolve()
+        if resolved == root:
+            return f"${{{label}}}"
+        if resolved.is_relative_to(root):
+            return f"${{{label}}}/{resolved.relative_to(root).as_posix()}"
+    raise SystemExit(f"Cannot make provenance path portable: {resolved}")
+
+
+def portableize_paths(value: object, roots: dict[str, Path], key: str = "") -> object:
+    if isinstance(value, dict):
+        return {
+            item_key: portableize_paths(item_value, roots, item_key)
+            for item_key, item_value in value.items()
+        }
+    if isinstance(value, list):
+        return [portableize_paths(item, roots, key) for item in value]
+    if key in PATH_KEYS and isinstance(value, str) and Path(value).is_absolute():
+        return portable_path(Path(value), roots)
+    return value
+
+
+def file_record(path: Path, roots: dict[str, Path]) -> dict[str, str]:
+    require(path.is_file(), f"Missing provenance input: {path}")
+    return {"path": portable_path(path, roots), "sha256": sha256(path)}
+
+
+def records_sha256(records: list[dict[str, str]]) -> str:
+    digest = hashlib.sha256()
+    for record in sorted(records, key=lambda item: item["path"]):
+        digest.update(record["path"].encode())
+        digest.update(b"\0")
+        digest.update(record["sha256"].encode())
+        digest.update(b"\n")
+    return digest.hexdigest()
+
+
+def collect_run_outputs(
+    case_dir: Path, time_name: str, roots: dict[str, Path]
+) -> dict[str, object]:
+    final_fields = [
+        file_record(case_dir / f"processor{rank}" / time_name / name, roots)
+        for rank in range(8)
+        for name in FINAL_FIELDS
+    ]
+    support_fields = [
+        file_record(case_dir / f"processor{rank}" / "0" / name, roots)
+        for rank in range(8)
+        for name in SUPPORT_FIELDS
+    ]
+    return {
+        "solver_log": file_record(case_dir / "reactiveTransportDBSFoamRT.out", roots),
+        "final_rank_fields": final_fields,
+        "final_rank_fields_sha256": records_sha256(final_fields),
+        "support_rank_fields": support_fields,
+        "support_rank_fields_sha256": records_sha256(support_fields),
+    }
 
 
 def exact_float(actual: object, expected: float, label: str) -> None:
@@ -148,35 +212,58 @@ def check_run(args: argparse.Namespace) -> dict[str, object]:
 def record_figure(args: argparse.Namespace) -> None:
     figure = args.figure.resolve()
     manifest = args.manifest.resolve()
+    paper_root = args.paper_root.resolve()
+    case_dir = args.case_dir.resolve()
+    run = json.loads(manifest.read_text())
+    roots = {
+        "RUN_CASE_DIR": case_dir,
+        "RUNTIME_REPO": Path(run["runtime"]["root"]),
+        "RUN_PAPER_REPO": Path(run["paper"]["root"]),
+        "PAPER_REPO": paper_root,
+    }
     require(figure.is_file(), f"Missing rendered figure: {figure}")
     figure_inputs = []
     for path in args.figure_input:
         resolved = path.resolve()
         require(resolved.is_file(), f"Missing figure input: {resolved}")
-        figure_inputs.append({"path": str(resolved), "sha256": sha256(resolved)})
-    run = json.loads(manifest.read_text())
+        figure_inputs.append(file_record(resolved, roots))
+    renderer_sources = [file_record(path.resolve(), roots) for path in args.renderer_source]
+    require(len(renderer_sources) >= 3, "At least three renderer source files are required")
     if args.output.is_file():
         payload = json.loads(args.output.read_text())
         require(isinstance(payload.get("figures"), dict), "Invalid existing figure manifest")
     else:
         payload = {"schema_version": 2, "figures": {}}
-    payload["schema_version"] = 2
+    payload["schema_version"] = 3
     payload["figures"][figure.name] = {
-        "figure_path": str(figure),
+        "path_roots": {
+            "PAPER_REPO": "checkout of the paper repository",
+            "RUN_PAPER_REPO": "checkout used to execute the archived run",
+            "RUN_CASE_DIR": "completed 2D fracture case directory",
+            "RUNTIME_REPO": "checkout used to build the solver and libraries",
+        },
+        "figure_path": portable_path(figure, roots),
         "figure_sha256": sha256(figure),
         "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "output_time_s": args.time,
         "figure_inputs": figure_inputs,
-        "run_manifest_path": str(manifest),
+        "renderer": {
+            "repository": args.renderer_repository,
+            "commit": args.renderer_commit,
+            "source_files": renderer_sources,
+            "source_files_sha256": records_sha256(renderer_sources),
+        },
+        "run_outputs": collect_run_outputs(case_dir, f"{args.time:g}", roots),
+        "run_manifest_path": portable_path(manifest, roots),
         "run_manifest_sha256": sha256(manifest),
-        "paper": run["paper"],
-        "runtime": run["runtime"],
-        "runtime_artifacts": run["runtime_artifacts"],
-        "surface": run["surface"],
-        "intrinsic_surface": run["intrinsic_surface"],
-        "chemistry": run["chemistry"],
+        "paper": portableize_paths(run["paper"], roots),
+        "runtime": portableize_paths(run["runtime"], roots),
+        "runtime_artifacts": portableize_paths(run["runtime_artifacts"], roots),
+        "surface": portableize_paths(run["surface"], roots),
+        "intrinsic_surface": portableize_paths(run["intrinsic_surface"], roots),
+        "chemistry": portableize_paths(run["chemistry"], roots),
         "realized_transport": {
-            key: run["realized_transport"][key]
+            key: portableize_paths(run["realized_transport"][key], roots)
             for key in (
                 "endTime", "deltaT", "writeInterval", "control_dict",
                 "thermo_file", "surface_master_fields",
@@ -212,9 +299,14 @@ def parser() -> argparse.ArgumentParser:
     check.set_defaults(func=lambda args: check_run(args))
     record = commands.add_parser("record-figure")
     record.add_argument("--manifest", type=Path, required=True)
+    record.add_argument("--case-dir", type=Path, required=True)
+    record.add_argument("--paper-root", type=Path, required=True)
     record.add_argument("--figure", type=Path, required=True)
     record.add_argument("--time", type=float, required=True)
     record.add_argument("--figure-input", action="append", type=Path, default=[])
+    record.add_argument("--renderer-source", action="append", type=Path, default=[])
+    record.add_argument("--renderer-repository", required=True)
+    record.add_argument("--renderer-commit", required=True)
     record.add_argument("--output", type=Path, required=True)
     record.set_defaults(func=record_figure)
     return main

@@ -30,6 +30,20 @@ validator = load(
 
 
 class Figure2Tests(unittest.TestCase):
+    @staticmethod
+    def populate_run_outputs(case: Path) -> None:
+        case.mkdir(parents=True, exist_ok=True)
+        (case / "reactiveTransportDBSFoamRT.out").write_text("Time = 20000\nEnd\n")
+        for rank in range(8):
+            for time_name, names in (
+                ("20000", provenance.FINAL_FIELDS),
+                ("0", provenance.SUPPORT_FIELDS),
+            ):
+                directory = case / f"processor{rank}" / time_name
+                directory.mkdir(parents=True, exist_ok=True)
+                for name in names:
+                    (directory / name).write_text(f"{rank} {time_name} {name}\n")
+
     def test_validator_reads_uniform_and_nonuniform_fields(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -57,24 +71,50 @@ class Figure2Tests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 provenance.verify_file(record, "input")
 
+    def test_portable_paths_fail_closed_outside_declared_roots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            child = root / "case" / "field"
+            child.parent.mkdir()
+            child.write_text("field")
+            roots = {"CASE": root / "case"}
+            self.assertEqual(provenance.portable_path(child, roots), "${CASE}/field")
+            with self.assertRaises(SystemExit):
+                provenance.portable_path(root / "elsewhere", roots)
+
+    def test_run_output_record_covers_every_rank_field_and_log(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            case = Path(tmp) / "case"
+            self.populate_run_outputs(case)
+            records = provenance.collect_run_outputs(case, "20000", {"CASE": case})
+            self.assertEqual(len(records["final_rank_fields"]), 48)
+            self.assertEqual(len(records["support_rank_fields"]), 32)
+            self.assertEqual(records["solver_log"]["path"], "${CASE}/reactiveTransportDBSFoamRT.out")
+            self.assertEqual(
+                records["final_rank_fields_sha256"],
+                provenance.records_sha256(records["final_rank_fields"]),
+            )
+
     def test_figure_record_preserves_existing_entries_and_embeds_run_inputs(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             figure = root / "fig02.png"
             figure.write_bytes(b"png")
+            case = root / "run" / "case"
+            self.populate_run_outputs(case)
             run = {
-                "paper": {"commit": "paper"},
-                "runtime": {"commit": "runtime"},
-                "runtime_artifacts": {"solver": {"sha256": "solver"}},
-                "surface": {"sha256": "surface"},
-                "intrinsic_surface": {"sha256": "intrinsic"},
-                "chemistry": {"files": [{"sha256": "chemistry"}]},
+                "paper": {"root": str(root / "run-paper"), "commit": "paper"},
+                "runtime": {"root": str(root / "runtime"), "commit": "runtime"},
+                "runtime_artifacts": {"solver": {"path": str(root / "runtime" / "solver"), "sha256": "solver"}},
+                "surface": {"path": str(case / "surface.log"), "sha256": "surface"},
+                "intrinsic_surface": {"path": str(case / "intrinsic.log"), "sha256": "intrinsic"},
+                "chemistry": {"files": [{"path": str(case / "chemistry"), "sha256": "chemistry"}]},
                 "realized_transport": {
                     "endTime": 20000,
                     "deltaT": 0.25,
                     "writeInterval": 2000,
-                    "control_dict": {"sha256": "control"},
-                    "thermo_file": {"sha256": "thermo"},
+                    "control_dict": {"path": str(case / "controlDict"), "sha256": "control"},
+                    "thermo_file": {"path": str(case / "thermo"), "sha256": "thermo"},
                     "surface_master_fields": [],
                 },
             }
@@ -84,7 +124,10 @@ class Figure2Tests(unittest.TestCase):
             output.write_text(json.dumps({"figures": {"existing.png": {"keep": True}}}))
             provenance.record_figure(argparse.Namespace(
                 figure=figure, manifest=manifest, time=20000, output=output,
-                figure_input=[manifest],
+                case_dir=case, paper_root=root, figure_input=[manifest],
+                renderer_source=[manifest, manifest, manifest],
+                renderer_repository="https://example.test/paper.git",
+                renderer_commit="a" * 40,
             ))
             recorded = json.loads(output.read_text())
             self.assertTrue(recorded["figures"]["existing.png"]["keep"])
@@ -94,6 +137,9 @@ class Figure2Tests(unittest.TestCase):
             self.assertEqual(entry["runtime"]["commit"], "runtime")
             self.assertEqual(entry["chemistry"]["files"][0]["sha256"], "chemistry")
             self.assertEqual(entry["figure_inputs"][0]["sha256"], provenance.sha256(manifest))
+            self.assertEqual(entry["figure_path"], "${PAPER_REPO}/fig02.png")
+            self.assertEqual(entry["run_outputs"]["solver_log"]["path"], "${RUN_CASE_DIR}/reactiveTransportDBSFoamRT.out")
+            self.assertEqual(entry["renderer"]["commit"], "a" * 40)
 
 
 if __name__ == "__main__":
