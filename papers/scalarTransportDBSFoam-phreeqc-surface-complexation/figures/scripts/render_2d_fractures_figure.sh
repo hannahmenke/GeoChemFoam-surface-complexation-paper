@@ -47,12 +47,12 @@ python "$provenance_tool" check-run \
   --manifest "$run_manifest" \
   --case-dir "$case_dir" \
   --paper-commit 103685cb597e75c4bdceb84adb9d26ade8604928 \
-  --runtime-commit 464dd93606c753269bbd33006510203e46119bd9 \
-  --solver-sha256 d7a55047bee24211730e05e6ba7c00752e8c6a07ceb4510572bb8912a6435b10 \
+  --runtime-commit 3c4a34326b5573d76d48664093a1933a5a65b316 \
+  --solver-sha256 3b41fd0914b4407fa591ea403cc66c4fde1daa7d1608481edaac19533e11b124 \
   --library-sha256 libfiniteVolumeGCFOAM.so=e13af080edca54982d9950378ab27d1c0df5cc1b26d384eb6bb64845348502ad \
-  --library-sha256 libreactionThermophysicalModelsGCFOAM.so=d3b74ea7cafc3e37935df8752599a4e6cd068b0ac84b046aced6c98f5448a0be \
-  --library-sha256 libPhreeqcRM.so=cfa877676ec21145ad60390c992dc7d80773ac4151c3c7c297d3de8ea8cc330a \
-  --phreeqcrm-commit 8ce64cf64b3c26ff7fdc41dbf5ae4fb7269b3a92 \
+  --library-sha256 libreactionThermophysicalModelsGCFOAM.so=447d857aa9679a1962f72d5df71f09c3faf0b84f4c5b74e279e092af1cdd425a \
+  --library-sha256 libPhreeqcRM.so=90ffa2f6c554941c40535739fc9359af19528425e6dc61b2876d00b016affe29 \
+  --phreeqcrm-commit a43de2c1d1dd5c0f93489d560fa3cd3e94646471 \
   --surface-mode occupancyGaussian \
   --surface-sigma 0.75 \
   --surface-area 0.021990199701030694 \
