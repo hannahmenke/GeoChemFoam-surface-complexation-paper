@@ -84,8 +84,8 @@ python "$scripts_dir/generate_2d_raw_geometry.py" \
   --aqueous-field-name "Pb+2" \
   --surface-field-name "Surf_sOPb+" \
   --asurf-field-name "aSurf" \
-  --aqueous-label "Pb$^{2+}$" \
-  --surface-label "Hfo$_s$OPb$^+$ / Hfo$_s$" \
+  --aqueous-label 'Pb$^{2+}$' \
+  --surface-label 'Hfo$_s$OPb$^+$ / Hfo$_s$' \
   --surface-transform occupancy \
   --surface-site-density 2e-7 \
   --log-scale \
