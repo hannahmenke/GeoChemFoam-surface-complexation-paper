@@ -11,8 +11,10 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.colors import TwoSlopeNorm
+import numpy as np
+
+from verify_production_runtime import load_identity
 
 FIGURE_SCRIPTS = Path(__file__).resolve().parents[3] / "figures" / "scripts"
 sys.path.insert(0, str(FIGURE_SCRIPTS))
@@ -141,10 +143,34 @@ def runtime_signature(provenance: dict[str, object]) -> dict[str, object]:
     runtime = provenance["runtime"]
     return {
         "commit": runtime["commit"],
+        "tree": runtime["tree"],
         "phreeqcrm_commit": runtime["phreeqcrm"]["commit"],
         "solver_sha256": provenance["solver"]["sha256"],
         "libraries": library_signature(provenance),
     }
+
+
+def validate_required_runtime(provenance: dict[str, object], label: str) -> None:
+    required = load_identity()
+    runtime = provenance.get("runtime", {})
+    validation = provenance.get("runtime_validation", {})
+    if (
+        runtime.get("commit") != required["runtime_commit"]
+        or runtime.get("tree") != required["runtime_tree"]
+        or runtime.get("phreeqcrm", {}).get("commit")
+        != required["phreeqcrm_commit"]
+        or provenance.get("solver", {}).get("sha256")
+        != required["artifacts"]["bin/reactiveTransportDBSFoam"]
+        or validation.get("required_identity") != required
+    ):
+        raise ValidationError(
+            f"{label} does not prove the required production runtime"
+        )
+    stage_validations = provenance.get("stage_runtime_validations", [])
+    if not stage_validations or any(
+        stage.get("required_identity") != required for stage in stage_validations
+    ):
+        raise ValidationError(f"{label} restart/final stage lacks runtime validation")
 
 
 def scientific_config(provenance: dict[str, object]) -> dict[str, str]:
@@ -164,6 +190,7 @@ def validate_provenance_pair(
             raise ValidationError(f"Expected provenance label {label}")
         if "initial" not in provenance or "final" not in provenance:
             raise ValidationError(f"{label} provenance is not complete")
+        validate_required_runtime(provenance, label)
         initial = provenance["initial"]
         if initial.get("surface_log_modes") != [provenance.get("surface_mode")]:
             raise ValidationError(

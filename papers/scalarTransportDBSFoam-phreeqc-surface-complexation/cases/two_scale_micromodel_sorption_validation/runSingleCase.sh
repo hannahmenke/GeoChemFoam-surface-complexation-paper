@@ -44,6 +44,15 @@ export PAPER_SOURCE_COMMIT
 
 mkdir -p results
 
+runtime_root="${GCFOAM_RUNTIME_ROOT:-${GCFOAM_DIR:-}}"
+if [ -z "$runtime_root" ]; then
+  echo "Set GCFOAM_RUNTIME_ROOT or GCFOAM_DIR to the reviewed production runtime." >&2
+  exit 2
+fi
+python scripts/verify_production_runtime.py \
+  --runtime-root "$runtime_root" \
+  --output results/runtime_preflight.json
+
 python scripts/prepare_images.py
 python scripts/compute_matrix_rev_properties.py \
   shared/metadata.json \
@@ -267,6 +276,7 @@ PY
 out_dir="results/single_case/${case_tag}_${pe_tag}"
 mkdir -p "$out_dir"
 cp results/current_run_config.env "$out_dir/"
+cp results/runtime_preflight.json "$out_dir/"
 cp results/preflight_summary.md "$out_dir/"
 cp results/matched_pe_flow_rates.json "$out_dir/"
 cp results/matched_pe_flow_rates.env "$out_dir/"

@@ -17,18 +17,25 @@ from analyze_matched_reconstruction_pair import (
     validate_provenance_pair,
     verify_clean_completion,
 )
+from verify_production_runtime import load_identity
 
 
 def provenance(label: str, mode: str, surface_hash: str) -> dict[str, object]:
+    required = load_identity()
     return {
         "reconstruction_label": label,
         "surface_mode": mode,
         "paper_source_commit": "paper-commit",
         "runtime": {
-            "commit": "runtime-commit",
-            "phreeqcrm": {"commit": "phreeqcrm-commit"},
+            "commit": required["runtime_commit"],
+            "tree": required["runtime_tree"],
+            "phreeqcrm": {"commit": required["phreeqcrm_commit"]},
         },
-        "solver": {"sha256": "solver-hash"},
+        "solver": {
+            "sha256": required["artifacts"]["bin/reactiveTransportDBSFoam"]
+        },
+        "runtime_validation": {"required_identity": required},
+        "stage_runtime_validations": [{"required_identity": required}],
         "resolved_libraries": [{"name": "libexample.so", "sha256": "lib-hash"}],
         "run_config": {
             "ASURF_SURFACE_MODE": mode,
@@ -79,7 +86,13 @@ class ProvenanceTests(unittest.TestCase):
 
     def test_rejects_runtime_difference(self) -> None:
         self.legacy["solver"]["sha256"] = "different"
-        with self.assertRaisesRegex(ValidationError, "Runtime, solver"):
+        with self.assertRaisesRegex(ValidationError, "required production runtime"):
+            validate_provenance_pair(self.supported, self.legacy)
+
+    def test_rejects_unreviewed_runtime_even_when_pair_matches(self) -> None:
+        for provenance_record in (self.supported, self.legacy):
+            provenance_record["runtime"]["commit"] = "unreviewed"
+        with self.assertRaisesRegex(ValidationError, "required production runtime"):
             validate_provenance_pair(self.supported, self.legacy)
 
 

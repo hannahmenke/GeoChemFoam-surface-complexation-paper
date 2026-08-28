@@ -13,6 +13,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from verify_production_runtime import verify_runtime
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -94,6 +96,7 @@ def runtime_state(root: Path) -> dict[str, object]:
     return {
         "root": str(root.resolve()),
         "commit": git(root, "rev-parse", "HEAD"),
+        "tree": git(root, "show", "-s", "--format=%T", "HEAD"),
         "source_status": source_status,
         "raw_top_level_status": raw_status,
         "phreeqcrm": {
@@ -265,6 +268,9 @@ def main() -> None:
         expected_solver = runtime_root / "bin" / "reactiveTransportDBSFoam"
         if Path(solver).resolve() != expected_solver.resolve():
             raise SystemExit(f"Wrong solver selected: {solver}; expected {expected_solver}")
+        runtime_validation = verify_runtime(
+            runtime_root, expected_solver=Path(solver)
+        )
         payload = {
             "schema_version": 1,
             "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -272,6 +278,7 @@ def main() -> None:
             "surface_mode": os.environ["ASURF_SURFACE_MODE"],
             "paper_source_commit": os.environ["PAPER_SOURCE_COMMIT"],
             "runtime": runtime,
+            "runtime_validation": runtime_validation,
             "solver": record(Path(solver), runtime_root),
             "resolved_libraries": resolved_libraries(Path(solver)),
             "execution_stages": [{
@@ -289,6 +296,20 @@ def main() -> None:
             raise SystemExit("Restart label does not match initial provenance")
         if payload["surface_mode"] != os.environ["ASURF_SURFACE_MODE"]:
             raise SystemExit("Restart surface mode does not match initial provenance")
+        solver = shutil.which("reactiveTransportDBSFoam")
+        if solver is None:
+            raise SystemExit("reactiveTransportDBSFoam is not on PATH")
+        runtime_root = Path(
+            os.environ.get("GCFOAM_RUNTIME_ROOT", Path(solver).resolve().parent.parent)
+        )
+        stage_runtime_validation = verify_runtime(
+            runtime_root, expected_solver=Path(solver)
+        )
+        if (
+            stage_runtime_validation["required_identity"]
+            != payload["runtime_validation"]["required_identity"]
+        ):
+            raise SystemExit("Restart runtime identity differs from initial provenance")
         time_name, partitions = complete_time(args.case_dir.resolve())
         final_files = [
             record(path, run_root)
@@ -300,6 +321,9 @@ def main() -> None:
             for key in ("SLURM_JOB_ID", "SLURM_JOB_NAME", "SLURM_NNODES", "SLURM_NTASKS")
         }
         payload.setdefault("execution_stages", []).append(stage)
+        payload.setdefault("stage_runtime_validations", []).append(
+            stage_runtime_validation
+        )
         payload["final"] = {
             "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
             "time_s": float(time_name),

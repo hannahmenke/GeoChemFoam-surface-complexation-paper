@@ -162,6 +162,23 @@ diffusion input for the selected Pe.
 
 ## HPC handoff
 
+Production and restart jobs are pinned to the reviewed runtime identity in
+`production_runtime_identity.json`:
+
+- runtime commit `e7b486b68fac48544ca394cd27cf408214b40dd9`;
+- runtime tree `26a39f2e4487162d9631502a94c258500e1b8709`;
+- PhreeqcRM commit `8ce64cf64b3c26ff7fdc41dbf5ae4fb7269b3a92`;
+- solver SHA-256 `b8762ed35691ed9edf809866e4a39382cfa3d1a9b7f589fc0a02b35eff38290d`;
+- reaction-library SHA-256 `897f16b1aab58b34b3c60d24dd7e9d2f56f32501cf955fe9fd4ad0039384ed1e`;
+- PhreeqcRM-library SHA-256 `cfa877676ec21145ad60390c992dc7d80773ac4151c3c7c297d3de8ea8cc330a`.
+
+`runSingleCase.sh` verifies the commit, tree, submodule, artifact hashes, and
+dynamic-library resolution before generating geometry or running a solver. It
+writes `results/runtime_preflight.json`, and matched-run provenance repeats the
+same validation at initial and final stages. Set `GCFOAM_RUNTIME_ROOT` or
+`GCFOAM_DIR` to the reconstructed runtime checkout. A different commit or
+binary fails closed even if it is otherwise clean.
+
 Commit the case templates, scripts, and compressed source images in
 `shared/source`. Do not commit generated `.raw` domains, `processor*`
 directories, `0` directories, logs, `.out` files, or `results`; these are

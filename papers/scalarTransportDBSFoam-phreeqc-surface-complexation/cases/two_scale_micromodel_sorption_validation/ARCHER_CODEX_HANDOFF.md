@@ -24,6 +24,20 @@ physical domain at multiple Peclet numbers.
 
 ## Important Rules
 
+- Use only the reviewed production runtime recorded in
+  `production_runtime_identity.json`: commit `e7b486b68fac48544ca394cd27cf408214b40dd9`,
+  tree `26a39f2e4487162d9631502a94c258500e1b8709`, and PhreeqcRM
+  `8ce64cf64b3c26ff7fdc41dbf5ae4fb7269b3a92`. The preflight also verifies
+  the pinned solver, reaction-library, and PhreeqcRM-library hashes and their
+  dynamic resolution. The earlier `5e53ad4e` runtime bundle is obsolete and
+  must not be used; preserve it only as historical evidence.
+- Transfer artifacts are provided as `runtime-e7b486b6.bundle` (SHA-256
+  `995b3c95f94ea7e9c69a81c687cfe44fa9bdfc7ad119687f0fd3d2a0ec2a94ab`)
+  and `phreeqcrm-8ce64cf6.bundle` (SHA-256
+  `fc9330c6f2140d9270bdd1b6a4f9aa6f8322ff6f6a40549182e57282e64c79a5`).
+  Both record complete history. They transfer source, not compiled artifacts;
+  the three production binaries must also match the committed identity file.
+
 - Restart only from a written time containing `phreeqc.dmp`; run
   `RT_RESTART=1 RT_TOTAL_TIME=<new-absolute-end-time>
   ./runCaseReactiveTransport.sh` inside the case directory.
@@ -137,7 +151,10 @@ physical times.
    a conservative `df`-based preflight and exits before running if either
    scratch or archive space is below the estimate, but the agent should still
    inspect quota explicitly on the target system.
-5. From this directory, preview a matched non-baseline pair:
+5. Set `GCFOAM_RUNTIME_ROOT` or `GCFOAM_DIR` to the reconstructed reviewed
+   runtime and run `python3 scripts/verify_production_runtime.py`. Do not
+   submit if the identity preflight fails.
+6. From this directory, preview a matched non-baseline pair:
 
 ```bash
 OTHER_PE_SWEEP=3 ./prepare_archer_other_pe.sh

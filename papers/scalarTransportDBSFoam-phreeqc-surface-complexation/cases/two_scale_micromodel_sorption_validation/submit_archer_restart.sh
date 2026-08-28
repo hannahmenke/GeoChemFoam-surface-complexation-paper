@@ -139,14 +139,17 @@ account="${GCFOAM_SLURM_ACCOUNT:-n03-hw}"
 qos="${GCFOAM_SLURM_QOS:-standard}"
 wall_time="${GCFOAM_SLURM_TIME:-24:00:00}"
 repo_root="$(cd "$(dirname "$0")/../../../.." && pwd -P)"
+runtime_verifier="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/scripts/verify_production_runtime.py"
+runtime_preflight="$(dirname "$work_case_dir")/results/runtime_preflight_restart_${restart_time}.json"
 env_file="${GCFOAM_ENV_FILE:-$repo_root/.archer2-tools/gcfoam-env.sh}"
 if [ -f "$env_file" ]; then
     environment_export=",GCFOAM_ENV_FILE=$env_file"
-    run_prefix="source '$env_file' && "
+    run_prefix="source '$env_file' && python3 '$runtime_verifier' --output '$runtime_preflight' && "
 elif command -v reactiveTransportDBSFoam >/dev/null 2>&1 && \
      [ -n "${WM_PROJECT_DIR:-}" ]; then
     environment_export=""
-    run_prefix=""
+    python3 "$runtime_verifier" --output "$runtime_preflight"
+    run_prefix="python3 '$runtime_verifier' --output '$runtime_preflight' && "
     echo "Using the inherited GeoChemFoam/OpenFOAM environment."
 else
     echo "Missing environment helper: $env_file" >&2
