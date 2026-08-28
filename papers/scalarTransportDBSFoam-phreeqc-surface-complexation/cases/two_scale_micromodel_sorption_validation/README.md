@@ -208,11 +208,12 @@ The runner selects the newest time containing both `phreeqc.dmp` and the
 have succeeded. Set `RT_RESTART_TIME=<time>` to select a specific complete
 checkpoint instead; an incomplete or missing requested checkpoint is rejected.
 Checkpoints are intentionally complete and can be large. The
-4.32-million-cell DBS smoke measured approximately 4.3 kB per chemistry-active
-cell in the current dump format; the submission guard budgets 4.6 kB/cell.
-The previous complete dump remains available until the new field write and
-marker succeed, then it is removed. Resumable ARCHER2 runs continue from the
-persistent `archer_work` case directory.
+4.32-million-cell DBS smoke used approximately 19.17 GiB for each retained
+checkpoint, including its PHREEQCRM dump and OpenFOAM fields. The submission
+guard budgets 5.0 kB per cell for every requested checkpoint, plus 5 GiB of
+fixed overhead. Ten checkpoints therefore require approximately 206 GiB of
+scratch per DBS job and 413 GiB for a matched pair. Completed checkpoints are
+retained and remain restartable in the persistent `archer_work` case directory.
 
 For production Pe/case runs on ARCHER2, submit each case as a separate job. The
 single-case runner is:
@@ -338,8 +339,11 @@ that both scratch and archive filesystems have enough free space below quota.
 preflight and exits before running if either filesystem is too small. The
 archive estimate follows `TWO_SCALE_ARCHIVE_MODE`; metadata mode does not
 require space for a second copy of the persistent fields and PHREEQC dumps.
-The ARCHER project quota should still be checked explicitly on the target
-system.
+The preflight records its model, byte requirements, paired requirements, and
+observed free space in `results/storage_preflight.env`. Overrides may increase
+but cannot reduce the modeled requirements. The ARCHER project quota and the
+combined capacity for both matched jobs should still be checked explicitly on
+the target system.
 
 If a production run reaches the 24-hour site limit, continue its newest
 complete checkpoint in the existing work directory with:

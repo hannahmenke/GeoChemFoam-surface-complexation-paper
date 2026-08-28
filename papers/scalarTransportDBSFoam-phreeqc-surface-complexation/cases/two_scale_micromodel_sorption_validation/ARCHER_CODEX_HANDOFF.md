@@ -182,6 +182,7 @@ results/archer/two_scale_<case>_pe_<Pe>_<jobid>/
 Important files there:
 
 - `results/current_run_config.env`
+- `results/storage_preflight.env`
 - `results/preflight_summary.md`
 - `results/matched_pe_flow_rates.json`
 - `<case>/reactiveTransportDBSFoamRT.out`
@@ -198,24 +199,29 @@ for analysis. With ASCII OpenFOAM fields and ten output intervals, a resolved
 case can require hundreds of gigabytes to more than a terabyte of working space
 depending on how many fields are retained.
 
-The Slurm script estimates storage from:
+The Slurm script estimates retained checkpoint storage from:
 
 ```text
-cells * bytes_per_scalar_ascii * archived_fields * write_count
+cells * 5000 bytes_per_checkpoint_cell * checkpoint_count + 5 GiB overhead
 ```
 
-with additional runtime and safety multipliers. It reports:
+This model covers the PHREEQCRM dump and OpenFOAM fields retained at every
+checkpoint. The measured 4.32-million-cell DBS checkpoints used approximately
+19.17 GiB each. The 5.0 kB/cell budget gives approximately 206 GiB per ten-write
+DBS job and 413 GiB for the matched pair. It reports and records:
 
 ```text
 estimated_required
+estimated_matched_pair_required
 scratch_available
 archive_available
 ```
 
-and exits before copying/running if either filesystem is too small. On ARCHER,
-also run the site quota command for the relevant project/work filesystems
-before submission, because `df` free space does not necessarily mean the project
-quota is available.
+and exits before copying/running if either filesystem is too small. Storage
+overrides may increase but cannot reduce the modeled requirement. On ARCHER,
+also run the site quota command for the relevant project/work filesystems and
+confirm combined capacity for both matched jobs before submission, because
+`df` free space does not necessarily mean the project quota is available.
 
 ## Post-Run Checks
 

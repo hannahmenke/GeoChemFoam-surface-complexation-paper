@@ -52,70 +52,12 @@ case "$archive_mode" in
 esac
 
 estimate_bytes() {
-  python - <<'PY' "$TARGET_CASE" "$RT_CHECKPOINT_COUNT" "$1" "$archive_mode"
-import os
-import sys
-
-case_name = sys.argv[1]
-checkpoint_count = max(1, int(float(sys.argv[2])))
-scope = sys.argv[3]
-archive_mode = sys.argv[4]
-mirror_copies = int(os.environ.get("X_MIRROR_COPIES", "2"))
-if case_name == "resolved-reference":
-    x_min = int(os.environ.get("RESOLVED_CROP_X_MIN", "0"))
-    x_max = int(os.environ.get("RESOLVED_CROP_X_MAX", "6000"))
-    y_min = int(os.environ.get("RESOLVED_CROP_Y_MIN", "0"))
-    y_max = int(os.environ.get("RESOLVED_CROP_Y_MAX", "6000"))
-    coarsen_factor = int(os.environ.get("RESOLVED_COARSEN_FACTOR", "1"))
-elif case_name == "dbs-upscaled":
-    x_min = int(os.environ.get("DBS_CROP_X_MIN", "0"))
-    x_max = int(os.environ.get("DBS_CROP_X_MAX", "1200"))
-    y_min = int(os.environ.get("DBS_CROP_Y_MIN", "0"))
-    y_max = int(os.environ.get("DBS_CROP_Y_MAX", "1200"))
-    coarsen_factor = int(os.environ.get("DBS_COARSEN_FACTOR", "1"))
-else:
-    raise SystemExit(f"unknown TARGET_CASE: {case_name}")
-if coarsen_factor <= 0:
-    raise SystemExit("coarsen factor must be positive")
-if (x_max - x_min) % coarsen_factor or (y_max - y_min) % coarsen_factor:
-    raise SystemExit("crop dimensions must be divisible by coarsen factor")
-cells = (
-    ((x_max - x_min) // coarsen_factor)
-    * (1 + mirror_copies)
-    * ((y_max - y_min) // coarsen_factor)
-)
-
-write_count = checkpoint_count + 1  # includes time 0
-bytes_per_scalar_ascii = 22
-archived_fields = 11
-runtime_field_multiplier = 2.0
-safety_factor = 2.5
-estimated = (
-    cells
-    * bytes_per_scalar_ascii
-    * archived_fields
-    * write_count
-    * runtime_field_multiplier
-    * safety_factor
-)
-# The solver retains only the newest complete PHREEQC dump, but peak space
-# briefly contains the previous and new checkpoints while the new one is
-# written. The 4.32-million-cell DBS smoke measured approximately 4.3 kB per
-# active cell; use 4.6 kB/cell here to retain margin around that observation.
-estimated += 2 * cells * 4600
-if scope == "scratch" or archive_mode == "full":
-    result = estimated
-elif archive_mode == "selected":
-    # Selected mode copies eleven scalar fields but no PHREEQC dumps.
-    result = cells * bytes_per_scalar_ascii * archived_fields * write_count * safety_factor
-    result += 5 * 1024**3
-elif archive_mode == "metadata":
-    # Allow ample room for root logs, summaries, dictionaries, and reports.
-    result = 5 * 1024**3
-else:
-    raise SystemExit(f"unknown archive mode: {archive_mode}")
-print(int(result))
-PY
+  python "$submit_dir/scripts/estimate_archer_storage.py" \
+    --case "$TARGET_CASE" \
+    --checkpoint-count "$RT_CHECKPOINT_COUNT" \
+    --scope "$1" \
+    --archive-mode "$archive_mode" \
+    --override "${2:-}"
 }
 
 available_bytes() {
@@ -126,20 +68,45 @@ human_bytes() {
   numfmt --to=iec --suffix=B "$1" 2>/dev/null || echo "${1} B"
 }
 
-scratch_required_bytes="${TWO_SCALE_REQUIRED_BYTES:-$(estimate_bytes scratch)}"
-archive_required_bytes="${TWO_SCALE_ARCHIVE_REQUIRED_BYTES:-$(estimate_bytes archive)}"
+modeled_scratch_required_bytes="$(estimate_bytes scratch)"
+modeled_archive_required_bytes="$(estimate_bytes archive)"
+scratch_required_bytes="$(estimate_bytes scratch "${TWO_SCALE_REQUIRED_BYTES:-}")"
+archive_required_bytes="$(estimate_bytes archive "${TWO_SCALE_ARCHIVE_REQUIRED_BYTES:-}")"
 scratch_available="$(available_bytes "$work_dir")"
 archive_available="$(available_bytes "$archive_dir")"
+matched_pair_scratch_required_bytes=$((2 * scratch_required_bytes))
+matched_pair_archive_required_bytes=$((2 * archive_required_bytes))
 
 echo "=== Disk/quota preflight ==="
 echo "TARGET_CASE=$TARGET_CASE"
 echo "TARGET_PE=$TARGET_PE"
 echo "RT_CHECKPOINT_COUNT=$RT_CHECKPOINT_COUNT"
 echo "TWO_SCALE_ARCHIVE_MODE=$archive_mode"
+echo "modeled_scratch_required=$(human_bytes "$modeled_scratch_required_bytes")"
+echo "modeled_archive_required=$(human_bytes "$modeled_archive_required_bytes")"
 echo "estimated_scratch_required=$(human_bytes "$scratch_required_bytes")"
 echo "estimated_archive_required=$(human_bytes "$archive_required_bytes")"
+echo "estimated_matched_pair_scratch_required=$(human_bytes "$matched_pair_scratch_required_bytes")"
+echo "estimated_matched_pair_archive_required=$(human_bytes "$matched_pair_archive_required_bytes")"
 echo "scratch_available=$(human_bytes "$scratch_available") at $work_dir"
 echo "archive_available=$(human_bytes "$archive_available") at $archive_dir"
+
+mkdir -p "$work_dir/results"
+cat > "$work_dir/results/storage_preflight.env" <<EOF
+STORAGE_ESTIMATE_MODEL=retained-checkpoints-v2
+TARGET_CASE=$TARGET_CASE
+TARGET_PE=$TARGET_PE
+RT_CHECKPOINT_COUNT=$RT_CHECKPOINT_COUNT
+TWO_SCALE_ARCHIVE_MODE=$archive_mode
+MODELED_SCRATCH_REQUIRED_BYTES=$modeled_scratch_required_bytes
+MODELED_ARCHIVE_REQUIRED_BYTES=$modeled_archive_required_bytes
+REQUIRED_SCRATCH_BYTES=$scratch_required_bytes
+REQUIRED_ARCHIVE_BYTES=$archive_required_bytes
+MATCHED_PAIR_REQUIRED_SCRATCH_BYTES=$matched_pair_scratch_required_bytes
+MATCHED_PAIR_REQUIRED_ARCHIVE_BYTES=$matched_pair_archive_required_bytes
+SCRATCH_AVAILABLE_BYTES=$scratch_available
+ARCHIVE_AVAILABLE_BYTES=$archive_available
+EOF
 
 if [ "$scratch_available" -lt "$scratch_required_bytes" ]; then
   echo "Insufficient scratch space for estimated run output." >&2
