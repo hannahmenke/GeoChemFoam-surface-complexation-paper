@@ -21,6 +21,10 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
 def git_value(root: Path, *args: str) -> str:
     result = subprocess.run(
         ["git", "-C", str(root), *args],
@@ -33,6 +37,7 @@ def git_value(root: Path, *args: str) -> str:
 
 def git_state(root: Path) -> dict[str, object]:
     status = git_value(root, "status", "--porcelain").splitlines()
+    tracked_diff = git_value(root, "diff", "--binary")
     dirty_paths = [line[3:] for line in status if len(line) > 3]
     allowed = {"etc/bashrc", "ThirdParty/PhreeqcRM"}
     return {
@@ -40,8 +45,30 @@ def git_state(root: Path) -> dict[str, object]:
         "commit": git_value(root, "rev-parse", "HEAD"),
         "branch": git_value(root, "branch", "--show-current"),
         "dirty": bool(status),
+        "status_porcelain": status,
+        "tracked_diff_sha256": sha256_text(tracked_diff),
         "dirty_paths": dirty_paths,
         "source_dirty_paths": [path for path in dirty_paths if path not in allowed],
+    }
+
+
+def runtime_artifacts(runtime_root: Path, solver: Path) -> dict[str, object]:
+    result = subprocess.run(
+        ["ldd", str(solver)], check=True, text=True, stdout=subprocess.PIPE
+    )
+    libraries = []
+    for line in result.stdout.splitlines():
+        match = re.search(r"=>\s+(/\S+)\s+\(", line)
+        if match:
+            path = Path(match.group(1)).resolve()
+            if path.is_relative_to(runtime_root) and path.is_file():
+                libraries.append({"path": str(path), "sha256": sha256(path)})
+    submodule_root = runtime_root / "ThirdParty" / "PhreeqcRM"
+    return {
+        "solver": {"path": str(solver.resolve()), "sha256": sha256(solver)},
+        "resolved_libraries": libraries,
+        "ldd_sha256": sha256_text(result.stdout),
+        "phreeqcrm_submodule": git_state(submodule_root),
     }
 
 
@@ -70,6 +97,77 @@ def surface_record(path: Path, expected_mode: str, expected_sigma: float) -> dic
     }
 
 
+def chemistry_record(thermo_file: Path, inputs: list[Path]) -> dict[str, object]:
+    text = thermo_file.read_text()
+    block = re.search(r"surfaceMasterDensities\s*\{(.*?)\}", text, re.S)
+    if not block:
+        raise SystemExit(f"Missing surfaceMasterDensities in {thermo_file}")
+    densities = {
+        name: float(value)
+        for name, value in re.findall(
+            r"([A-Za-z0-9_+\-]+)\s+([0-9.eE+\-]+)\s*;", block.group(1)
+        )
+    }
+    if not densities:
+        raise SystemExit(f"No surface master densities found in {thermo_file}")
+    records = []
+    for input_path in inputs:
+        resolved = input_path.resolve()
+        if not resolved.is_file():
+            raise SystemExit(f"Missing provenance input: {resolved}")
+        records.append({"path": str(resolved), "sha256": sha256(resolved)})
+    return {"surface_master_densities_kmol_m2": densities, "files": records}
+
+
+def uniform_value(path: Path) -> float:
+    match = re.search(r"internalField\s+uniform\s+([0-9.eE+\-]+)\s*;", path.read_text())
+    if not match:
+        raise SystemExit(f"Expected a uniform internalField in {path}")
+    return float(match.group(1))
+
+
+def control_values(path: Path) -> dict[str, float]:
+    text = path.read_text()
+    values: dict[str, float] = {}
+    for key in ("endTime", "deltaT", "writeInterval"):
+        match = re.search(rf"^\s*{key}\s+([0-9.eE+\-]+)\s*;", text, re.M)
+        if not match:
+            raise SystemExit(f"Missing numeric {key} in {path}")
+        values[key] = float(match.group(1))
+    return values
+
+
+def record_run_config(args: argparse.Namespace) -> None:
+    payload = json.loads(args.manifest.read_text())
+    chemistry = chemistry_record(args.thermo_file, [args.thermo_file])
+    expected = chemistry["surface_master_densities_kmol_m2"]
+    rank_dirs = sorted(args.case_dir.glob("processor*/0"))
+    zero_dirs = rank_dirs or [args.case_dir / "0"]
+    masters = []
+    for zero_dir in zero_dirs:
+        for name, expected_value in expected.items():
+            field = zero_dir / name
+            actual = uniform_value(field)
+            if abs(actual - expected_value) > 1.0e-15 * max(1.0, abs(expected_value)):
+                raise SystemExit(f"Surface master mismatch in {field}: {actual} != {expected_value}")
+            masters.append({"path": str(field.resolve()), "value_kmol_m2": actual, "sha256": sha256(field)})
+    initial_inputs = []
+    for rank_dir in sorted(args.case_dir.glob("processor*")):
+        for input_root in (rank_dir / "0", rank_dir / "constant" / "polyMesh"):
+            if input_root.is_dir():
+                for path in sorted(item for item in input_root.rglob("*") if item.is_file()):
+                    initial_inputs.append({"path": str(path.resolve()), "sha256": sha256(path)})
+    payload["realized_transport"] = {
+        **control_values(args.control_dict),
+        "control_dict": {"path": str(args.control_dict.resolve()), "sha256": sha256(args.control_dict)},
+        "thermo_file": {"path": str(args.thermo_file.resolve()), "sha256": sha256(args.thermo_file)},
+        "surface_master_fields": masters,
+        "initial_rank_inputs": initial_inputs,
+    }
+    args.manifest.write_text(json.dumps(payload, indent=2) + "\n")
+    print(f"Updated realized run configuration in {args.manifest}")
+
+
 def record(args: argparse.Namespace) -> None:
     case_dir = args.case_dir.resolve()
     paper_root = args.paper_root.resolve()
@@ -96,8 +194,10 @@ def record(args: argparse.Namespace) -> None:
         "paper": git_state(paper_root),
         "runtime": runtime,
         "solver_executable": str(Path(solver).resolve()),
+        "runtime_artifacts": runtime_artifacts(runtime_root, Path(solver)),
         "surface": surface_record(args.surface_log, args.mode, args.sigma),
         "intrinsic_surface": surface_record(args.intrinsic_log, args.mode, args.sigma),
+        "chemistry": chemistry_record(args.thermo_file, args.input),
     }
     args.output.write_text(json.dumps(payload, indent=2) + "\n")
     print(f"Wrote {args.output}")
@@ -136,6 +236,7 @@ def record_basic(args: argparse.Namespace) -> None:
         "paper": git_state(paper_root),
         "runtime": runtime,
         "solver_executable": str(Path(solver).resolve()),
+        "runtime_artifacts": runtime_artifacts(runtime_root, Path(solver)),
         "surface": surface,
         "inputs": inputs,
     }
@@ -208,10 +309,19 @@ def parser() -> argparse.ArgumentParser:
     rec.add_argument("--runtime-root", type=Path, required=True)
     rec.add_argument("--surface-log", type=Path, required=True)
     rec.add_argument("--intrinsic-log", type=Path, required=True)
+    rec.add_argument("--thermo-file", type=Path, required=True)
+    rec.add_argument("--input", action="append", type=Path, default=[])
     rec.add_argument("--mode", required=True)
     rec.add_argument("--sigma", type=float, required=True)
     rec.add_argument("--output", type=Path, required=True)
     rec.set_defaults(func=record)
+
+    run_cfg = commands.add_parser("record-run-config")
+    run_cfg.add_argument("--manifest", type=Path, required=True)
+    run_cfg.add_argument("--case-dir", type=Path, required=True)
+    run_cfg.add_argument("--control-dict", type=Path, required=True)
+    run_cfg.add_argument("--thermo-file", type=Path, required=True)
+    run_cfg.set_defaults(func=record_run_config)
 
     basic = commands.add_parser("record-basic")
     basic.add_argument("--case-id", required=True)
