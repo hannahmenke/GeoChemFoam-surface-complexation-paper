@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -Eeuo pipefail
+set -Eo pipefail
 cd "$(dirname "$0")"
 
 if [[ -z "${ITEM1_RUNTIME_SETUP:-}" || ! -f "$ITEM1_RUNTIME_SETUP" ]]; then
@@ -10,6 +10,7 @@ fi
 
 # shellcheck disable=SC1090
 source "$ITEM1_RUNTIME_SETUP"
+set -Eeuo pipefail
 export GCFOAM_RUNTIME_ROOT="$GCFOAM_DIR"
 export TOTAL_TIME=20000
 export WRITE_TIMESTEP=2000
