@@ -10,20 +10,19 @@
 \usepackage{manyfoot}
 \usepackage[section]{placeins}
 
+\newcommand{\orcidtext}[1]{\href{https://orcid.org/#1}{\textnormal{\footnotesize [ORCID: #1]}}}
+
 \raggedbottom
 
 \begin{document}
 
 \title[Conservative DBS Formulation for PHREEQC-Coupled Reactive Transport]{A Conservative Darcy-Brinkman-Stokes Formulation for PHREEQC-Coupled Reactive Transport with Cell-Based Surface Complexation}
 
-\author*[1,2]{\fnm{Hannah P.} \sur{Menke}}\email{H.Menke@hw.ac.uk}
-%% ORCID: 0000-0002-1445-6354
+\author*[1,2]{\fnm{Hannah P.} \sur{Menke} \orcidtext{0000-0002-1445-6354}}\email{H.Menke@hw.ac.uk}
 
-\author[1,2]{\fnm{Florian} \sur{Doster}}
-%% ORCID: 0000-0001-7460-573X
+\author[1,2]{\fnm{Florian} \sur{Doster} \orcidtext{0000-0001-7460-573X}}
 
-\author[1,2]{\fnm{Julien} \sur{Maes}}
-%% ORCID: 0000-0002-3248-9758
+\author[1,2]{\fnm{Julien} \sur{Maes} \orcidtext{0000-0002-3248-9758}}
 
 \affil*[1]{\orgdiv{Institute for GeoEnergy Engineering}, \orgname{Heriot-Watt University}, \orgaddress{\city{Edinburgh}, \country{United Kingdom}}}
 
@@ -39,7 +38,7 @@
 \begin{itemize}
 \item One-dimensional tests reproduce delayed solute transport while tracking dissolved and surface-bound mass.
 \item Image-based tests assess how reactive surface area is represented in two and three dimensions.
-\item Cell-based reactive area represents mineral surfaces that are too small to resolve in images.
+\item The cell field accounts for reactive area that is unresolved at the image scale.
 \end{itemize}
 
 \input{sections/02_introduction}
