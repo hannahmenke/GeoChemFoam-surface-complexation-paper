@@ -36,9 +36,22 @@
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
 - source case:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures`
 - reproducible entry point:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation/runAll.sh`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh`
+- accepted artifact:
+  - `1860 x 675` pixels
+  - SHA-256 `72380206ac6e03d7d86f53a4c27f57fc319459d8b1b7ffb469c7b2e836ecaf38`
+- accepted run and validation records:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/run_provenance.json`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_item2_validation_metrics.json`
+- machine-readable figure record:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/figure_provenance.json`
+- verifier:
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py`
+  - this is the bounded Figure 2 schema used for the accepted run, not the final
+    repository-wide common provenance schema
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py`
 - repeatable command:

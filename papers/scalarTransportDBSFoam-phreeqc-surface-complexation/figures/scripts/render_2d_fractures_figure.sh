@@ -12,7 +12,7 @@ figure_manifest="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-comple
 numerical_validator="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py"
 validation_metrics="$png_dir/fig02_item2_validation_metrics.json"
 validator_sha256="85754589f4e398173664e09aa3435541e5db1c9cc17b8ea4f9ddf04bd23da718"
-renderer_commit="$(git -C "$repo_root" rev-parse HEAD)"
+renderer_base_commit="$(git -C "$repo_root" rev-parse HEAD)"
 renderer_repository="$(git -C "$repo_root" remote get-url origin)"
 
 required_fields=(
@@ -46,7 +46,7 @@ fi
 python "$provenance_tool" check-run \
   --manifest "$run_manifest" \
   --case-dir "$case_dir" \
-  --paper-commit 103685cb597e75c4bdceb84adb9d26ade8604928 \
+  --paper-commit fdd31c399d6fd6317027474ce9667d9850a7bb18 \
   --runtime-commit 3c4a34326b5573d76d48664093a1933a5a65b316 \
   --solver-sha256 3b41fd0914b4407fa591ea403cc66c4fde1daa7d1608481edaac19533e11b124 \
   --library-sha256 libfiniteVolumeGCFOAM.so=e13af080edca54982d9950378ab27d1c0df5cc1b26d384eb6bb64845348502ad \
@@ -113,7 +113,7 @@ python "$provenance_tool" record-figure \
   --renderer-source "$provenance_tool" \
   --renderer-source "$numerical_validator" \
   --renderer-repository "$renderer_repository" \
-  --renderer-commit "$renderer_commit" \
+  --renderer-base-commit "$renderer_base_commit" \
   --output "$figure_manifest"
 
 echo "Wrote $png_dir/fig02_2d_fractures.png"

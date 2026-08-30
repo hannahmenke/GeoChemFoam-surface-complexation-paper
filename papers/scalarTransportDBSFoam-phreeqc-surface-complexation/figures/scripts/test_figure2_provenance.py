@@ -31,6 +31,18 @@ validator = load(
 
 class Figure2Tests(unittest.TestCase):
     @staticmethod
+    def write_checkpoint(directory: Path, time_name: str, dump: bytes = b"state\n") -> None:
+        directory.mkdir(parents=True, exist_ok=True)
+        dump_path = directory / "phreeqc.dmp"
+        dump_path.write_bytes(dump)
+        (directory / "phreeqc.complete").write_text(
+            "GeoChemFoam-PHREEQCRM-checkpoint 1\n"
+            f"time {time_name}\n"
+            f"dumpSize {len(dump)}\n"
+            f"dumpSHA256 {provenance.sha256(dump_path)}\n"
+        )
+
+    @staticmethod
     def populate_run_outputs(case: Path) -> None:
         case.mkdir(parents=True, exist_ok=True)
         (case / "reactiveTransportDBSFoamRT.out").write_text("Time = 20000\nEnd\n")
@@ -70,6 +82,50 @@ class Figure2Tests(unittest.TestCase):
             path.write_text("changed")
             with self.assertRaises(SystemExit):
                 provenance.verify_file(record, "input")
+
+    def test_checkpoint_validation_covers_every_rank_and_write_time(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            case = Path(tmp)
+            times = provenance.checkpoint_time_names(6000.0, 2000.0)
+            self.assertEqual(times, ("2000", "4000", "6000"))
+            for rank in range(8):
+                for time_name in times:
+                    self.write_checkpoint(case / f"processor{rank}" / time_name, time_name)
+            provenance.verify_checkpoints(case, times)
+            (case / "processor3" / "4000" / "phreeqc.dmp").write_bytes(b"other\n")
+            with self.assertRaisesRegex(SystemExit, "Checkpoint SHA256 mismatch"):
+                provenance.verify_checkpoints(case, times)
+
+    def test_checkpoint_validation_rejects_wrong_recorded_size(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "2000"
+            self.write_checkpoint(directory, "2000")
+            (directory / "phreeqc.dmp").write_bytes(b"longer state\n")
+            with self.assertRaisesRegex(SystemExit, "Checkpoint size mismatch"):
+                provenance.verify_checkpoint(directory, "2000")
+
+    def test_checkpoint_validation_rejects_malformed_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "2000"
+            self.write_checkpoint(directory, "2000")
+            (directory / "phreeqc.complete").write_text("complete\n")
+            with self.assertRaisesRegex(SystemExit, "Malformed checkpoint marker"):
+                provenance.verify_checkpoint(directory, "2000")
+
+    def test_checkpoint_validation_rejects_wrong_recorded_time(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "2000"
+            self.write_checkpoint(directory, "4000")
+            with self.assertRaisesRegex(SystemExit, "Wrong checkpoint time"):
+                provenance.verify_checkpoint(directory, "2000")
+
+    def test_checkpoint_validation_rejects_pending_marker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "2000"
+            self.write_checkpoint(directory, "2000")
+            (directory / "phreeqc.complete.tmp").write_text("pending\n")
+            with self.assertRaisesRegex(SystemExit, "Incomplete checkpoint marker remains"):
+                provenance.verify_checkpoint(directory, "2000")
 
     def test_portable_paths_fail_closed_outside_declared_roots(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -127,9 +183,10 @@ class Figure2Tests(unittest.TestCase):
                 case_dir=case, paper_root=root, figure_input=[manifest],
                 renderer_source=[manifest, manifest, manifest],
                 renderer_repository="https://example.test/paper.git",
-                renderer_commit="a" * 40,
+                renderer_base_commit="a" * 40,
             ))
             recorded = json.loads(output.read_text())
+            self.assertEqual(recorded["schema_scope"], "bounded_figure2")
             self.assertTrue(recorded["figures"]["existing.png"]["keep"])
             entry = recorded["figures"]["fig02.png"]
             self.assertEqual(entry["figure_sha256"], provenance.sha256(figure))
@@ -139,7 +196,11 @@ class Figure2Tests(unittest.TestCase):
             self.assertEqual(entry["figure_inputs"][0]["sha256"], provenance.sha256(manifest))
             self.assertEqual(entry["figure_path"], "${PAPER_REPO}/fig02.png")
             self.assertEqual(entry["run_outputs"]["solver_log"]["path"], "${RUN_CASE_DIR}/reactiveTransportDBSFoamRT.out")
-            self.assertEqual(entry["renderer"]["commit"], "a" * 40)
+            self.assertEqual(entry["renderer"]["base_commit"], "a" * 40)
+            self.assertEqual(entry["renderer"]["source_state"], "curated_dirty_at_base")
+            self.assertTrue(entry["renderer"]["source_files_authoritative"])
+            self.assertIn("source_files are authoritative", entry["renderer"]["source_authority"])
+            self.assertNotIn("commit", entry["renderer"])
 
 
 if __name__ == "__main__":

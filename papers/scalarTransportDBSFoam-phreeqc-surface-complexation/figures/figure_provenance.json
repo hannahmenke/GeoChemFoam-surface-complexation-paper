@@ -37,7 +37,7 @@
           },
           {
             "path": "${RUN_CASE_DIR}/system/controlDict1",
-            "sha256": "d451ebc96ab88ff10f10245a00220782041283df45c74df4a542c76f8e12f276"
+            "sha256": "e270fed1dd9d7e1551cbc6c473d69cd01f64fb70c35ecc1587a8ce4932563ba7"
           },
           {
             "path": "${RUN_CASE_DIR}/system/fvSchemes",
@@ -109,7 +109,7 @@
           },
           {
             "path": "${RUN_PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/case_provenance.py",
-            "sha256": "dd37b1b727d9c8d484e14f2730e4b6cc0d1bbeb2f20fd09073384f77c5fe4599"
+            "sha256": "a8d4effcd6de5f4413a31abd33370f486fa86e7b281c72076b96167c914a0cfb"
           },
           {
             "path": "${RUN_PAPER_REPO}/scripts/createASurfMarchingCubes.py",
@@ -132,15 +132,15 @@
       "figure_inputs": [
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
-          "sha256": "38638d034f8c621b2eb227934a99b904ca14d6f0d7153419445e17efa9255c39"
+          "sha256": "5f33bf9a60f8abe66f93a2ded7f6bc4a8b847b96fcffee3472594136fad61c96"
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
-          "sha256": "ac13990d5a48bc34da8252e0b600793bfe561838668208148e745d46e093dac5"
+          "sha256": "2610e8fc8f8c01c17740038fe188caf8781fe0ebead4ecf893388cc134e7b598"
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
-          "sha256": "5d0223570de59bbd1b47e553d7a95a27067711cc52fe1968b029f2a3b8ad14df"
+          "sha256": "295170e4fe40297eac7fc1d1c637a84945c57ad9ef479dab92d1dc2fe7b9bb94"
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
@@ -148,7 +148,7 @@
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_item2_validation_metrics.json",
-          "sha256": "7d8d01fec5c2c37fcaa0c3ddffa741356810443dfed34a8776b82fc0be533f84"
+          "sha256": "4bb785d0f89c251bbdac51e8f44966301f9b0630ebb3dbe75ceb28c2ceb618c8"
         },
         {
           "path": "${PAPER_REPO}/images/raw/4StraightFractures.raw.tar.gz",
@@ -160,7 +160,7 @@
         }
       ],
       "figure_path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_2d_fractures.png",
-      "figure_sha256": "b4b8d97c232d1ea2d8cb8c2c397f7a9883b5f91b938ec139dca5e8e5d4373911",
+      "figure_sha256": "72380206ac6e03d7d86f53a4c27f57fc319459d8b1b7ffb469c7b2e836ecaf38",
       "intrinsic_surface": {
         "integrated_area_m2": 0.021960000000000004,
         "mode": "occupancyGaussian",
@@ -171,20 +171,19 @@
       "output_time_s": 20000.0,
       "paper": {
         "branch": "",
-        "commit": "103685cb597e75c4bdceb84adb9d26ade8604928",
+        "commit": "fdd31c399d6fd6317027474ce9667d9850a7bb18",
         "dirty": true,
         "dirty_paths": [
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/0/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createMesh.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteAll.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteReactiveTransport.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseReactiveTransport.sh",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/poroPerm.csv",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processReactiveTransport.sh",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor0/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor1/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor2/",
@@ -193,27 +192,20 @@
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor5/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor6/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor7/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseReactiveTransport.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/case_provenance.py",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/SPDict"
         ],
         "root": "${RUN_PAPER_REPO}",
         "source_dirty_paths": [
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/0/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createMesh.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteAll.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteReactiveTransport.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseReactiveTransport.sh",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/poroPerm.csv",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processReactiveTransport.sh",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor0/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor1/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor2/",
@@ -222,26 +214,19 @@
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor5/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor6/",
           "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor7/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseFlow.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseReactiveTransport.sh",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/case_provenance.py",
-          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/SPDict"
         ],
         "status_porcelain": [
+          " M papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+          " M papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+          " M papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/0/",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createMesh.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteAll.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteFlow.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteReactiveTransport.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseFlow.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseReactiveTransport.sh",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/poroPerm.csv",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processFlow.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processReactiveTransport.sh",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor0/",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor1/",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor2/",
@@ -250,15 +235,9 @@
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor5/",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor6/",
           "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor7/",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseFlow.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseReactiveTransport.sh",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/case_provenance.py",
-          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/SPDict"
         ],
-        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "tracked_diff_sha256": "fc6b9e34a3ed3a0d93284c87b3e0892b7c4ec9b147978cbbf041eeae1d32fe91"
       },
       "path_roots": {
         "PAPER_REPO": "checkout of the paper repository",
@@ -269,7 +248,7 @@
       "realized_transport": {
         "control_dict": {
           "path": "${RUN_CASE_DIR}/system/controlDict",
-          "sha256": "077ab9dfcbbbe0ceb35aa01b285264f670a39353d4beab7ee8c2ccf8b9cfa49f"
+          "sha256": "efe0f94b3321e6ef743d6c056af9fbb34247172e5bb69482cd3d6192828593ab"
         },
         "deltaT": 0.25,
         "endTime": 20000.0,
@@ -361,231 +340,235 @@
         },
         "writeInterval": 2000.0
       },
-      "recorded_utc": "2026-08-28T08:59:46.122757+00:00",
+      "accepted_figure_recorded_utc": "2026-08-29T12:21:23.377416+00:00",
+      "recorded_utc": "2026-08-30T14:31:14.816306+00:00",
       "renderer": {
-        "commit": "01a7bb0ea3194c2e2802ef9a2b064d9613908c10",
+        "base_commit": "fdd31c399d6fd6317027474ce9667d9850a7bb18",
         "repository": "https://github.com/hannahmenke/GeoChemFoam-surface-complexation-paper.git",
+        "source_authority": "Exact SHA-256 records in source_files are authoritative; base_commit identifies only the underlying Git state.",
         "source_files": [
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
-            "sha256": "38638d034f8c621b2eb227934a99b904ca14d6f0d7153419445e17efa9255c39"
+            "sha256": "5f33bf9a60f8abe66f93a2ded7f6bc4a8b847b96fcffee3472594136fad61c96"
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
-            "sha256": "ac13990d5a48bc34da8252e0b600793bfe561838668208148e745d46e093dac5"
+            "sha256": "2610e8fc8f8c01c17740038fe188caf8781fe0ebead4ecf893388cc134e7b598"
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
-            "sha256": "5d0223570de59bbd1b47e553d7a95a27067711cc52fe1968b029f2a3b8ad14df"
+            "sha256": "295170e4fe40297eac7fc1d1c637a84945c57ad9ef479dab92d1dc2fe7b9bb94"
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
             "sha256": "85754589f4e398173664e09aa3435541e5db1c9cc17b8ea4f9ddf04bd23da718"
           }
         ],
-        "source_files_sha256": "281983446d59267e5365360b6c83c50c46f717b89092032ec580bfbcccd498a9"
+        "source_files_authoritative": true,
+        "source_files_sha256": "b13614be46c2ad6be217384242ac9ab363a3b8a87ede2236b2ecf94723e4b844",
+        "source_state": "curated_dirty_at_base"
       },
       "run_manifest_path": "${RUN_CASE_DIR}/run_provenance.json",
-      "run_manifest_sha256": "3767dcd9e5ea1a2aa5e006c9896b2d3c77d466abf19fad15181e37883b1fddcb",
+      "run_manifest_sha256": "93a4aed8a657f0ec060c39845071016c857cb19db8dce16f69893b070debd87c",
       "run_outputs": {
         "final_rank_fields": [
           {
             "path": "${RUN_CASE_DIR}/processor0/20000/Pb+2",
-            "sha256": "568b6f74657a85891cf623889c492b60af6530b27e4a1ba479dcbc6d0cb5e954"
+            "sha256": "4eb4fdea1fc09fc9b63dd869b18d95cda3817819859748401c40ecff658cac18"
           },
           {
             "path": "${RUN_CASE_DIR}/processor0/20000/Cl-",
-            "sha256": "11394c5fd4773618e67897a3483a4fc581073e65e35f54b3364ed9c1991fe74d"
+            "sha256": "3d63070ac06edf3dda8914f4bc4ee664c3975608d05fd4bd0e0314d791b4c01a"
           },
           {
             "path": "${RUN_CASE_DIR}/processor0/20000/H+",
-            "sha256": "8d346ac8c15d98bc3482296d3ccbd622f3e8bd10dcd60b0620ff0a6efbd0ae37"
+            "sha256": "6c69550cdfaeeb3c18cf4d05ecde55fb87b6646ceaf4ea4fe4333be478de7898"
           },
           {
             "path": "${RUN_CASE_DIR}/processor0/20000/OH-",
-            "sha256": "dc514b17fed086ff7e1d536f438e81db5ab83a20f0519b629a89626e191c2ff9"
+            "sha256": "92b467369a2e58423d2127999bbacf66418c2c583a41c37c194e26043b4e5f01"
           },
           {
             "path": "${RUN_CASE_DIR}/processor0/20000/Surf_sOPb+",
-            "sha256": "5c90ba077d09517c0fe81f6cd7e0bf8c04a9e6a142010874cf6b401ff67f314c"
+            "sha256": "cedfa10edfd9ad2ae44e005a474f2cd56dd7c0a865ffedbabb65d1ff7c91f931"
           },
           {
             "path": "${RUN_CASE_DIR}/processor0/20000/Surf_wOPb+",
-            "sha256": "ac5bce7ef120b8958133dac6eb7677ad186f1cc6ab274aa9253b03516d1fc211"
+            "sha256": "1663fd321e0badafd2ca9e600dc77c80299798003f24908f8efced8d8c7d84e0"
           },
           {
             "path": "${RUN_CASE_DIR}/processor1/20000/Pb+2",
-            "sha256": "149fc686b7ecef9602a90787f5c4ea2c0ae3e1a63bbb233e71616bf59706126b"
+            "sha256": "bcb5dff4978231a9cbe365d4301d0a0a542a9200cf2dcfab0b0805dea561ec34"
           },
           {
             "path": "${RUN_CASE_DIR}/processor1/20000/Cl-",
-            "sha256": "43bc00a8ca3ed3cddf0f3c54f2f82b3044d63d01d4a092410640f1fb7392f47d"
+            "sha256": "349f56adc01b448ab7c3044daaf04f1da2cd29395330963d3a4bd1733723f9df"
           },
           {
             "path": "${RUN_CASE_DIR}/processor1/20000/H+",
-            "sha256": "1a88a36735b5b350c6f260f5b6bf381773df23fb4af4874c79366688ee49fb94"
+            "sha256": "1a32f7dbaf2a1555e45b02ea456fed2960dd4b0ba41b7c9c48953bc767a39d78"
           },
           {
             "path": "${RUN_CASE_DIR}/processor1/20000/OH-",
-            "sha256": "e78bf837a255c5555423d6bafb0fab2df7cef0d4db839f9ca05cd348d47fe003"
+            "sha256": "aecc79b40f8a19fd12d8bdac1c3c8a842ba0f08c4b8cc264c574a982ab6d91a3"
           },
           {
             "path": "${RUN_CASE_DIR}/processor1/20000/Surf_sOPb+",
-            "sha256": "a3392d92d430b132e51c8731729e007c94cfc448f4ad207b9a8401e1fc45287b"
+            "sha256": "97b2bf4bef9a0258af7a2faa472ee0181111ac2c255a6647d223f4519c8e11c3"
           },
           {
             "path": "${RUN_CASE_DIR}/processor1/20000/Surf_wOPb+",
-            "sha256": "9afa28896dff70c829b321a9c79a64c51ec1777c35cc35b4df7e3948e864d688"
+            "sha256": "2d772fa3de5041d72b7c5076b0fff0eaf67dece17efc5f834ad46c5f2cd8e23b"
           },
           {
             "path": "${RUN_CASE_DIR}/processor2/20000/Pb+2",
-            "sha256": "2e52ea8036a102e5d4e9b08c3e0e204b55c0a7da00428e9cd1144631db823148"
+            "sha256": "75b7b2015dfa27d74545bd8d2bb8bc672cda6b00763851a6998b6f973fe3f699"
           },
           {
             "path": "${RUN_CASE_DIR}/processor2/20000/Cl-",
-            "sha256": "7b67407147137909831c6b4352cec00c9cb3eff9af632e970c661c085de48850"
+            "sha256": "0200c9cff3ff210fe810309aaa61aa75a8ef246d80160bc32d840c8183452dc7"
           },
           {
             "path": "${RUN_CASE_DIR}/processor2/20000/H+",
-            "sha256": "587192d9c64e4fe86e370f6f8dd11cfd5d9dfc434bbf52d2b506419e73fc8fc7"
+            "sha256": "cbecb25a2fb59e125fc33f903c8c44ce4b98202b489974b6766feb7a07c030f8"
           },
           {
             "path": "${RUN_CASE_DIR}/processor2/20000/OH-",
-            "sha256": "12fe6a2e49ff24baa12e8b796d9b5cbcfd13bb60ad8b325d5ca5ecabce03ae58"
+            "sha256": "c960993ee4153037b870706fd576a7c08c8cd2735713c8cf9357354644a27a5e"
           },
           {
             "path": "${RUN_CASE_DIR}/processor2/20000/Surf_sOPb+",
-            "sha256": "271e8848056f4361479867bc41d6723089cd4f1f4b0e3bb649eeb3255473b847"
+            "sha256": "5511462e62c4fb109f0103337f5a9591e0b8afa4b0f86e6559f457c77f2a51c3"
           },
           {
             "path": "${RUN_CASE_DIR}/processor2/20000/Surf_wOPb+",
-            "sha256": "c51d183ae968b8874ce2a036cdb16b77c50b6fb5257da2b70cf1514fc94d7c8c"
+            "sha256": "08647e16ca24784d2d4a75d9a46b0203d63faf9b20c6c6b3810ea6919d01f932"
           },
           {
             "path": "${RUN_CASE_DIR}/processor3/20000/Pb+2",
-            "sha256": "3d5966b1eaee66f4d0574f74ac6ba2c7437fc74aa0bc03de13a01299d6748e97"
+            "sha256": "d38a904042ded554145724131551bb33331b2de5e45e0fb0c3b5437893a0c0f3"
           },
           {
             "path": "${RUN_CASE_DIR}/processor3/20000/Cl-",
-            "sha256": "150e3843db243ba902f175d5eed13ed65bee406622702588efa423a18a64cddf"
+            "sha256": "e9e16e9165766d5f2cb0b657b2c92d8209b7597bc9a3dc92b63e7b4959d14b95"
           },
           {
             "path": "${RUN_CASE_DIR}/processor3/20000/H+",
-            "sha256": "f9b1403e670c452cd78d432c6d5565fe0f770e282e14cfee1fbc4535f2d6fbc2"
+            "sha256": "89544e141066c109d7c5c96871ae96757a64c4acdfb3f63c5461c947b72291f0"
           },
           {
             "path": "${RUN_CASE_DIR}/processor3/20000/OH-",
-            "sha256": "4b434ae438cd6158b150ff23556c538b5e52734ed59afb8e06b0afbb815a91d6"
+            "sha256": "d7ed45865a6cb8ba92dd960c564a33b7b994862b4bfb522ddf6651032cbc5677"
           },
           {
             "path": "${RUN_CASE_DIR}/processor3/20000/Surf_sOPb+",
-            "sha256": "4f1f6429ddd306e9546d916ce46947c3526fb03d10dbb0a6bd36d34b8cdb9f84"
+            "sha256": "8f8e3b298f4ee5781ccb1640bbb181d7d6207dafa12d05e1894d5fc8ec82b8cc"
           },
           {
             "path": "${RUN_CASE_DIR}/processor3/20000/Surf_wOPb+",
-            "sha256": "d5e9a25a3c2f50aab542a0947e1489f8cb9f7e653ebbe55293ac19bb2c281834"
+            "sha256": "af655d33580827aa51dab43e5872555decbeec4c4048fedd1e44f56bd21a5e5c"
           },
           {
             "path": "${RUN_CASE_DIR}/processor4/20000/Pb+2",
-            "sha256": "38a9e24a37388cdacdbb39574eddb4dec818562fb655d76e74706a7e3ba2d094"
+            "sha256": "49d92106949f840201a35614bb1f10d0a9167868fd83f56f3dbe1404b694b569"
           },
           {
             "path": "${RUN_CASE_DIR}/processor4/20000/Cl-",
-            "sha256": "4b0c1dbcc2f433600eb7f96249e2921b1f6f9e114d7e9240cd8b0dfafc4cdbcb"
+            "sha256": "85c7847f439272ffd67e472feb083e5805c9082779c206c992ff6d8c44f0f3e3"
           },
           {
             "path": "${RUN_CASE_DIR}/processor4/20000/H+",
-            "sha256": "cbc85eea63c239ba61308270d80160db5755a30e60b9f68a12234fe5b308b0bb"
+            "sha256": "57a549d0fd166572ddcc19d8dd3eda9bb1a5ed0ac593cb9fd754e1c97be6f33a"
           },
           {
             "path": "${RUN_CASE_DIR}/processor4/20000/OH-",
-            "sha256": "4f1750c1204ffa4bd2036d3f443ac80e190136ddcbde7e8731ff9f0cafaaebbd"
+            "sha256": "41c2f368ce866f3bf1399e436fc93de08240e207c9396143ef8ff4b91570833b"
           },
           {
             "path": "${RUN_CASE_DIR}/processor4/20000/Surf_sOPb+",
-            "sha256": "175aa58406d07ba3b63f5e72dd5d66287688d1541c64a357e822070fcdbc33d6"
+            "sha256": "f18a2f749fd0f65d5c9fd38bb41aaf5db33d52f46037d53dd5556fbb5bc073bb"
           },
           {
             "path": "${RUN_CASE_DIR}/processor4/20000/Surf_wOPb+",
-            "sha256": "fc9e7cd9aae388fd7268bc1da4e598a651cb0572e64bb7315b3d241f5e05154d"
+            "sha256": "93a5ed82d4b4cadb6ff375290029b1d304c2b7164920c4b5872f60967f185127"
           },
           {
             "path": "${RUN_CASE_DIR}/processor5/20000/Pb+2",
-            "sha256": "a452e715897b6c94a45cd37a08e8ad382dc43ba3172b23d40c88518df0a9ea42"
+            "sha256": "e57ff5287677d17c0fa7c9e486a171f44a268395bce787ce81a81b4985b9c5f8"
           },
           {
             "path": "${RUN_CASE_DIR}/processor5/20000/Cl-",
-            "sha256": "d25af48f76fb6786ec169791121bdc8efbd28a45285bbb373835b78958c2ff42"
+            "sha256": "adbc29971eb55679ab5796941f253ca396c4c616977713f25b3244d5ac3137d6"
           },
           {
             "path": "${RUN_CASE_DIR}/processor5/20000/H+",
-            "sha256": "252f62f177e0b36cca2a0303e68d1672a8dda310e09052152832a4d1dd821e66"
+            "sha256": "ab4dc265d928848e520210fae31bd89590a8752f8b1816d448f6fb1b6fa39c73"
           },
           {
             "path": "${RUN_CASE_DIR}/processor5/20000/OH-",
-            "sha256": "0bcec50591d1a948c0b110d80097ed280227386ca1a53b5392637de2d44cbd1c"
+            "sha256": "db7f066af4de16179f2c28e2cff79d97c078557a3b0953e23ab6967a5eba9de8"
           },
           {
             "path": "${RUN_CASE_DIR}/processor5/20000/Surf_sOPb+",
-            "sha256": "b21518856058a72c438606a2f293628af507bc6819e848891e857ccd89cfbfd5"
+            "sha256": "f6ca6d85fa732101b30411a1813e928121af96a0e14af1d1afda92c1c554191b"
           },
           {
             "path": "${RUN_CASE_DIR}/processor5/20000/Surf_wOPb+",
-            "sha256": "af8f37427cac0a263b0dd6ed716f60664a9a9a2cda65167d5e76550073b0eaff"
+            "sha256": "8487cca0c32f69ca0b681751d40081493302879a3093131ea9018ceea58db2be"
           },
           {
             "path": "${RUN_CASE_DIR}/processor6/20000/Pb+2",
-            "sha256": "6f29e50ab3c5c1ce20f6d2e2d236a8eac79dcaff0a40c3272d3fa198656f8d3f"
+            "sha256": "5448330a663770c1410365bdc0f575a5778e7d4f4c86deee0cc6ea85d3cdb1d5"
           },
           {
             "path": "${RUN_CASE_DIR}/processor6/20000/Cl-",
-            "sha256": "b7f3e036a1c6d0c412daf7a44322d72dd740db7f36407cd9784850488673eafe"
+            "sha256": "896c7568db6b00fd6984fb114047617ee484bde6b1311e41655a315f29d08bd5"
           },
           {
             "path": "${RUN_CASE_DIR}/processor6/20000/H+",
-            "sha256": "9661c798b870f91e022a629f553f67e2e78df2eb49f4105de2f1d5a6050752a1"
+            "sha256": "4b3c6d14f3fb8ce4df49d69ad5db3397a87bf4266083c355d3d52412fdb48adc"
           },
           {
             "path": "${RUN_CASE_DIR}/processor6/20000/OH-",
-            "sha256": "60e7f85425d3e4652eb0b605d8b4ada1f49043ef1940f52e8692c0632bfa3706"
+            "sha256": "13ff7a33174197c587d46d3f839d62974e4b632557ad38b681aa4ef54c01eed6"
           },
           {
             "path": "${RUN_CASE_DIR}/processor6/20000/Surf_sOPb+",
-            "sha256": "3395cc43aa875472834f59894c1558ff89c3df7363b109e5dfa8402cdb21d5dd"
+            "sha256": "1b0c24d5b99cc907118c85afad9d080eb81e12b0ab99091620d449537040b7c0"
           },
           {
             "path": "${RUN_CASE_DIR}/processor6/20000/Surf_wOPb+",
-            "sha256": "23beb1b4ee7e906b6659e7f9dc3bb96d8f74fbe39061e3e4aa79e65eecd4687c"
+            "sha256": "59497313a5135fca387ee40b6e50366fdb320796698502f74dcee49d1d08392a"
           },
           {
             "path": "${RUN_CASE_DIR}/processor7/20000/Pb+2",
-            "sha256": "c1c3867c00ea6bb708cc5483b6c6a573fff108dcffb2217a3500b1a79516e3bb"
+            "sha256": "6c39986f404c15ee68198ecffe9725540fc9bda7b07883f084a62ad594658fa0"
           },
           {
             "path": "${RUN_CASE_DIR}/processor7/20000/Cl-",
-            "sha256": "1de1f4d9ccb95bfbff962ca13644f4687df1a6d648db17aa9ffc87c98c27988e"
+            "sha256": "714a20a58bba3d10a23613f5d88ef5403399bea48a1d49cbae70497255245adb"
           },
           {
             "path": "${RUN_CASE_DIR}/processor7/20000/H+",
-            "sha256": "14cd2aa53a80c9df67114574b26be56cef6ff4c125fe8cad0882a8a4cb1d9fe9"
+            "sha256": "92d989f7abd81d24da6da1c1b20bdd10d9d39abe629d5f0241d2489518b9b20c"
           },
           {
             "path": "${RUN_CASE_DIR}/processor7/20000/OH-",
-            "sha256": "62d54e416860afe62f4e68715638835f15632082c2e9423b21a28c228c144afa"
+            "sha256": "3491730609680a6f8a0fa1ac2de3198e7eb560eeeae94979cf52dfc7328fd3df"
           },
           {
             "path": "${RUN_CASE_DIR}/processor7/20000/Surf_sOPb+",
-            "sha256": "047982e995bd9f94fb4249f71c49313d680c8254114c1aaffcb5cafd6564f656"
+            "sha256": "a3f8de739d30497ec1e0571f836e9f6555bae3776cc4d6a8b432a2bba1dbfdd4"
           },
           {
             "path": "${RUN_CASE_DIR}/processor7/20000/Surf_wOPb+",
-            "sha256": "2fe8aa1075bcaf50445d226cfc299c99bf4ce6f9a9a30db2c2ede3efeaea205e"
+            "sha256": "bf111f9f29848aad2595a4e2eda248c75f6538217aaac64d34d4c680566ae9a3"
           }
         ],
-        "final_rank_fields_sha256": "cf04717d80c1c75cd5a8c9974f72322707e6cbc742eaf41f25f7c02a571a4e7e",
+        "final_rank_fields_sha256": "d0e2bf3b1548da999c0001abfb32775a90d75164acedeed74dd72ca9f83043c3",
         "solver_log": {
           "path": "${RUN_CASE_DIR}/reactiveTransportDBSFoamRT.out",
-          "sha256": "463cda571363084f91d20dda8c4f836a1680e4f29ea7a3c40c9aea993aa78f63"
+          "sha256": "05a4a26cc1c394294cda88a67fc846adc94273624e7f137b56570a06b103f846"
         },
         "support_rank_fields": [
           {
@@ -720,8 +703,8 @@
         "support_rank_fields_sha256": "121d8a422a48088736c49c4ce102f3cbdb9dcdc4a1bcafbb10f5aa5ecac0b0db"
       },
       "runtime": {
-        "branch": "codex/test-phreeqcrm-oneway-surface-state",
-        "commit": "464dd93606c753269bbd33006510203e46119bd9",
+        "branch": "codex/paper-candidate-pr53-10f-adapter-a43",
+        "commit": "3c4a34326b5573d76d48664093a1933a5a65b316",
         "dirty": true,
         "dirty_paths": [
           "ThirdParty/PhreeqcRM"
@@ -734,10 +717,10 @@
         "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       },
       "runtime_artifacts": {
-        "ldd_sha256": "e0542aa95767f49a12be3ff80195de74f78ffc6c12bf1f5d551475cdce4504fd",
+        "ldd_sha256": "20aded39ba5e86bf46435b5bfd63587abc2d9201921bb3333b51e09f6d29ecc4",
         "phreeqcrm_submodule": {
           "branch": "",
-          "commit": "8ce64cf64b3c26ff7fdc41dbf5ae4fb7269b3a92",
+          "commit": "a43de2c1d1dd5c0f93489d560fa3cd3e94646471",
           "dirty": true,
           "dirty_paths": [
             "lib/",
@@ -764,16 +747,16 @@
           },
           {
             "path": "${RUNTIME_REPO}/lib/libreactionThermophysicalModelsGCFOAM.so",
-            "sha256": "d3b74ea7cafc3e37935df8752599a4e6cd068b0ac84b046aced6c98f5448a0be"
+            "sha256": "447d857aa9679a1962f72d5df71f09c3faf0b84f4c5b74e279e092af1cdd425a"
           },
           {
             "path": "${RUNTIME_REPO}/ThirdParty/PhreeqcRM/lib/libPhreeqcRM.so",
-            "sha256": "cfa877676ec21145ad60390c992dc7d80773ac4151c3c7c297d3de8ea8cc330a"
+            "sha256": "90ffa2f6c554941c40535739fc9359af19528425e6dc61b2876d00b016affe29"
           }
         ],
         "solver": {
           "path": "${RUNTIME_REPO}/bin/reactiveTransportDBSFoam",
-          "sha256": "d7a55047bee24211730e05e6ba7c00752e8c6a07ceb4510572bb8912a6435b10"
+          "sha256": "3b41fd0914b4407fa591ea403cc66c4fde1daa7d1608481edaac19533e11b124"
         }
       },
       "surface": {
@@ -785,5 +768,6 @@
       }
     }
   },
+  "schema_scope": "bounded_figure2",
   "schema_version": 3
 }

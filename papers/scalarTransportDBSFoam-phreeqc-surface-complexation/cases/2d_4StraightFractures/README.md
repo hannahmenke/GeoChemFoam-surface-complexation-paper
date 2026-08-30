@@ -31,12 +31,12 @@
 ## Runtime Case
 
 - paper-local executable case:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures`
 - reproducible entry point:
   - `runAll.sh`
-- draft mesh:
+- mesh:
   - `250 x 250 x 1`
-- production draft run:
+- accepted production run:
   - `8` MPI ranks (`4 x 2 x 1`)
 
 ## Current Outputs
@@ -45,10 +45,30 @@
 - aqueous concentration panel
 - surface-loading panel
 
+## Accepted Record
+
+- launch inputs and runtime identity:
+  - `launch_provenance.json`
+  - this is a point-in-time pre-launch record; the run scripts subsequently
+    replace the working copies of `transportProperties`, `controlDict`, and
+    `fvSolution` from their preserved `*1` templates
+- realized transport inputs and source/output hashes:
+  - `run_provenance.json`
+- numerical validation summary:
+  - `../../figures/png/fig02_item2_validation_metrics.json`
+- figure provenance and verifier:
+  - `../../figures/figure_provenance.json`
+  - `../../figures/scripts/figure2_provenance.py`
+- provenance scope:
+  - the verifier and records are the bounded schema used for the accepted
+    Figure 2 run; they predate the planned repository-wide common schema
+
 ## Figure
 
 - `figures/png/fig02_2d_fractures.png`
   - populated from the `t = 20000` solver output
+  - `1860 x 675` pixels
+  - SHA-256 `72380206ac6e03d7d86f53a4c27f57fc319459d8b1b7ffb469c7b2e836ecaf38`
 
 Regenerate the figure after a completed run with:
 

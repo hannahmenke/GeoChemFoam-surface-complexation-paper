@@ -1,0 +1,262 @@
+{
+  "case_id": "2d_4StraightFractures_item1_final_fresh",
+  "cfl_preflight": {
+    "matching_dt_s": 0.25,
+    "prior_max_courant": 0.06024709546261201,
+    "prior_mean_courant": 0.004285756863393865
+  },
+  "chemistry": {
+    "surface_master_densities_kmol_m2": {
+      "Surf_s": 2e-07,
+      "Surf_w": 6e-06
+    }
+  },
+  "controls": {
+    "decomposition": [
+      4,
+      2,
+      1
+    ],
+    "delta_t_s": 0.25,
+    "end_time_s": 20000,
+    "mpi_ranks": 8,
+    "phreeqc_restart_checkpoints": true,
+    "phreeqc_restore_checkpoint": false,
+    "start_time_s": 0,
+    "write_interval_s": 2000
+  },
+  "fresh_state": {
+    "copied_checkpoint_state": false,
+    "copied_result_state": false,
+    "initial_processor_directories": [],
+    "initial_time_directories": []
+  },
+  "paper": {
+    "commit": "fdd31c399d6fd6317027474ce9667d9850a7bb18",
+    "root": "${PAPER_REPO}",
+    "status_porcelain": [
+      "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+      "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+      "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+      "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status"
+    ],
+    "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "path_roots": {
+    "PAPER_REPO": "isolated paper checkout used for this run",
+    "RUNTIME_REPO": "reviewed combined GeoChemFoam runtime checkout"
+  },
+  "recorded_utc": "2026-08-28T18:06:24.320364+00:00",
+  "runtime": {
+    "commit": "3c4a34326b5573d76d48664093a1933a5a65b316",
+    "root": "${RUNTIME_REPO}",
+    "status_porcelain": [
+      " M ThirdParty/PhreeqcRM"
+    ],
+    "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "runtime_artifacts": {
+    "ldd_sha256": "d00b21968edeb116be81d8e4268fb16e867273c389d102d5ac2fe44a8c8cc6c0",
+    "phreeqcrm": {
+      "commit": "a43de2c1d1dd5c0f93489d560fa3cd3e94646471",
+      "root": "${RUNTIME_REPO}/ThirdParty/PhreeqcRM",
+      "status_porcelain": [
+        "?? lib/",
+        "?? src/Make/linux64GccDPInt32Opt/",
+        "?? src/lnInclude/"
+      ],
+      "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "resolved_libraries": [
+      {
+        "path": "${RUNTIME_REPO}/lib/libfiniteVolumeGCFOAM.so",
+        "sha256": "e13af080edca54982d9950378ab27d1c0df5cc1b26d384eb6bb64845348502ad"
+      },
+      {
+        "path": "${RUNTIME_REPO}/lib/libreactionThermophysicalModelsGCFOAM.so",
+        "sha256": "447d857aa9679a1962f72d5df71f09c3faf0b84f4c5b74e279e092af1cdd425a"
+      },
+      {
+        "path": "${RUNTIME_REPO}/ThirdParty/PhreeqcRM/lib/libPhreeqcRM.so",
+        "sha256": "90ffa2f6c554941c40535739fc9359af19528425e6dc61b2876d00b016affe29"
+      }
+    ],
+    "solver": {
+      "path": "${RUNTIME_REPO}/bin/reactiveTransportDBSFoam",
+      "sha256": "3b41fd0914b4407fa591ea403cc66c4fde1daa7d1608481edaac19533e11b124"
+    }
+  },
+  "runtime_pairing": {
+    "parent_commit": "10f7a66afbf745d25013f7eda45b090cff66b866",
+    "phreeqcrm_gitlink": "a43de2c1d1dd5c0f93489d560fa3cd3e94646471"
+  },
+  "schema_version": 1,
+  "source_inputs": [
+    {
+      "path": "${PAPER_REPO}/images/raw/4StraightFractures.raw.tar.gz",
+      "sha256": "042de7f02d0e8316977787cd72bb6db3c5154eb8ee6745cd59376759ec6759c1"
+    },
+    {
+      "path": "${PAPER_REPO}/images/raw/4StraightFractures.txt",
+      "sha256": "30a2f9e6480f5e50cb5f8ece9e740b3ff61efb489e8bf01b725a66373ced9528"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/GeoChem.dat",
+      "sha256": "2cfa5be85bd29bd7556946a0b7f104857ff848d04b18c9f57e9d2508195e72fe"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/dynamicMeshDict",
+      "sha256": "31fbb851de01ed23db3b6fc98a6e964688abc53678d4951dbb912c22c521c315"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/g",
+      "sha256": "6f241b529a84ab307aed418045676a8e94d7605819ce9af184a68e9ddeebe971"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/phreeqcReactions",
+      "sha256": "5745e708e23f4f98d686aa51ee53ec2b7da15c01ba5b803ddb2fd91b9007be27"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/thermoPhysicalProperties",
+      "sha256": "7b8033d1790f412f74cabd33992763e727dc70e19323c0f9e7f07eaf270694bf"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/thermoPhysicalProperties1",
+      "sha256": "7b8033d1790f412f74cabd33992763e727dc70e19323c0f9e7f07eaf270694bf"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+      "sha256": "225b3a86f0a27c48c33abe522b07ff987aad2a9fb9b5eb34642ad81b35adfd4b"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties1",
+      "sha256": "fe97aeaff12c61a416352a9bce0af0abb29e1c288810b7d592f124952eb1a78b"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/turbulenceProperties",
+      "sha256": "ee3ded398d6cfe54b9a42450e8d0d01e966756066304ebe5dd5efffc6ae2f550"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createMesh.sh",
+      "sha256": "b00bf78f3f51bacfaf7847e2d12dc7bd954fad1b885147a8c5a13aba1956a97b"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteAll.sh",
+      "sha256": "39107159d376ff33aabf11f039d41d32ec6fd9732725ae1b714bdd37387620a2"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteFlow.sh",
+      "sha256": "0d4905debd19e088ceea53e1aff9e76cfc351fb518d2d13a8f2adf7ad46f65aa"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/deleteReactiveTransport.sh",
+      "sha256": "b18e70122936162201e59845e86fb03a3dfdd28ff0adc0b217c407a516b79d2f"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseFlow.sh",
+      "sha256": "acde7490f98e59160d7fb35d998e934895d4e6d505dc0d184de3660d3f8ac8e2"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/initCaseReactiveTransport.sh",
+      "sha256": "a24f79065951790279422ed48401488d85352d8f6cf6b868df2167b1b1e76858"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processFlow.sh",
+      "sha256": "69ffeb9a0fdfe98f8ddc1b1677dd4154d1974dd8e7b2cd1e4c0c106c0eb55645"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processReactiveTransport.sh",
+      "sha256": "08e57e1d37e79fe1c6434e2adec3a271a78f8dfcd8901df748057f0c47d911e6"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/record_item1_launch.py",
+      "sha256": "e6a00ac247441d82d0a0820c16fbe4251718f2e9c6841990375c7ac048aaba13"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runAll.sh",
+      "sha256": "21a051d6993f53c15d9b6bfac51498244262ef84f8cd1906db8026a03af15a45"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseFlow.sh",
+      "sha256": "babb22501a1d59e3e405b1f6530973241fb15cad3baf34c38f0e385955b51cb8"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/runCaseReactiveTransport.sh",
+      "sha256": "28d6ab5b110b2b50c8ec8e7b9c1ce22b276410570c5351e4c24bd764ef69391c"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/run_item1_final.sh",
+      "sha256": "bfbc7740016377546bc67f217bb289bef09c1fbc2ab1696a646d59ae08abf868"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/NPX",
+      "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/NPY",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/NPZ",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/Nx1",
+      "sha256": "e4355a05c3a4b156700c4a1a32867d8f7a25a0dd24c6146c2deb2a1c96a6c93c"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/Ny1",
+      "sha256": "e4355a05c3a4b156700c4a1a32867d8f7a25a0dd24c6146c2deb2a1c96a6c93c"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/Nz1",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+      "sha256": "72d793e945d6faa0138ecf1a51bee134cbbe1c8395b58e3f43acd4fb3f27e935"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict1",
+      "sha256": "e270fed1dd9d7e1551cbc6c473d69cd01f64fb70c35ecc1587a8ce4932563ba7"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSchemes",
+      "sha256": "4cebcca11bfda486f9e2a77094237236d0b568bf07d86f1dffb095d598a6c352"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
+      "sha256": "853fa90c7e3e75f1cda1f71b921e908de4aa22806691d9a89fa0e06620461e2a"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution1",
+      "sha256": "40e0c0c721d360ed8217479cb8f30632c020b95fc7e852a423d5c25e7d6d2392"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/postProcessDict",
+      "sha256": "60d72923f4d600db019c3fa96101770793cfbf53d496d5a2387f9b6129eee867"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/postProcessDict1",
+      "sha256": "b98d19924b5a8b2673f3b1f837867180e781daf4073cfe6ccd18608b8d4afea2"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/case_provenance.py",
+      "sha256": "a8d4effcd6de5f4413a31abd33370f486fa86e7b281c72076b96167c914a0cfb"
+    },
+    {
+      "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh",
+      "sha256": "ada94fac25802b66bb1f1e945a3963d29d8b0e33bd654a4859339dcdb070ba18"
+    },
+    {
+      "path": "${PAPER_REPO}/scripts/createASurfMarchingCubes.py",
+      "sha256": "3e60ee8064c22d6f1c56f04a33e677ea52618e0243c2b3f2ec354750dcd14aa1"
+    }
+  ],
+  "surface": {
+    "expected_integrated_area_m2": 0.021990199701030694,
+    "expected_intrinsic_area_m2": 0.021960000000000004,
+    "mode": "occupancyGaussian",
+    "sigma_vox": 0.75
+  }
+}

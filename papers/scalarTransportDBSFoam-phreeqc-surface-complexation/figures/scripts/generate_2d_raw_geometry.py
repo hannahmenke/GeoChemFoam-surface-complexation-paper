@@ -175,7 +175,7 @@ def main() -> None:
         "--surface-site-density",
         type=float,
         default=None,
-        help="Surface master density [mol m^-2] used for occupancy plots",
+        help="Surface master density [kmol m^-2] used for occupancy plots",
     )
     parser.add_argument("--log-scale", action="store_true",
         help="Use logarithmic colour scale for the aqueous field panel")
@@ -260,11 +260,11 @@ def main() -> None:
         if surface_transform == "raw":
             surf_metric = surf_values
             surface_title = surf_lbl
-            cbar2_label_raw = f"{surface_title} [mol m$^{{-2}}$]"
+            cbar2_label_raw = f"{surface_title} [kmol m$^{{-2}}$]"
         elif surface_transform == "bulk_density":
             surf_metric = surf_values * asurf_values
             surface_title = surf_lbl
-            cbar2_label_raw = f"{surface_title} [mol m$^{{-3}}$]"
+            cbar2_label_raw = f"{surface_title} [kmol m$^{{-3}}$]"
         elif surface_transform == "occupancy":
             if args.surface_site_density is None or args.surface_site_density <= 0.0:
                 raise RuntimeError("--surface-site-density must be set for occupancy plots")
@@ -274,11 +274,11 @@ def main() -> None:
         elif surface_transform == "delta_raw":
             surf_metric = surf_delta
             surface_title = f"Incremental {surf_lbl}"
-            cbar2_label_raw = f"{surface_title} [mol m$^{{-2}}$]"
+            cbar2_label_raw = f"{surface_title} [kmol m$^{{-2}}$]"
         elif surface_transform == "delta_bulk_density":
             surf_metric = surf_delta * asurf_values
             surface_title = f"Incremental {surf_lbl}"
-            cbar2_label_raw = f"{surface_title} [mol m$^{{-3}}$]"
+            cbar2_label_raw = f"{surface_title} [kmol m$^{{-3}}$]"
         elif surface_transform == "delta_occupancy":
             if args.surface_site_density is None or args.surface_site_density <= 0.0:
                 raise RuntimeError("--surface-site-density must be set for occupancy plots")

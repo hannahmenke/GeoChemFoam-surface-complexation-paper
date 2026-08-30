@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
 
@@ -15,6 +16,12 @@ EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 FINAL_FIELDS = ("Pb+2", "Cl-", "H+", "OH-", "Surf_sOPb+", "Surf_wOPb+")
 SUPPORT_FIELDS = ("eps", "aSurf", "Surf_s", "Surf_w")
 PATH_KEYS = {"path", "root", "figure_path", "run_manifest_path", "solver_executable"}
+CHECKPOINT_MARKER = re.compile(
+    r"GeoChemFoam-PHREEQCRM-checkpoint 1\n"
+    r"time ([^\s]+)\n"
+    r"dumpSize ([0-9]+)\n"
+    r"dumpSHA256 ([0-9a-f]{64})\n\Z"
+)
 
 
 def sha256(path: Path) -> str:
@@ -44,6 +51,48 @@ def verify_records(records: object, label: str, minimum: int = 1) -> list[dict[s
         require(isinstance(record, dict), f"Invalid {label} record {index}")
         verify_file(record, f"{label} record {index}")
     return records
+
+
+def checkpoint_time_names(end_time: float, write_interval: float) -> tuple[str, ...]:
+    require(math.isfinite(end_time) and end_time > 0.0, "Invalid checkpoint end time")
+    require(
+        math.isfinite(write_interval) and write_interval > 0.0,
+        "Invalid checkpoint write interval",
+    )
+    write_count = end_time / write_interval
+    rounded_count = round(write_count)
+    require(
+        math.isclose(write_count, rounded_count, rel_tol=0.0, abs_tol=1.0e-12),
+        "Checkpoint end time is not an integer multiple of the write interval",
+    )
+    return tuple(f"{index * write_interval:g}" for index in range(1, rounded_count + 1))
+
+
+def verify_checkpoint(directory: Path, expected_time: str) -> None:
+    dump = directory / "phreeqc.dmp"
+    marker = directory / "phreeqc.complete"
+    pending_marker = directory / "phreeqc.complete.tmp"
+    require(
+        not pending_marker.exists(),
+        f"Incomplete checkpoint marker remains: {pending_marker}",
+    )
+    require(dump.is_file() and dump.stat().st_size > 0, f"Missing checkpoint dump: {dump}")
+    require(marker.is_file(), f"Missing checkpoint marker: {marker}")
+    try:
+        marker_text = marker.read_bytes().decode("ascii")
+    except (OSError, UnicodeDecodeError) as error:
+        raise SystemExit(f"Unreadable checkpoint marker: {marker}") from error
+    match = CHECKPOINT_MARKER.fullmatch(marker_text)
+    require(match is not None, f"Malformed checkpoint marker: {marker}")
+    require(match.group(1) == expected_time, f"Wrong checkpoint time in marker: {marker}")
+    require(int(match.group(2)) == dump.stat().st_size, f"Checkpoint size mismatch: {dump}")
+    require(match.group(3) == sha256(dump), f"Checkpoint SHA256 mismatch: {dump}")
+
+
+def verify_checkpoints(case_dir: Path, time_names: tuple[str, ...], ranks: int = 8) -> None:
+    for rank in range(ranks):
+        for time_name in time_names:
+            verify_checkpoint(case_dir / f"processor{rank}" / time_name, time_name)
 
 
 def portable_path(path: Path, roots: dict[str, Path]) -> str:
@@ -203,8 +252,12 @@ def check_run(args: argparse.Namespace) -> dict[str, object]:
     require(re.search(r"^End$", text, re.M) is not None, "Solver log has no clean End marker")
     for rank in range(8):
         final = case_dir / f"processor{rank}" / f"{args.time:g}"
-        for name in (*FINAL_FIELDS, "phreeqc.dmp", "phreeqc.complete"):
+        for name in FINAL_FIELDS:
             require((final / name).is_file(), f"Missing final rank output: {final / name}")
+    verify_checkpoints(
+        case_dir,
+        checkpoint_time_names(args.time, args.write_interval),
+    )
 
     return payload
 
@@ -235,6 +288,7 @@ def record_figure(args: argparse.Namespace) -> None:
     else:
         payload = {"schema_version": 2, "figures": {}}
     payload["schema_version"] = 3
+    payload["schema_scope"] = "bounded_figure2"
     payload["figures"][figure.name] = {
         "path_roots": {
             "PAPER_REPO": "checkout of the paper repository",
@@ -249,7 +303,13 @@ def record_figure(args: argparse.Namespace) -> None:
         "figure_inputs": figure_inputs,
         "renderer": {
             "repository": args.renderer_repository,
-            "commit": args.renderer_commit,
+            "base_commit": args.renderer_base_commit,
+            "source_state": "curated_dirty_at_base",
+            "source_files_authoritative": True,
+            "source_authority": (
+                "Exact SHA-256 records in source_files are authoritative; "
+                "base_commit identifies only the underlying Git state."
+            ),
             "source_files": renderer_sources,
             "source_files_sha256": records_sha256(renderer_sources),
         },
@@ -306,7 +366,7 @@ def parser() -> argparse.ArgumentParser:
     record.add_argument("--figure-input", action="append", type=Path, default=[])
     record.add_argument("--renderer-source", action="append", type=Path, default=[])
     record.add_argument("--renderer-repository", required=True)
-    record.add_argument("--renderer-commit", required=True)
+    record.add_argument("--renderer-base-commit", required=True)
     record.add_argument("--output", type=Path, required=True)
     record.set_defaults(func=record_figure)
     return main
