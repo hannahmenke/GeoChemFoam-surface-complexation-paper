@@ -133,7 +133,7 @@ if rg -n '\{sections/|\{figures/png/' "$export_dir"/*.tex; then
     exit 2
 fi
 
-for required in main.tex references.bib sn-jnl.cls sn-basic.bst cover_letter.txt; do
+for required in main.tex supplementary.tex supplementary_information.tex references.bib sn-jnl.cls sn-basic.bst cover_letter.txt; do
     if [[ ! -f "$export_dir/$required" ]]; then
         echo "Required export file is missing: $required" >&2
         exit 2

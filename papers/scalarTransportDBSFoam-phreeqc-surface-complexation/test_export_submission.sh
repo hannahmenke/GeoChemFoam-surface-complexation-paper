@@ -17,12 +17,16 @@ make_fixture() {
     cp -- "$script_dir/export_submission.sh" "$fixture/export_submission.sh"
     chmod +x "$fixture/export_submission.sh"
     printf '\\documentclass{sn-jnl}\n\\begin{document}Test\\end{document}\n' > "$fixture/main.tex"
+    printf '\\documentclass{sn-jnl}\n\\begin{document}Supplement\\end{document}\n' > "$fixture/supplementary.tex"
+    printf 'Supplementary text\n' > "$fixture/supplementary_information.tex"
     printf '@misc{test, title={Test}}\n' > "$fixture/references.bib"
     printf 'class fixture\n' > "$fixture/sn-jnl.cls"
     printf 'bst fixture\n' > "$fixture/sn-basic.bst"
     printf 'cover fixture\n' > "$fixture/cover_letter.txt"
     printf '%s\n' \
         $'main.tex\tmain.tex' \
+        $'supplementary.tex\tsupplementary.tex' \
+        $'supplementary_information.tex\tsupplementary_information.tex' \
         $'references.bib\treferences.bib' \
         $'sn-jnl.cls\tsn-jnl.cls' \
         $'sn-basic.bst\tsn-basic.bst' \
