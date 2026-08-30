@@ -70,8 +70,9 @@ surface-chemistry coupling and the batch-secant estimation procedure rather than
 mesh or geometry artefacts. Figure~\ref{fig:1DRetardation} shows the spatial
 profiles at $t = 10$, and Figure~\ref{fig:1DBreakthrough} shows the
 outlet breakthrough curves over the full run to $t = 80$~s.
-The surface-enabled breakthrough arrives at $1/R \approx 54\%$
-of the aqueous-only breakthrough time, in agreement with the analytical prediction.
+The surface-enabled front travels at $1/R$ of the aqueous-only velocity, so its
+breakthrough occurs at $R \approx 1.851$ times the aqueous-only breakthrough
+time (37.0 versus 20.0~s), in agreement with the analytical prediction.
 The classical semi-infinite Ogata--Banks solution~\citep{ogata1961solution} is also
 shown for comparison and predicts systematically later breakthrough: because the
 simulation uses a Neumann (no-flux) outlet, solute cannot diffuse past $x = L$
@@ -98,7 +99,8 @@ agreement shown.
     \includegraphics[width=0.9\linewidth]{figures/png/fig06_1d_breakthrough.png}
     \caption{1D outlet breakthrough curves. Symbols show the outlet-patch
     area-averaged Ca$^{2+}$ normalised by the inlet concentration $C_{\mathrm{in}}$
-    for the aqueous-only run (circles) and the surface-enabled run (squares).
+    for the aqueous-only and surface-enabled runs. Both numerical series use
+    circle markers and are distinguished by colour and legend.
     Dashed lines are the finite-domain analytical reference; dash-dot lines are
     the semi-infinite Ogata--Banks solution~\citep{ogata1961solution}.
     Vertical dotted lines mark the advective breakthrough times
