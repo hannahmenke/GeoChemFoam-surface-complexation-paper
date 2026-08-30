@@ -15,14 +15,12 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
   set -u
 fi
 
-if [ -f "$repo_root/etc/bashrc" ]; then
-  set +e
-  set +u
-  # shellcheck disable=SC1090
-  source "$repo_root/etc/bashrc"
-  set -e
-  set -u
-fi
+# shellcheck disable=SC1090
+source "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
+
+: "${TOTAL_TIME:?Set TOTAL_TIME to the reviewed stage endpoint}"
+: "${WRITE_TIMESTEP:?Set WRITE_TIMESTEP to the reviewed stage interval}"
+: "${RUN_TIMESTEP:?Set RUN_TIMESTEP to the accepted timestep}"
 
 run_task() {
   local name="$1"
@@ -38,6 +36,7 @@ run_task() {
 }
 
 echo "=== Run: 3D Kelvin HFO Mn/Mg selective capture ==="
+echo "Runtime: $GCFOAM_RUNTIME_ROOT ($(git -C "$GCFOAM_RUNTIME_ROOT" rev-parse HEAD))"
 run_task createMesh.sh
 run_task initCaseFlow.sh
 run_task runCaseFlow.sh

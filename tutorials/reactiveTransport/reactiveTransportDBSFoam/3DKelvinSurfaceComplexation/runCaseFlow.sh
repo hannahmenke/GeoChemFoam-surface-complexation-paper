@@ -3,7 +3,7 @@
 ###### USERS INPUT ############################################################
 
 ## Define the total number of iterations of the simulation
-TotalTime=300
+TotalTime="${FLOW_TOTAL_TIME:-300}"
 
 #### END OF USER INPUT #######################################################
 

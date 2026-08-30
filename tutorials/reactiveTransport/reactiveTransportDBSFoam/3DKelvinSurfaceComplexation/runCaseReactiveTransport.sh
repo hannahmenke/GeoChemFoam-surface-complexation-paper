@@ -17,18 +17,12 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
     set -u
 fi
 
-if [ -f "$repo_root/etc/bashrc" ]; then
-    set +e
-    set +u
-    # shellcheck disable=SC1090
-    source "$repo_root/etc/bashrc"
-    set -e
-    set -u
-fi
+# shellcheck disable=SC1090
+source "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
 
-TotalTime="${TOTAL_TIME:-120}"
-WriteTimestep="${WRITE_TIMESTEP:-4}"
-runTimestep="${RUN_TIMESTEP:-2}"
+TotalTime="${TOTAL_TIME:?Set TOTAL_TIME to the reviewed stage endpoint}"
+WriteTimestep="${WRITE_TIMESTEP:?Set WRITE_TIMESTEP to the reviewed stage interval}"
+runTimestep="${RUN_TIMESTEP:?Set RUN_TIMESTEP to the accepted timestep}"
 
 cp system/controlDict1 system/controlDict
 sed -i "s/TotalTime/$TotalTime/g" system/controlDict
@@ -36,6 +30,12 @@ sed -i "s/WriteTimestep/$WriteTimestep/g" system/controlDict
 sed -i "s/runTimestep/$runTimestep/g" system/controlDict
 
 cp system/fvSolution1 system/fvSolution
+
+python kelvin_provenance.py record-run \
+    --manifest run_provenance.json \
+    --case . \
+    --control system/controlDict \
+    --thermo constant/thermoPhysicalProperties
 
 if [ -d "processor0" ]
 then

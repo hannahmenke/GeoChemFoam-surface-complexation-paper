@@ -22,9 +22,9 @@
 ## Surface Model
 
 - two-site Dzombak-Morel hydrous ferric oxide (HFO) surface complexation
-- strong sites: `Hfo_s = 2e-7 kmol/m2` in the OpenFOAM dictionary,
+- strong sites: `Surf_s = 2e-7 kmol/m2` in the OpenFOAM dictionary,
   equivalent to `2e-4 mol/m2`
-- weak sites: `Hfo_w = 6e-6 kmol/m2` in the OpenFOAM dictionary,
+- weak sites: `Surf_w = 6e-6 kmol/m2` in the OpenFOAM dictionary,
   equivalent to `6e-3 mol/m2`
 - target species: Mn2+
 - competing background species: Mg2+
@@ -47,11 +47,17 @@ The paper-local executable case is
 Run the full case from that directory:
 
 ```bash
+export GCFOAM_RUNTIME_ROOT=/absolute/path/to/reviewed-runtime
+export TOTAL_TIME=/reviewed/stage/endpoint
+export WRITE_TIMESTEP=/reviewed/stage/interval
+export RUN_TIMESTEP=/accepted/timestep
 ./runAll.sh
 ```
 
 The script creates the mesh, runs flow, runs reactive transport, and performs
-the configured post-processing.
+the configured post-processing. The transport values are intentionally
+required at launch so that convergence-pilot settings cannot become implicit
+production settings.
 
 ## Figures
 

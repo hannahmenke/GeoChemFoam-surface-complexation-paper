@@ -14,14 +14,8 @@ if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
     set -u
 fi
 
-if [ -f "$repo_root/etc/bashrc" ]; then
-    set +e
-    set +u
-    # shellcheck disable=SC1090
-    source "$repo_root/etc/bashrc"
-    set -e
-    set -u
-fi
+# shellcheck disable=SC1090
+source "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
 
 # Mn2+ capture from Mg-rich water on a two-site HFO coating.
 # Mn is the target critical-metal species; Mg represents abundant brine
@@ -67,6 +61,49 @@ python "$repo_root/scripts/createASurfMarchingCubes.py" \
     Kelvin1-200x200x200 \
     2 1 3D aSurfIntrinsic occupancyGaussian 0.75 none \
     "2:${micropore_intrinsic_asurf}:micropore" true 0 > createASurfIntrinsicReactive.out
+
+python kelvin_provenance.py record \
+    --paper "$repo_root" \
+    --runtime "$GCFOAM_RUNTIME_ROOT" \
+    --runtime-commit "$(git -C "$GCFOAM_RUNTIME_ROOT" rev-parse HEAD)" \
+    --surface-log createASurfReactive.out \
+    --intrinsic-log createASurfIntrinsicReactive.out \
+    --mode occupancyGaussian \
+    --sigma 0.75 \
+    --thermo constant/thermoPhysicalProperties \
+    --input constant/thermoPhysicalProperties \
+    --input constant/thermoPhysicalProperties1 \
+    --input constant/phreeqcReactions \
+    --input constant/GeoChem.dat \
+    --input constant/dynamicMeshDict \
+    --input constant/g \
+    --input constant/transportProperties1 \
+    --input constant/turbulenceProperties \
+    --input system/controlDict1 \
+    --input system/fvSchemes \
+    --input system/fvSolution1 \
+    --input system/postProcessDict1 \
+    --input system/NPX \
+    --input system/NPY \
+    --input system/NPZ \
+    --input system/Nx1 \
+    --input system/Ny1 \
+    --input system/Nz1 \
+    --input createMesh.sh \
+    --input initCaseFlow.sh \
+    --input runCaseFlow.sh \
+    --input processFlow.sh \
+    --input initCaseReactiveTransport.sh \
+    --input runCaseReactiveTransport.sh \
+    --input processReactiveTransport.sh \
+    --input runAll.sh \
+    --input deleteReactiveTransport.sh \
+    --input kelvin_provenance.py \
+    --input "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh" \
+    --input "$repo_root/scripts/createASurfMarchingCubes.py" \
+    --input "$repo_root/images/raw/Kelvin1-200x200x200.raw.tar.gz" \
+    --input "$repo_root/images/raw/Kelvin1-200x200x200.txt" \
+    --output run_provenance.json
 
 if [ -d "processor0" ]
 then
@@ -292,15 +329,15 @@ if CASE_IS_PARALLEL:
         write_species(template_path, proc_dir / "Cl-", "Cl-", aqueous_dims, os.environ["CL_INTERNAL"], "fixedValue", os.environ["CL_INLET"])
         write_species(template_path, proc_dir / "H+", "H+", aqueous_dims, os.environ["H_INTERNAL"], "fixedValue", os.environ["H_INTERNAL"])
         write_species(template_path, proc_dir / "OH-", "OH-", aqueous_dims, os.environ["OH_INTERNAL"], "fixedValue", os.environ["OH_INTERNAL"])
-        write_species(template_path, proc_dir / "Hfo_sOH", "Hfo_sOH", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_sO-", "Hfo_sO-", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_sOMn+", "Hfo_sOMn+", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_wOH", "Hfo_wOH", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_wO-", "Hfo_wO-", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_wOMg+", "Hfo_wOMg+", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_wOMn+", "Hfo_wOMn+", surface_dims, "0", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_s", "Hfo_s", surface_dims, "2e-7", "zeroGradient", None)
-        write_species(template_path, proc_dir / "Hfo_w", "Hfo_w", surface_dims, "6e-6", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_sOH", "Surf_sOH", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_sO-", "Surf_sO-", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_sOMn+", "Surf_sOMn+", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_wOH", "Surf_wOH", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_wO-", "Surf_wO-", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_wOMg+", "Surf_wOMg+", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_wOMn+", "Surf_wOMn+", surface_dims, "0", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_s", "Surf_s", surface_dims, "2e-7", "zeroGradient", None)
+        write_species(template_path, proc_dir / "Surf_w", "Surf_w", surface_dims, "6e-6", "zeroGradient", None)
 
 
         xs = x_starts[ipx]
@@ -331,15 +368,15 @@ else:
     write_species(template_path, zero_dir / "Cl-", "Cl-", aqueous_dims, os.environ["CL_INTERNAL"], "fixedValue", os.environ["CL_INLET"])
     write_species(template_path, zero_dir / "H+", "H+", aqueous_dims, os.environ["H_INTERNAL"], "fixedValue", os.environ["H_INTERNAL"])
     write_species(template_path, zero_dir / "OH-", "OH-", aqueous_dims, os.environ["OH_INTERNAL"], "fixedValue", os.environ["OH_INTERNAL"])
-    write_species(template_path, zero_dir / "Hfo_sOH", "Hfo_sOH", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_sO-", "Hfo_sO-", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_sOMn+", "Hfo_sOMn+", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_wOH", "Hfo_wOH", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_wO-", "Hfo_wO-", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_wOMg+", "Hfo_wOMg+", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_wOMn+", "Hfo_wOMn+", surface_dims, "0", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_s", "Hfo_s", surface_dims, "2e-7", "zeroGradient", None)
-    write_species(template_path, zero_dir / "Hfo_w", "Hfo_w", surface_dims, "6e-6", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_sOH", "Surf_sOH", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_sO-", "Surf_sO-", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_sOMn+", "Surf_sOMn+", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_wOH", "Surf_wOH", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_wO-", "Surf_wO-", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_wOMg+", "Surf_wOMg+", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_wOMn+", "Surf_wOMn+", surface_dims, "0", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_s", "Surf_s", surface_dims, "2e-7", "zeroGradient", None)
+    write_species(template_path, zero_dir / "Surf_w", "Surf_w", surface_dims, "6e-6", "zeroGradient", None)
 
     if asurf_intrinsic_global is not None:
         write_asurf_from_template(eps_path, zero_dir / "aSurfIntrinsic", "aSurfIntrinsic", asurf_intrinsic_global)

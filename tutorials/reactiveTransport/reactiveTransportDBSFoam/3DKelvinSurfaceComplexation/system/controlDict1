@@ -47,5 +47,6 @@ runTimeModifiable yes;
 
 
 phreeqcRestartCheckpoints true;
+phreeqcRestoreCheckpoint false;
 
 // ************************************************************************* //

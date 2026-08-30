@@ -53,25 +53,25 @@ solutionSpecies
 
 surfaceSpecies
 {
-	Hfo_sOH;
-	Hfo_sO-;
-	Hfo_sOMn+;
-	Hfo_wOH;
-	Hfo_wO-;
-	Hfo_wOMg+;
-	Hfo_wOMn+;
+	Surf_sOH;
+	Surf_sO-;
+	Surf_sOMn+;
+	Surf_wOH;
+	Surf_wO-;
+	Surf_wOMg+;
+	Surf_wOMn+;
 };
 
 surfaceMasters
 {
-	Hfo_s;
-	Hfo_w;
+	Surf_s;
+	Surf_w;
 };
 
 surfaceMasterDensities
 {
-	Hfo_s 2e-7;
-	Hfo_w 6e-6;
+	Surf_s 2e-7;
+	Surf_w 6e-6;
 };
 
 surfaceInitialSolutionId 1;

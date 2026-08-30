@@ -20,12 +20,12 @@ fi
 required_fields=(
   "$case_dir/processor0/120/Mn+2"
   "$case_dir/processor0/120/Mg+2"
-  "$case_dir/processor0/120/Hfo_sOMn+"
-  "$case_dir/processor0/120/Hfo_wOMn+"
-  "$case_dir/processor0/120/Hfo_wOMg+"
-  "$case_dir/processor0/0/Hfo_sOMn+"
-  "$case_dir/processor0/0/Hfo_wOMn+"
-  "$case_dir/processor0/0/Hfo_wOMg+"
+  "$case_dir/processor0/120/Surf_sOMn+"
+  "$case_dir/processor0/120/Surf_wOMn+"
+  "$case_dir/processor0/120/Surf_wOMg+"
+  "$case_dir/processor0/0/Surf_sOMn+"
+  "$case_dir/processor0/0/Surf_wOMn+"
+  "$case_dir/processor0/0/Surf_wOMg+"
 )
 
 missing=0
@@ -47,8 +47,8 @@ python "$scripts_dir/generate_kelvin_competition_figure.py" \
   --surface-baseline-time 0 \
   --target-field "Mn+2" \
   --background-field "Mg+2" \
-  --surf-target-fields "Hfo_sOMn+,Hfo_wOMn+" \
-  --surf-background-fields "Hfo_wOMg+" \
+  --surf-target-fields "Surf_sOMn+,Surf_wOMn+" \
+  --surf-background-fields "Surf_wOMg+" \
   --target-label 'Mn$^{2+}$ / C$_{in}$' \
   --background-label 'Mg$^{2+}$ / C$_{init}$' \
   --surf-target-label='$\Delta$HFO-Mn' \
@@ -61,8 +61,8 @@ python "$scripts_dir/generate_kelvin_temporal_plot.py" \
   --background-in 1e-3 \
   --target-field "Mn+2" \
   --background-field "Mg+2" \
-  --surf-target-fields "Hfo_sOMn+,Hfo_wOMn+" \
-  --surf-background-fields "Hfo_wOMg+" \
+  --surf-target-fields "Surf_sOMn+,Surf_wOMn+" \
+  --surf-background-fields "Surf_wOMg+" \
   --target-label 'Mn$^{2+}$' \
   --background-label 'Mg$^{2+}$' \
   --surf-target-label "HFO-Mn" \
