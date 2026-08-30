@@ -1,0 +1,53 @@
+{
+  "case": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades",
+  "criterion": "Integrated aSurf at every retained checkpoint agrees with the surface-construction record within the stated relative tolerance",
+  "expected_ranks": 64,
+  "voxel_size_m": 4e-06,
+  "reference_area_m2": 0.000522861342891493,
+  "relative_tolerance": 1e-12,
+  "passed": true,
+  "samples": [
+    {
+      "time_s": 0.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    },
+    {
+      "time_s": 20.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    },
+    {
+      "time_s": 40.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    },
+    {
+      "time_s": 60.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    },
+    {
+      "time_s": 80.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    },
+    {
+      "time_s": 100.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    },
+    {
+      "time_s": 120.0,
+      "integrated_area_m2": 0.0005228613428914902,
+      "relative_difference_from_surface_log": 5.391344544374378e-15,
+      "passed": true
+    }
+  ]
+}

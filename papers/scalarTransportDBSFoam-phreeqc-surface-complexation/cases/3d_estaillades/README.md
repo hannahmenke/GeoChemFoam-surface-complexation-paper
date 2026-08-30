@@ -22,7 +22,7 @@
 - angled 3D geometry overview
 - aqueous concentration volume render
 - surface-loading volume render
-- one summary performance/chemistry metric
+- weighted dissolved and surface-loading histories through `t = 120 s`
 
 ## Figure Convention
 
@@ -71,9 +71,13 @@ Regenerate both figures after a completed run with:
 - reactive timestep: `2 s`; the implicit Euler/upwind transport discretisation
   gives a face-flux Courant number of `63.400` maximum (`5.424` mean) on the
   converged full-resolution flow field
-- transported-species linear solve: `tolerance 5e-7`, `relTol 0.001`; this
-  tighter relative criterion avoids the conservative-species overshoot seen
-  with the generic main-branch production setting at this case's larger Co
+- external-interface reconstruction: occupancy-weighted Gaussian smoothing
+  with `sigma = 0.74` voxel
+- integrated combined reactive area: `5.228613428914902e-4 m2`, comprising
+  reconstructed external interface area and intrinsic micropore area
+- transported-species linear solve: `tolerance 1e-10`, `relTol 0`; this
+  absolute convergence criterion controls conservative-species overshoot at
+  this case's larger Courant number
 - final time: `120 s`
 - write interval: `20 s`
 - OpenFOAM field output: binary
@@ -88,6 +92,12 @@ export GCFOAM_RUNTIME_ROOT=/path/to/GeoChemFoam
 
 Generated mesh, fields, and logs remain untracked. Older
 coarse-grid outputs must not be used for the full-resolution paper result.
+
+The definitive run, exact input hashes, runtime identity, retained output
+coverage, figure hashes, and renderer hashes are recorded in
+`run_provenance.json`. Checkpoint-wise area validation is retained in
+`validation/surface_area.json`; concentration validation and weighted temporal
+metrics accompany Figure 8 in `figures/png`.
 
 Launch the flow stage first, then evaluate its maximum velocity and Courant
 number before starting chemistry:

@@ -10,16 +10,16 @@
       "fields": {
         "Cl-": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 0.00020000107403699667,
-          "maximum_mol_per_litre": 0.0020000161225075573,
+          "minimum_mol_per_litre": 0.00020000107388150397,
+          "maximum_mol_per_litre": 0.002000015835219849,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.002002,
           "passed": true
         },
         "Sr+2": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 1.0000884488950082e-12,
-          "maximum_mol_per_litre": 0.00010007147041824416,
+          "minimum_mol_per_litre": 1.0027576762550452e-12,
+          "maximum_mol_per_litre": 0.0001000712304364687,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.0001001,
           "passed": true
@@ -31,16 +31,16 @@
       "fields": {
         "Cl-": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 0.00020000008596641718,
-          "maximum_mol_per_litre": 0.0020000034860015023,
+          "minimum_mol_per_litre": 0.00020000008581379415,
+          "maximum_mol_per_litre": 0.0020000034393845866,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.002002,
           "passed": true
         },
         "Sr+2": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 3.325873725567999e-12,
-          "maximum_mol_per_litre": 0.00010007229843080778,
+          "minimum_mol_per_litre": 6.956892510937841e-12,
+          "maximum_mol_per_litre": 0.00010006997484883608,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.0001001,
           "passed": true
@@ -52,16 +52,16 @@
       "fields": {
         "Cl-": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 0.00020000001763038685,
-          "maximum_mol_per_litre": 0.001999989560695067,
+          "minimum_mol_per_litre": 0.00020000001751834827,
+          "maximum_mol_per_litre": 0.0019999886305804193,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.002002,
           "passed": true
         },
         "Sr+2": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 2.5683140963377913e-10,
-          "maximum_mol_per_litre": 0.00010007306307703316,
+          "minimum_mol_per_litre": 4.78695122243288e-10,
+          "maximum_mol_per_litre": 0.00010006880417148256,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.0001001,
           "passed": true
@@ -73,16 +73,16 @@
       "fields": {
         "Cl-": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 0.00020000000420116105,
-          "maximum_mol_per_litre": 0.0019998564322866253,
+          "minimum_mol_per_litre": 0.00020000000417793093,
+          "maximum_mol_per_litre": 0.0019998523271315587,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.002002,
           "passed": true
         },
         "Sr+2": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 3.452474028937806e-09,
-          "maximum_mol_per_litre": 0.00010007189328514141,
+          "minimum_mol_per_litre": 6.13925443378479e-09,
+          "maximum_mol_per_litre": 0.00010006806284979982,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.0001001,
           "passed": true
@@ -94,16 +94,16 @@
       "fields": {
         "Cl-": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 0.00020000000102457066,
-          "maximum_mol_per_litre": 0.0019991741478414746,
+          "minimum_mol_per_litre": 0.000200000001019438,
+          "maximum_mol_per_litre": 0.0019991610910063025,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.002002,
           "passed": true
         },
         "Sr+2": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 2.0415426861279106e-08,
-          "maximum_mol_per_litre": 0.0001000725613596725,
+          "minimum_mol_per_litre": 3.47836707979197e-08,
+          "maximum_mol_per_litre": 0.00010006851508960804,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.0001001,
           "passed": true
@@ -115,16 +115,16 @@
       "fields": {
         "Cl-": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 0.00020000000020624505,
-          "maximum_mol_per_litre": 0.0019972602690923272,
+          "minimum_mol_per_litre": 0.00020000000020503126,
+          "maximum_mol_per_litre": 0.0019972404428361145,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.002002,
           "passed": true
         },
         "Sr+2": {
           "chemistry_active_cells": 94031005,
-          "minimum_mol_per_litre": 7.662219283174484e-08,
-          "maximum_mol_per_litre": 0.00010007247368594222,
+          "minimum_mol_per_litre": 1.1785438449204875e-07,
+          "maximum_mol_per_litre": 0.00010006947409528146,
           "lower_bound_mol_per_litre": -1e-10,
           "upper_bound_mol_per_litre": 0.0001001,
           "passed": true

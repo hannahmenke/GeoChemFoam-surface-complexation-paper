@@ -94,9 +94,9 @@ yi_rel_tol="$(awk '
     in_yi && $1 == "relTol" { gsub(/;/, "", $2); print $2; exit }
 ' system/fvSolution1)"
 if ! awk -v tol="$yi_tolerance" -v rel="$yi_rel_tol" '
-    BEGIN { exit !(tol == 5e-7 && rel == 1e-3) }
+    BEGIN { exit !(tol == 1e-10 && rel == 0) }
 '; then
-    echo "Refusing reactive launch: Yi must use tolerance 5e-7 and relTol 0.001 (found ${yi_tolerance:-missing}, ${yi_rel_tol:-missing})" >&2
+    echo "Refusing reactive launch: Yi must use tolerance 1e-10 and relTol 0 (found ${yi_tolerance:-missing}, ${yi_rel_tol:-missing})" >&2
     exit 1
 fi
 

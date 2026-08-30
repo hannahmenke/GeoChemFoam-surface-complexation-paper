@@ -71,23 +71,23 @@ GRID_NX="$(tail -n 1 system/Nx1)"
 GRID_NY="$(tail -n 1 system/Ny1)"
 GRID_NZ="$(tail -n 1 system/Nz1)"
 
-python "$repo_root/scripts/createASurfPhases.py" \
+python "$repo_root/scripts/createASurfMarchingCubes.py" \
     500 500 500 \
     0 500 0 500 0 500 \
     500 500 500 \
     4e-6 \
     Est_3phase500cubed4micron \
-    0 1 3 3D 0 aSurf fluid \
-    2 "$micropore_intrinsic_asurf" > createASurfReactive.out
+    1 3 3D aSurf occupancyGaussian 0.74 "" \
+    "2:${micropore_intrinsic_asurf}:micropore" true 0 > createASurfReactive.out
 
-python "$repo_root/scripts/createASurfPhases.py" \
+python "$repo_root/scripts/createASurfMarchingCubes.py" \
     500 500 500 \
     0 500 0 500 0 500 \
     500 500 500 \
     4e-6 \
     Est_3phase500cubed4micron \
-    0 1 3 3D 0 aSurfIntrinsic none \
-    2 "$micropore_intrinsic_asurf" > createASurfIntrinsicReactive.out
+    1 3 3D aSurfIntrinsic occupancyGaussian 0.74 none \
+    "2:${micropore_intrinsic_asurf}:micropore" true 0 > createASurfIntrinsicReactive.out
 
 if [ -d "processor0" ]
 then
