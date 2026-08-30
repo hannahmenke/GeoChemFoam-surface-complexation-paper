@@ -1,0 +1,40 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermoPhysicalProperties;
+}
+
+mixtureType phreeqcMixture;
+epsChemistryMin 1e-3;
+maxRelativeClippedMass 1e-8;
+
+kineticPhases
+{
+}
+
+kineticPhaseReactions
+{
+}
+
+solutionSpecies
+{
+    Ca+2
+    {
+        D D [ 0 2 -1 0 0 0 0 ] 1e-11;
+    }
+    Cl-
+    {
+        D D [ 0 2 -1 0 0 0 0 ] 1e-11;
+    }
+    H+
+    {
+        D D [ 0 2 -1 0 0 0 0 ] 1e-11;
+    }
+    OH-
+    {
+        D D [ 0 2 -1 0 0 0 0 ] 1e-11;
+    }
+};

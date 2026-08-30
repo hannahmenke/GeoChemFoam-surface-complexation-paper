@@ -194,6 +194,8 @@ def main() -> None:
                         help="Calibrated surface Henry coefficient K_s")
     parser.add_argument("--ca-in", type=float, default=2.0e-9,
                         help="Inlet Ca2+ concentration C_in (mol/m3)")
+    parser.add_argument("--dpi", type=int, default=240,
+                        help="PNG resolution (default: 240 dpi)")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
@@ -299,7 +301,7 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fig.tight_layout()
-    fig.savefig(args.output, dpi=200)
+    fig.savefig(args.output, dpi=args.dpi)
     print(f"Wrote {args.output}")
 
 

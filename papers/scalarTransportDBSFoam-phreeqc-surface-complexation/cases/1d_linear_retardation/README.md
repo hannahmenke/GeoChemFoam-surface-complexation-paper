@@ -3,9 +3,11 @@
 ## Source
 
 - paper-local executable case:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
 - reproducible entry point:
   - `runPhase8AnalyticalBenchmark.sh`
+- runtime selection:
+  - set `GCFOAM_RUNTIME_ROOT` to a clean, isolated GeoChemFoam checkout
 
 ## Paper Role
 

@@ -1,0 +1,57 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+
+application     reactiveTransportDBSFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         8.0000000000000000e+01;
+
+deltaT          2.5000000000000000e-01;
+
+writeControl    adjustableRunTime;
+
+writeInterval   1.0000000000000000e+01;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  16;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   8;
+
+runTimeModifiable yes;
+
+phreeqcRestartCheckpoints true;
+
+functions
+{
+    outletCa
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        log             false;
+        writeControl    timeStep;
+        writeInterval   1;
+        regionType      patch;
+        name            outlet;
+        operation       areaAverage;
+        fields          ( "Ca+2" );
+        writeFields     false;
+    }
+}

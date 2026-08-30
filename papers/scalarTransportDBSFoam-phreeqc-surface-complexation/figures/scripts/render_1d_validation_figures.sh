@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")"/../../../.. && pwd)"
-case_dir="$repo_root/tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation"
+case_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation"
 png_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png"
 scripts_dir="$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts"
 
@@ -23,7 +23,7 @@ for path in "${required_files[@]}"; do
 done
 
 if [ "$missing" -ne 0 ]; then
-  echo "Run $case_dir/runAll.sh to completion before regenerating 1D figures." >&2
+  echo "Run $case_dir/runPhase8AnalyticalBenchmark.sh to completion before regenerating 1D figures." >&2
   exit 1
 fi
 

@@ -11,9 +11,9 @@
   - cell-averaged analytical retarded reference
   - normalized surface-loading profile
 - source case:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
 - reproducible entry point:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation/runPhase8AnalyticalBenchmark.sh`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/runPhase8AnalyticalBenchmark.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_retardation_plot.py`
 - repeatable command:
@@ -125,9 +125,9 @@
   - Ogata-Banks analytical reference curves for both cases
   - breakthrough time markers
 - source case:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation`
 - reproducible entry point:
-  - `tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation/runPhase8AnalyticalBenchmark.sh`
+  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/runPhase8AnalyticalBenchmark.sh`
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_breakthrough_plot.py`
 - repeatable command:
