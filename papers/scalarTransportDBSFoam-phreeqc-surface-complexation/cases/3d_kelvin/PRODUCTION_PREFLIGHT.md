@@ -131,6 +131,15 @@ L1 difference was 0.363160%; all recorded front shifts were zero.  Therefore
 the completed comparison does not establish `0.00078125` as a production
 timestep.
 
+The more relevant completed comparison `0.00078125` versus `0.000390625` also
+did not pass.  Sorbed-Mn global relative L1 difference was 4.147294%, while
+aqueous-Mn relative L1 was 0.185760%.  Aqueous, sorbed, and total Mn inventory
+differences were 0.066285%, 0.842758%, and 0.232488%, respectively.  The
+sorbed-Mn 90th-percentile front shifted by one 10 micrometre cell; the other
+front criteria passed.  Thus only the below-1% distribution criterion failed.
+Both inputs had 32/32 valid checkpoint pairs and 1,048 validated provenance
+records each.
+
 **Required:** after the final runtime and tracked `Surf_*` case exist, run the
 matched `0.000390625`/`0.0001953125` pair again on that exact identity.  The
 comparison artifact must validate every recorded hash, all 32 checkpoint
@@ -182,29 +191,37 @@ restart chain.
 
 ## Wall-time projection
 
-**Measured:** before endpoint checkpoint I/O, the `deltaT = 0.000390625 s`,
-32-rank pilot required 26,085 s of solver clock for 0.5 s simulated time.  Its
-single endpoint checkpoint/publish interval then took 36 s, reaching 26,121 s.
-Restore and staged-startup costs have not been measured.
+**Measured:** the `deltaT = 0.000390625 s`, 32-rank pilot required 26,121 s of
+unsplit solver clock for 0.5 s simulated time.  The preceding 26,085 s log
+entry is at simulated time 0.499609375 s, not at 0.5 s before checkpoint I/O;
+the remaining 36 s includes the final transport/reaction step as well as final
+field/checkpoint publication and cannot be assigned to checkpoint writing.
+Compute, write, restore, and staged-startup costs have not been measured as
+non-overlapping components.
 
-**Derived conservative baseline:**
+**Derived provisional unsplit baseline:**
 
 ```text
-Tcompute,120,32 = 26,085 s x (120 / 0.5) = 6,260,400 s
-Twrite,32       = 36 s (one measured endpoint)
-T120,R = 6,260,400 / Scompute,R + 14 x Twrite,R
+Tunsplit,120,32 = 26,121 s x (120 / 0.5) = 6,269,040 s
+                 = 1,741.4 h = 72.5583 d
+```
+
+This is only linear scaling of one whole-case measurement: it is neither a
+component model nor a production forecast, because it repeats the endpoint
+overhead at the wrong frequency and contains no restores or staged launches.
+Instrument the rank benchmark and restart-equivalence test to measure mutually
+exclusive `Tcompute,120,32`, `Twrite,R`, `Trestore,R`, and aggregate
+`Tstartup,total,R`.  Then project
+
+```text
+T120,R = Tcompute,120,32 / Scompute,R + 14 x Twrite,R
          + 13 x Trestore,R + Tstartup,total,R
 ```
 
-Here `Scompute,32 = 1`; only the compute term is divided by the measured
-32-to-64 compute speedup.  Applying the single measured 32-rank write time to
-all fourteen writes gives a provisional lower bound of 6,260,904 s
-(72.4642 d), but it excludes thirteen restores and staged-startup overhead and
-is not a production projection.  The rank benchmark and restart-equivalence
-test must measure `Twrite,R`, `Trestore,R`, and the aggregate staged-launch
-overhead `Tstartup,total,R`; add each exactly once using the formula, then apply
-the **assumed** 10% contingency to the full sum.  Do not advertise a 32- or
-64-rank duration before those measurements.
+Only the compute term is divided by the measured 32-to-64 compute speedup; add
+each measured I/O or startup component exactly once, then apply the **assumed**
+10% contingency to the full sum.  Do not advertise a 32- or 64-rank duration
+before those measurements.
 
 ## Retained output and disk gate
 
@@ -326,10 +343,12 @@ Production is evidence only after all of the following pass.
 - All fourteen stages have status 0, clean `End`, exact endpoints, and valid
   checkpoint pairs on every rank; no fatal, floating-point, or PHREEQC error is
   present.
-- Every aqueous and surface field is finite; fields required to be
-  nonnegative are nonnegative.  The numerical internal and boundary values of
-  `eps` and both surface-area fields match their initial values at every
-  checkpoint (file headers legitimately record a different time location).
+- Every aqueous and surface field is finite; every field that is analytically
+  nonnegative is at least `-1e-12` in its native units.  Record each field's
+  minimum and count below zero, with no silent validator clipping.  The
+  numerical internal and boundary values of `eps` and both surface-area fields
+  match their initial values at every checkpoint (file headers legitimately
+  record a different time location).
 - Strong- and weak-site species sums do not exceed their respective master
   capacities beyond the documented floating-point tolerance.
 - Parse every clipping report.  No call may exceed the configured
@@ -434,5 +453,11 @@ the independent reimplementation has SHA-256
 `a7f981390c8152257f3c01faf6b21fc4874e71c34c2926267d4166707fce370a`,
 and the pair-identification diagnosis has SHA-256
 `b18d8955e75949a5794421c5a5eaba2391f6689532f01526ca27ea467375b1bc`.
+The `0.00078125`/`0.000390625` artifact has SHA-256
+`b839316e8441e9394f426fbce6249eeb7d98c37d2c61253c5736e79797a07140`
+and was generated by comparator commit
+`46317fcac609819c35e1a85b1de6a3c73a6d156f` from source manifests
+`eb38e0ef928b1a8c5fb20aa152dec211ecb2510d4875bb72e9070a1ed8570abe`
+and `a4cc4bbdb9d687908cd1fc58ec4e1a02d2a03332272c62adb49a920b871d38d0`.
 These records support the measurements above; they are not substitutes for the
 required final-runtime acceptance artifacts.
