@@ -63,15 +63,22 @@ merged production binary.
 
 ### 2. The tracked Kelvin case is not the pilot-tested case
 
-**Measured:** the reviewed paper head tracks HFO-prefixed Kelvin surface-field
-names, whereas every completed pilot uses the project `Surf_*` case convention.
-The reviewed renderer wrapper also asks for HFO-prefixed fields, while the
-pilots actually wrote `Surf_sOMn+`, `Surf_wOMn+`, and `Surf_wOMg+`.
+**Measured:** the executable Kelvin case tracked by the reviewed paper head is
+`tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`.
+The paper `cases/3d_kelvin` directory contains documentation, not a second case
+copy.  The tracked tutorial uses HFO-prefixed surface-field names, whereas all
+completed pilots use the project `Surf_*` convention.  The figure wrapper is
+also hard-coded to that tutorial and requests HFO-prefixed fields in both its
+`required_fields` list and renderer arguments; the pilots wrote
+`Surf_sOMn+`, `Surf_wOMn+`, and `Surf_wOMg+`.
 
-Seven logical tracked inputs differ; the first row comprises both the template
-and realised dictionary, so eight file paths differ:
+Nine logical tracked inputs differ; the first row comprises both the template
+and realised dictionary, so ten file paths differ.  The pilot manifest recorded
+the first seven rows but omitted the two orchestrating scripts in the final two
+rows.  `Reviewed` is the canonical tutorial at the paper head; `Pilot` is the
+preserved completed paper-case copy from which the measurements were made:
 
-| Logical input in `tutorials/.../3DKelvinSurfaceComplexation` | Reviewed SHA-256 | Pilot SHA-256 | Material difference |
+| Canonical relative input | Reviewed SHA-256 | Pilot SHA-256 | Material difference |
 |---|---:|---:|---|
 | `constant/thermoPhysicalProperties{,1}` | `ff8793b418b15cf3874a9c169f6b910a807ad875b81cc382403ebb4228e5694c` | `91b7d1229e4d3758000b7069486cc791a6ae5a5ca4e3375677f21201e81cee77` | HFO-prefixed fields/masters versus `Surf_*` |
 | `constant/phreeqcReactions` | `ff378541ec4ee4ab6ad5603aa5724c632a9f73b1438cdd79a67d74126a463e62` | `fae65265504bb6166ee72ed69b78f995cbee6c5f9a9d6055d07dadef19912a76` | matching PHREEQC names and selected output |
@@ -80,21 +87,30 @@ and realised dictionary, so eight file paths differ:
 | `runCaseFlow.sh` | `956e144256256a2db00cd69985cc31ee09f38b5e3c3a46e35e5028919a263260` | `cb8c11f671bf16974850132d3741747bca9a21389dd034eee2769447b2aad830` | explicit flow-duration override |
 | `initCaseReactiveTransport.sh` | `ea2a9b7a174ea23fafe1e0d81ea542463aafb401e8c379300f0d011e92b39080` | `abd6bb498e9cf35f931611ecbc534657e90ac3ddb2f66e3fd4e29e7fe25208ec` | runtime isolation, provenance, and `Surf_*` fields |
 | `runCaseReactiveTransport.sh` | `2a2f589d41a7c19a6bc56caa76d74505b21105b1da5572f686a81d615175ed2e` | `962fade27bac9567c09cfb1cee27d957aa13411fcd1885313102004e9fc01721` | runtime isolation, pilot timestep, and run manifest |
+| `runAll.sh` | `1c9d9c0e8b8532f4dd81b723987a45834a87c70589bd8fa9cd344ddf81c5db07` | `897746015273b2b7620964aa272f68d719999b240799f3d5c3c457be5e9559ff` | paper runtime configuration and selected-runtime logging |
+| `deleteReactiveTransport.sh` | `4dd4999413df2a3fab6b72dde113e9f1a08792f637deed63f077863fa115817b` | `ea8ef45b9339dead1218f34fbce97ace0b97bceeebca20a3e568aeed1943d92e` | provenance cleanup and `Surf_*` field/master names |
 
 The pilot `kelvin_provenance.py` is also absent from the reviewed tree, and the
 pilot cases contain untracked realised inputs and outputs.
 
 **Minimum coherent remediation, required before rerunning acceptance pilots:**
 
-1. Commit and independently review the pilot-tested `Surf_*` Kelvin input
-   bundle, runtime isolation, and provenance recorder as one case change.
-2. Change only the generic renderer wrapper's field arguments from the stale
-   HFO-prefixed names to the resulting tracked `Surf_*` names; the Python
-   renderers already accept field names as arguments.  Do not add ion-name or
+1. Keep the tracked tutorial above as the single canonical source and production
+   bundle; keep `papers/.../cases/3d_kelvin` documentation-only.  Integrate and
+   independently review all nine logical input changes plus the missing
+   `kelvin_provenance.py` there as one coherent case change.
+2. Keep `configure_runtime.sh` at
+   `papers/.../cases/configure_runtime.sh`.  Resolve it from the repository root
+   in every tutorial script and detached command; do not rely on a case-relative
+   `../configure_runtime.sh` path.
+3. Update the wrapper's `required_fields` and renderer arguments together from
+   the stale HFO-prefixed names to the tracked `Surf_*` names.  The Python
+   renderers already accept field names as arguments; do not add ion-name or
    surface-name special cases to solver or adapter code.
-3. Regenerate a clean case from that commit and prove its manifest covers every
-   case, chemistry, geometry, decomposed initial-field, runtime, solver, and
-   linked-library input.  No local patch or untracked input may remain.
+4. Regenerate a clean tutorial case from that commit and prove its manifest
+   covers all ten tracked paths, `kelvin_provenance.py`, chemistry, geometry,
+   decomposed initial fields, runtime, solver, and linked libraries.  No local
+   patch or untracked input may remain.
 
 ## Timestep-convergence gate
 
@@ -102,16 +118,18 @@ The 32-rank pilots used identical 200 x 200 x 200 meshes, a 2 x 4 x 4
 decomposition, a 0.5 s endpoint, and one matched checkpoint.  Completed-run
 measurements are:
 
-| `deltaT` [s] | Detached wall [s] | Solver clock [s] | mean Co | max Co | status | checkpoint pairs |
+| `deltaT` [s] | Detached wall [s] | Final solver clock, including endpoint I/O [s] | mean Co | max Co | status | checkpoint pairs |
 |---:|---:|---:|---:|---:|---:|---:|
 | 0.0015625 | 6,808 | 6,799 | 0.0581960 | 0.201417 | 0 | 32/32 |
 | 0.00078125 | 13,544 | 13,535 | 0.0290980 | 0.100709 | 0 | 32/32 |
 | 0.000390625 | 26,131 | 26,121 | 0.0145490 | 0.0503543 | 0 | 32/32 |
 
-The completed adjacent comparison `0.00078125` versus `0.000390625` did not
-pass: sorbed-Mn global relative L1 difference was 4.1473%, although all Mn
-inventory differences were below 1% and front positions agreed within one
-cell.  Therefore `0.00078125` is not a production timestep.
+The independently reproduced completed comparison `0.0015625` versus
+`0.00078125` did not pass: sorbed-Mn global relative L1 difference was
+7.560231%, sorbed-Mn inventory differed by 1.581806%, and aqueous-Mn relative
+L1 difference was 0.363160%; all recorded front shifts were zero.  Therefore
+the completed comparison does not establish `0.00078125` as a production
+timestep.
 
 **Required:** after the final runtime and tracked `Surf_*` case exist, run the
 matched `0.000390625`/`0.0001953125` pair again on that exact identity.  The
@@ -122,8 +140,9 @@ pairs, identical mesh/initial fields/chemistry, and all of these criteria:
 - global relative L1 differences for aqueous and sorbed Mn are below 1%;
 - Mn front positions at the 10th, 50th, and 90th inventory percentiles differ
   by no more than one 10 micrometre cell and by less than 1% of domain length;
-- all values are finite and all required nonnegative fields remain
-  nonnegative.
+- all values are finite and every field that is analytically nonnegative is at
+  least `-1e-12` in its native units; record the minimum and count of values
+  below zero rather than silently clipping them in the comparator.
 
 If it passes, select `deltaT = 0.000390625 s`.  If it fails, do not launch;
 continue timestep refinement.  The measured maximum Co of 0.0503543 at the
@@ -163,20 +182,29 @@ restart chain.
 
 ## Wall-time projection
 
-**Measured:** the `deltaT = 0.000390625 s`, 32-rank pilot required 26,121 s of
-solver clock for 0.5 s simulated time.
+**Measured:** before endpoint checkpoint I/O, the `deltaT = 0.000390625 s`,
+32-rank pilot required 26,085 s of solver clock for 0.5 s simulated time.  Its
+single endpoint checkpoint/publish interval then took 36 s, reaching 26,121 s.
+Restore and staged-startup costs have not been measured.
 
 **Derived conservative baseline:**
 
 ```text
-T120,32 = 26,121 s x (120 / 0.5) = 6,269,040 s
-         = 1,741.4 h = 72.5583 d
+Tcompute,120,32 = 26,085 s x (120 / 0.5) = 6,260,400 s
+Twrite,32       = 36 s (one measured endpoint)
+T120,R = 6,260,400 / Scompute,R + 14 x Twrite,R
+         + 13 x Trestore,R + Tstartup,total,R
 ```
 
-**Assumed planning contingency:** 10%, giving 79.8142 d at 32 ranks.  After
-the strong-scaling test, project `T120,64 = T120,32 / S`, then add the measured
-cost of fourteen checkpoint writes, thirteen restores, and 10% contingency.
-Do not advertise a 64-rank duration before measuring `S`.
+Here `Scompute,32 = 1`; only the compute term is divided by the measured
+32-to-64 compute speedup.  Applying the single measured 32-rank write time to
+all fourteen writes gives a provisional lower bound of 6,260,904 s
+(72.4642 d), but it excludes thirteen restores and staged-startup overhead and
+is not a production projection.  The rank benchmark and restart-equivalence
+test must measure `Twrite,R`, `Trestore,R`, and the aggregate staged-launch
+overhead `Tstartup,total,R`; add each exactly once using the formula, then apply
+the **assumed** 10% contingency to the full sum.  Do not advertise a 32- or
+64-rank duration before those measurements.
 
 ## Retained output and disk gate
 
@@ -194,7 +222,8 @@ post-initial checkpoints.
 
 **Measured at 32 ranks:** one complete endpoint occupies 29,772,206,080
 allocated bytes (26,591,259,783 bytes are PHREEQCRM dumps); the mesh, constant
-data, and time 0 occupy 3,210,031,104 allocated bytes.  The completed case
+data, time 0, and other non-endpoint case content occupy 3,210,031,104 allocated
+bytes.  The completed case
 contains 864 endpoint files and 32 valid dump/marker pairs.
 
 **Derived using the measured candidate footprint:**
@@ -237,9 +266,11 @@ Once all gates pass, prepare the first 0-to-1 s stage exactly as follows in the
 fresh case (subsequent stages replace start/end/interval and set restore true):
 
 ```bash
-cd /absolute/path/to/fresh-kelvin-production-case
+cd /absolute/path/to/fresh-repository-worktree
+export KELVIN_REPO_ROOT=$PWD
+cd "$KELVIN_REPO_ROOT/tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation"
 export GCFOAM_RUNTIME_ROOT=/absolute/path/to/final-clean-runtime
-source ../configure_runtime.sh
+source "$KELVIN_REPO_ROOT/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
 cp system/controlDict1 system/controlDict
 foamDictionary system/controlDict -entry startFrom -set startTime
 foamDictionary system/controlDict -entry startTime -set 0
@@ -260,8 +291,8 @@ launch pattern for that prepared first stage:
 export GCFOAM_RUNTIME_ROOT=/absolute/path/to/final-clean-runtime
 export KELVIN_RANKS=32  # or 64 only if the benchmark gate selected it
 /home/hm114/.codex/skills/geochemfoam-detached/scripts/run_detached.sh \
-  /absolute/path/to/fresh-kelvin-production-case \
-  'source ../configure_runtime.sh; export FOAM_SIGFPE=false OMP_NUM_THREADS=1; mpirun --bind-to core --map-by core -np "$KELVIN_RANKS" reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT_0_to_1.out' \
+  "$KELVIN_REPO_ROOT/tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation" \
+  'source "$KELVIN_REPO_ROOT/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"; export FOAM_SIGFPE=false OMP_NUM_THREADS=1; mpirun --bind-to core --map-by core -np "$KELVIN_RANKS" reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT_0_to_1.out' \
   kelvin_local_0_to_1
 ```
 
@@ -307,18 +338,52 @@ Production is evidence only after all of the following pass.
 
 ### Element mass balance
 
-Before launch, the production validator must be reviewed and tested to record
-time-integrated inlet/outlet advective and diffusive fluxes and aqueous plus
-surface inventories for Mn, Mg, and conservative Cl.  For each retained time,
+Before launch, the production validator must be reviewed and tested against
+these explicit units and signs.  Aqueous concentration `C` is in kmol m^-3
+(numerically mol L^-1), surface concentration `Gamma` is in kmol m^-2,
+`aSurf` is the chemistry-supplied interfacial area density in m^-1, cell volume
+`V` is in m^3, `eps` is dimensionless, and outward-oriented face flux `phi` is
+in m^3 s^-1.  Do not treat `Gamma` as an intrinsic volumetric concentration.
+At each retained time calculate, in kmol,
 
 ```text
-residual = initial inventory + cumulative net boundary input
-           - aqueous inventory - surface inventory
+C_Mn = field Mn+2; C_Mg = field Mg+2; C_Cl = field Cl-
+N_X,aqueous = sum_cells eps_i C_X,i V_i
+N_Mn,surface = sum_cells aSurf_i
+               (Gamma_Surf_sOMn+,i + Gamma_Surf_wOMn+,i) V_i
+N_Mg,surface = sum_cells aSurf_i Gamma_Surf_wOMg+,i V_i
+N_Cl,surface = 0
 ```
 
-must be finite and below 1% of `max(|initial + net input|, |final total|)`.
-The Cl residual is the nonreactive transport control.  Missing boundary-flux
-history is not a mass-balance pass.
+Use the mesh cell volumes rather than assuming a uniform voxel volume.  Site
+capacity checks must use the same `aSurf * Gamma * V` conversion and enumerate
+the species actually included; an observed-species sum is not a full-site
+closure unless every site-bearing species is recorded.
+
+For each boundary face, define outward-positive fluxes in kmol s^-1:
+
+```text
+Fadv,out,X  = sum_faces phi_f C_X,f
+Fdiff,out,X = -sum_faces [(eps D_X)_f grad(C_X)_f dot S_f]
+Fin,X       = -(Fadv,out,X + Fdiff,out,X)
+```
+
+Use the tensor form when `D_X` is tensorial, and the solver's interpolation and
+discretisation (or solver-recorded face fluxes) so validator reconstruction
+does not introduce a different scheme.  Integrate `Fin,X` over solver timesteps
+with a documented quadrature to obtain cumulative net input in kmol.  For each
+retained time,
+
+```text
+residual_X = initial total inventory_X + integral(Fin,X dt)
+             - final total inventory_X
+```
+
+where total Mn and Mg include the mapped aqueous and surface terms above and
+total Cl is aqueous only.  The residual must be finite and below 1% of
+`max(|initial + net input|, |final total|)`.  The Cl residual is the
+nonreactive transport control.  Missing boundary-flux history or undocumented
+signs/units is not a mass-balance pass.
 
 ### Provenance and figures
 
@@ -329,9 +394,10 @@ history is not a mass-balance pass.
 - Verify the manifest from a clean checkout and an archive without relying on
   absolute pilot paths.  Preserve checkpoint and field hashes before any
   reconstruction or curation.
-- After the `Surf_*` wrapper mismatch is fixed, regenerate both Kelvin figures
-  from times 0/120 and 0/12/.../120.  Open and inspect the rendered figures for
-  complete methods/fields, geometry, scales, labels, legends, and visible
+- After the `Surf_*` wrapper mismatch is fixed, regenerate the spatial and
+  temporal Kelvin figures from times 0/120 and 0/12/.../120.  They must show
+  the Mn/Mg competition in both aqueous and surface fields.  Open and inspect
+  them for complete fields, geometry, scales, labels, legends, and visible
   scientific comparison before adding Kelvin result claims to the manuscript.
 
 ## Explicit no-launch conditions
@@ -362,8 +428,11 @@ solver-log SHA-256
 `f8e339b07e7eff8da19cb97df8b72c0d0c5afaeb57e0935e747a8b700ce06fbd`,
 and detached-log SHA-256
 `2f499968aa7be777d55f1f7306243748b6e32398c5d4ef8cfe516e385b2af24c`.
-The adjacent-comparison artifact records source-manifest hashes
-`eb38e0ef928b1a8c5fb20aa152dec211ecb2510d4875bb72e9070a1ed8570abe`
-and `a4cc4bbdb9d687908cd1fc58ec4e1a02d2a03332272c62adb49a920b871d38d0`.
-These records support the measurements above; they are not substitutes for
-the required final-runtime acceptance artifacts.
+The `0.0015625`/`0.00078125` comparison artifact has SHA-256
+`bdad624a8ee1960e3ed06974d83566391cf718b4bc2ac62e5991fd240453fb34`;
+the independent reimplementation has SHA-256
+`a7f981390c8152257f3c01faf6b21fc4874e71c34c2926267d4166707fce370a`,
+and the pair-identification diagnosis has SHA-256
+`b18d8955e75949a5794421c5a5eaba2391f6689532f01526ca27ea467375b1bc`.
+These records support the measurements above; they are not substitutes for the
+required final-runtime acceptance artifacts.
