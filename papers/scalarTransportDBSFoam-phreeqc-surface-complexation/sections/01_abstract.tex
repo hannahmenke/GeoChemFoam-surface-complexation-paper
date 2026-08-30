@@ -1,39 +1,28 @@
-\begin{abstract}
-We present a conservative Darcy-Brinkman-Stokes (DBS) formulation for
+\abstract{We present a conservative Darcy-Brinkman-Stokes (DBS) formulation for
 PHREEQC-coupled reactive transport with cell-based surface complexation in
-image-based porous media. Implemented in GeoChemFoam, an OpenFOAM-based
-reactive-transport framework, the formulation transports dissolved species in
-the physical mobile-water fraction, stores adsorbed species as conservative
-cell-scale surface inventories, and couples each reactive cell to PHREEQC
-without heuristic source redistribution. This provides a direct way to
-represent unresolved internal reactive area in segmented microporous phases,
-while retaining the DBS description of flow and transport through resolved pore
-space. The approach is motivated by applications in groundwater contaminant
-retention, critical-mineral recovery, direct lithium extraction, and
-radionuclide transport in geological materials.
+image-based porous media. Implemented in the OpenFOAM-based GeoChemFoam
+framework, the formulation transports dissolved species in the physical
+mobile-water fraction, stores adsorbed species as conservative cell-scale
+surface inventories, and couples each reactive cell to PHREEQC. Reactive
+surface area is supplied independently as a cell field, allowing unresolved
+internal area in segmented microporous phases to be represented while DBS flow
+and transport are retained in resolved pore space.
 
-The implementation is assessed through a validation sequence that separates
-conservative coupling, surface-area construction, and two-scale upscaling. A
-1D analytical retardation benchmark and closed-system batch tests verify the
-transport--chemistry balance. Circular-post and sphere benchmarks isolate the
-2D and 3D smooth-interface surface-area algorithms. Image-based micromodel and
-Estaillades external-surface comparisons then evaluate DBS
-\texttt{smoothSurface} against resolved-wall \texttt{snappyHexMesh}
-references, including the resulting sorbed inventories.
-A resolved-to-DBS two-scale micromodel benchmark tests Li$^{+}$ capture from
-Na--K--Mg brine as a direct-lithium-extraction analogue. Across P\'{e}clet
-numbers from $0.1$ to $10$, aqueous and sorbed inventory differences remain
-below $0.9\%$ and profile errors remain below $5.8\%$.
+The implementation is assessed through tests that separate conservative
+transport--chemistry coupling from surface-area construction. A one-dimensional
+analytical retardation benchmark and closed-system batch tests evaluate the
+aqueous and adsorbed mass balance. Controlled two- and three-dimensional
+geometries test the smooth-interface surface-area algorithms, while image-based
+fracture-network and Estaillades limestone cases examine reactive transport in
+heterogeneous pore structures.
 
-The validated formulation is applied to three image-based reactive-transport
-cases spanning distinct applications: Pb$^{2+}$ retardation by HFO coatings in
-a 2D fracture network for heavy-metal remediation, selective Mn$^{2+}$ capture
-from Mg$^{2+}$-rich brine in a 3D Kelvin-cell sorbent geometry for
-critical-mineral separation, and Sr$^{2+}$/Ca$^{2+}$ exchange in Estaillades
-limestone as a radionuclide-transport scenario for nuclear-waste deep
-geological repositories. Across these cases, the method produces spatially
-resolved aqueous and adsorbed inventories in geometries where the reactive
-surface area is partly unresolved at the image scale. The results support
-conservative DBS surface-complexation coupling as a practical framework for
-multi-scale reactive transport in segmented porous-media images.
-\end{abstract}
+The application set spans Pb$^{2+}$ retardation by hydrous ferric oxide
+coatings in a two-dimensional fracture network, competitive Mn$^{2+}$/Mg$^{2+}$
+exchange in a three-dimensional Kelvin-cell sorbent geometry, and
+Sr$^{2+}$/Ca$^{2+}$ exchange in Estaillades limestone. The fracture-network and
+limestone cases illustrate how the formulation produces spatially resolved
+aqueous and adsorbed
+inventories when reactive surface area is partly unresolved at the image scale.
+The resulting framework supports conservative surface-complexation modelling
+across resolved and unresolved pore structures relevant to contaminant
+retention, selective ion capture, and radionuclide transport.}

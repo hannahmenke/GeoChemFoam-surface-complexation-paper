@@ -1,0 +1,40 @@
+Dear Editor,
+
+Please consider our research article, "A Conservative Darcy-Brinkman-Stokes
+Formulation for PHREEQC-Coupled Reactive Transport with Cell-Based Surface
+Complexation," by Hannah P. Menke, Florian Doster, and Julien Maes for
+publication in Transport in Porous Media.
+
+The manuscript presents a conservative Darcy-Brinkman-Stokes formulation that
+couples reactive transport to PHREEQC-based surface complexation through a
+cell-based representation of reactive surface area. This representation allows
+surface reactions within segmented microporous phases while retaining the
+resolved pore-space description of flow and transport. The transport and
+chemical calculations use consistent cell water volumes and explicit dissolved
+and surface-bound inventories.
+
+The evidence reported includes a one-dimensional analytical retardation
+benchmark, closed-system balance tests, controlled surface-area tests, and
+image-based applications to fracture and limestone geometries. Together, these
+results show how conservative coupling and cell-based reactive area can be
+assessed without requiring every relevant mineral surface to be resolved by the
+image or mesh. We expect the work to interest readers studying pore-scale
+reactive transport, micro-continuum methods, contaminant retention,
+critical-mineral separation, and radionuclide transport.
+
+We confirm that this manuscript has not been published elsewhere and is not
+under consideration by another journal. All authors have approved the
+manuscript and agree with its submission to Transport in Porous Media. The
+authors declare that they have no relevant financial or non-financial interests
+to disclose.
+
+Thank you for your consideration.
+
+Sincerely,
+
+Hannah P. Menke (corresponding author)
+Institute for GeoEnergy Engineering, Heriot-Watt University
+Edinburgh, United Kingdom
+H.Menke@hw.ac.uk
+
+On behalf of co-authors Florian Doster and Julien Maes

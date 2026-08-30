@@ -1,29 +1,47 @@
-\documentclass[11pt]{article}
+\documentclass[pdflatex,sn-basic]{sn-jnl}
 
-\usepackage[a4paper,margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{siunitx}
-\usepackage{hyperref}
-\usepackage{setspace}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage[authoryear,round]{natbib}
+\usepackage{array}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{manyfoot}
 \usepackage[section]{placeins}
 
-\title{A Conservative Darcy-Brinkman-Stokes Formulation For PHREEQC-Coupled Reactive Transport\\
-With Cell-Based Surface Complexation}
-\author{Hannah P. Menke, Florian Doster,  Julien Maes}
-\date{\today}
+\raggedbottom
 
 \begin{document}
 
-\maketitle
-\onehalfspacing
+\title[Conservative DBS Formulation for PHREEQC-Coupled Reactive Transport]{A Conservative Darcy-Brinkman-Stokes Formulation for PHREEQC-Coupled Reactive Transport with Cell-Based Surface Complexation}
+
+\author*[1,2]{\fnm{Hannah P.} \sur{Menke}}\email{H.Menke@hw.ac.uk}
+%% ORCID: 0000-0002-1445-6354
+
+\author[1,2]{\fnm{Florian} \sur{Doster}}
+%% ORCID: 0000-0001-7460-573X
+
+\author[1,2]{\fnm{Julien} \sur{Maes}}
+%% ORCID: 0000-0002-3248-9758
+
+\affil*[1]{\orgdiv{Institute for GeoEnergy Engineering}, \orgname{Heriot-Watt University}, \orgaddress{\city{Edinburgh}, \country{United Kingdom}}}
+
+\affil[2]{\orgdiv{SET-IT (Subsurface Energy Transition \& Innovation Centre)}, \orgname{Heriot-Watt University}, \orgaddress{\city{Edinburgh}, \state{Scotland}, \country{United Kingdom}}}
 
 \input{sections/01_abstract}
+
+\keywords{Darcy-Brinkman-Stokes, PHREEQC, surface complexation, micro-continuum reactive transport, image-based porous media, direct lithium extraction}
+
+\maketitle
+
+\noindent\textbf{Article Highlights}
+\begin{itemize}
+\item One-dimensional tests reproduce delayed solute transport while tracking dissolved and surface-bound mass.
+\item Image-based tests assess how reactive surface area is represented in two and three dimensions.
+\item Cell-based reactive area represents mineral surfaces that are too small to resolve in images.
+\end{itemize}
+
 \input{sections/02_introduction}
 \input{sections/03_model_description}
 \input{sections/04_numerical_implementation}
@@ -31,9 +49,41 @@ With Cell-Based Surface Complexation}
 \input{sections/06_test_cases}
 \input{sections/07_discussion}
 \input{sections/08_conclusions}
-\input{sections/09_acknowledgements}
 
-\bibliographystyle{abbrvnat}
+\backmatter
+
 \bibliography{references}
+
+\section*{Statements and Declarations}
+
+\textbf{Funding:} This work was supported by the Natural Environment Research
+Council (NERC) and Nuclear Waste Services (NWS) through the GeoSAFE grant
+(reference NE/Y002504/1). Opinions, findings, conclusions or recommendations
+expressed are those of the authors and do not necessarily reflect the views
+of NERC or NWS.
+
+\textbf{Competing interests:} The authors have no relevant financial or
+non-financial interests to disclose.
+
+\textbf{Ethics approval:} Not applicable.
+
+\textbf{Consent to participate:} Not applicable.
+
+\textbf{Consent for publication:} Not applicable.
+
+\textbf{Availability of data and materials:} The data and materials supporting
+this study are available from the corresponding author on reasonable request.
+
+\textbf{Code availability:} The GeoChemFoam 5.2 codebase is publicly available
+at \url{https://github.com/GeoChemFoam/GeoChemFoam-5.2}. The solver modifications,
+paper-specific cases, simulation scripts, and post-processing code are available
+from the corresponding author on reasonable request.
+
+\textbf{Authors' contributions:} \textbf{Hannah P. Menke:} Conceptualisation,
+Methodology, Software, Investigation, Formal analysis, Writing -- original
+draft, Funding acquisition. \textbf{Julien Maes:} Conceptualisation,
+Methodology, Writing -- review \& editing, Funding acquisition.
+\textbf{Florian Doster:} Conceptualisation, Writing -- review \& editing,
+Funding acquisition.
 
 \end{document}
