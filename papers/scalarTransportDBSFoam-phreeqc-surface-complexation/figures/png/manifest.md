@@ -245,9 +245,10 @@
 - reproducible entry point:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/runAllParallel.sh`
 - availability:
-  - the clean archive and submission source retain the rendered figure and its
-    renderer, not the raw mesh and field outputs; regenerate it only after the
-    case has completed through `runAll.sh` or `runAllParallel.sh`
+  - the clean repository archive retains the published PNG and renderer; the
+    flat submission source retains only the published PNG. Neither retains raw
+    mesh or field outputs; regenerate only after `runAll.sh` or
+    `runAllParallel.sh` has completed, or from an external completed case tree
 - case analyzer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/scripts/analyze_external_flow_validation.py`
 - renderer:

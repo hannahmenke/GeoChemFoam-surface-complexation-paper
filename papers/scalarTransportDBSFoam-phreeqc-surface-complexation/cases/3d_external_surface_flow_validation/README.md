@@ -45,8 +45,9 @@ reference at that comparison time.
 
 Figure~11 is rendered from completed case outputs by
 `figures/scripts/render_3d_external_surface_area_validation.sh`. The clean
-archive and flat submission source provide the published figure and renderer,
-but do not bundle the raw mesh and field outputs needed to regenerate it. A
-fresh clone must first generate the shared crop and complete either `runAll.sh`
-or `runAllParallel.sh`; regeneration then uses those outputs and is not
-presented as a byte-identical archive-only operation.
+repository archive retains the published PNG and renderer, whereas the flat
+submission source retains only the published PNG. Neither includes the raw
+mesh and field outputs needed to regenerate it. A fresh clone must first
+generate the shared crop and complete either `runAll.sh` or `runAllParallel.sh`,
+or use an external completed case tree; regeneration is not presented as a
+byte-identical archive-only operation.
