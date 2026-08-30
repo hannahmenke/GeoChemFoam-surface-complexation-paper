@@ -1,0 +1,661 @@
+{
+  "bindings": [
+    {
+      "id": "data-1d-analytical-comparison",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/phase8_analytical_compare.out",
+      "role": "validation_evidence",
+      "sha256": "5b0436158405085bcea9a00ce49f5bf8b0e4db9cff7d4d0ec01322ffbc1d3eab",
+      "size_bytes": 825
+    },
+    {
+      "id": "data-1d-aqueous-outlet",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_aqueous/postProcessing/outletCa/0/surfaceFieldValue.dat",
+      "role": "material_data",
+      "sha256": "cf6a69fca326dfe0b80640d652eded2daae4b95039905ee821bc9f4daf55bc9b",
+      "size_bytes": 15566
+    },
+    {
+      "id": "data-1d-aqueous-profile",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_aqueous/Ca+2",
+      "role": "material_data",
+      "sha256": "877d532fbdd52af483e0759aa3bd17c78c15ee23a6d7242d9ca15e2f960e60a3",
+      "size_bytes": 3097
+    },
+    {
+      "id": "data-1d-batch-secant",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/phase8_batch_secant.out",
+      "role": "material_data",
+      "sha256": "fac333636ae4902c34ddb5fe8429bef0fdf81bdd32d8083925c5c5d1add8c039",
+      "size_bytes": 151
+    },
+    {
+      "id": "data-1d-surface-loading",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_surface/Surf_aCa+",
+      "role": "material_data",
+      "sha256": "d9d01f0824179db4463fafad14a60613147de0cc4486fe46dcad23f0a2be059a",
+      "size_bytes": 3064
+    },
+    {
+      "id": "data-1d-surface-outlet",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_surface/postProcessing/outletCa/0/surfaceFieldValue.dat",
+      "role": "material_data",
+      "sha256": "6f55d3969d4fce95e1a5fa32bb133a24845e3ca38e2abe32fe9dd58ffad9d4e4",
+      "size_bytes": 15566
+    },
+    {
+      "id": "data-1d-surface-profile",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_surface/Ca+2",
+      "role": "material_data",
+      "sha256": "8be08d9e2b8c0428bb8b33b15813390708787d2362c1efc25317d849f1784631",
+      "size_bytes": 3097
+    },
+    {
+      "id": "data-2d-fracture-metadata",
+      "media_type": "text/plain",
+      "path": "images/raw/4StraightFractures.txt",
+      "role": "material_data",
+      "sha256": "30a2f9e6480f5e50cb5f8ece9e740b3ff61efb489e8bf01b725a66373ced9528",
+      "size_bytes": 72
+    },
+    {
+      "id": "data-2d-fracture-raw",
+      "media_type": "application/gzip",
+      "path": "images/raw/4StraightFractures.raw.tar.gz",
+      "role": "material_data",
+      "sha256": "042de7f02d0e8316977787cd72bb6db3c5154eb8ee6745cd59376759ec6759c1",
+      "size_bytes": 1144
+    },
+    {
+      "id": "data-2d-intrinsic-surface-log",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createASurfIntrinsicReactive.out",
+      "role": "material_data",
+      "sha256": "34d25b0d50108298293246c671c3a6d0a4960ac503be1f780d61f32bb6cdab68",
+      "size_bytes": 181
+    },
+    {
+      "id": "data-2d-reactive-surface-log",
+      "media_type": "text/plain",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createASurfReactive.out",
+      "role": "material_data",
+      "sha256": "6d612d9ad1d47b7d6eac3b7f4e4fb5ba5b46f191dfd0244da847f18a5e3f9900",
+      "size_bytes": 197
+    },
+    {
+      "id": "data-estaillades-metadata",
+      "media_type": "text/plain",
+      "path": "images/raw/Est_3phase500cubed4micron.txt",
+      "role": "material_data",
+      "sha256": "99bf01dbd908acf5ae823673041be5f4b32676fdcd2020758610c8ad028074a2",
+      "size_bytes": 76
+    },
+    {
+      "id": "data-estaillades-raw",
+      "media_type": "application/gzip",
+      "path": "images/raw/Est_3phase500cubed4micron.raw.tar.gz",
+      "role": "material_data",
+      "sha256": "aa258b5a0d21ae36e23b0cb5f931b1f5c2f2455f0fa766adacb379fcb7f3189b",
+      "size_bytes": 5594894
+    },
+    {
+      "id": "evidence-2d-validation",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_item2_validation_metrics.json",
+      "role": "validation_evidence",
+      "sha256": "4bb785d0f89c251bbdac51e8f44966301f9b0630ebb3dbe75ceb28c2ceb618c8",
+      "size_bytes": 5940
+    },
+    {
+      "id": "evidence-estaillades-bounds",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig08_estaillades_concentration_bounds.json",
+      "role": "validation_evidence",
+      "sha256": "eee55e79427265778814437051f25f2d6086fcd8ced7540fd992606cf051e938",
+      "size_bytes": 4454
+    },
+    {
+      "id": "evidence-estaillades-surface-area",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/validation/surface_area.json",
+      "role": "validation_evidence",
+      "sha256": "9774cc144cfb9c6c5e816989816edd1e5764ade86258e2fa10965e59269def1b",
+      "size_bytes": 1636
+    },
+    {
+      "id": "evidence-estaillades-temporal",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig08_estaillades_temporal.json",
+      "role": "validation_evidence",
+      "sha256": "0c5b21a5857c379e71c4d195c06fd9c97458c2283a05be5be1c3e03a8886901e",
+      "size_bytes": 3745
+    },
+    {
+      "id": "figure-01-png",
+      "media_type": "image/png",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig01_1d_retardation.png",
+      "role": "figure",
+      "sha256": "3514a6efd7cd44cb9474733358ac18710145513431997bd42aaed1f7c76274a1",
+      "size_bytes": 171477
+    },
+    {
+      "id": "figure-02-png",
+      "media_type": "image/png",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_2d_fractures.png",
+      "role": "figure",
+      "sha256": "72380206ac6e03d7d86f53a4c27f57fc319459d8b1b7ffb469c7b2e836ecaf38",
+      "size_bytes": 153297
+    },
+    {
+      "id": "figure-04-png",
+      "media_type": "image/png",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades.png",
+      "role": "figure",
+      "sha256": "e53a69063be67b3158077149e78f26d2b56884ab12ae413400a492bf78efb8b4",
+      "size_bytes": 1779050
+    },
+    {
+      "id": "figure-06-png",
+      "media_type": "image/png",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig06_1d_breakthrough.png",
+      "role": "figure",
+      "sha256": "727b80765a080e525d277c9acba56288a5e664d76ed35ad96b1043c7b37baabd",
+      "size_bytes": 190721
+    },
+    {
+      "id": "figure-08-png",
+      "media_type": "image/png",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig08_estaillades_temporal.png",
+      "role": "figure",
+      "sha256": "2e0d7b8417c110f9310b76bd5f8124ba7bf4a1b5647d6d8c3fcac163ce78a399",
+      "size_bytes": 151829
+    },
+    {
+      "id": "provenance-1d-run",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/run_provenance.json",
+      "role": "provenance_record",
+      "sha256": "c0a72061791b90e7bbb3cfc5a72da6d2ea94b144496a05308fe84c8537478ab6",
+      "size_bytes": 19749
+    },
+    {
+      "id": "provenance-2d-figure",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/figure_provenance.json",
+      "role": "provenance_record",
+      "sha256": "eb86e3b381d19a65f8b5806e006091ecb15a36dfc0356170ca335d67d36840d0",
+      "size_bytes": 38133
+    },
+    {
+      "id": "provenance-2d-launch",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
+      "role": "provenance_record",
+      "sha256": "9c537e971e26e0d1a1dd885da29646d38e6314963c0be32b48643be603f8c755",
+      "size_bytes": 12750
+    },
+    {
+      "id": "provenance-2d-run",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/run_provenance.json",
+      "role": "provenance_record",
+      "sha256": "93a4aed8a657f0ec060c39845071016c857cb19db8dce16f69893b070debd87c",
+      "size_bytes": 85241
+    },
+    {
+      "id": "provenance-estaillades-run",
+      "media_type": "application/json",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/run_provenance.json",
+      "role": "provenance_record",
+      "sha256": "ea1a3d91bc593c1440993f65d966866b57bb9c8badb2d4e7aeeba5b041239dcd",
+      "size_bytes": 8887
+    },
+    {
+      "id": "renderer-1d-breakthrough",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_breakthrough_plot.py",
+      "role": "renderer_source",
+      "sha256": "42e017e76f26d8622b2d7e7f656ba23f0809f8a28c9ea40160b0259c445a1a2c",
+      "size_bytes": 11065
+    },
+    {
+      "id": "renderer-1d-profile",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_1d_retardation_plot.py",
+      "role": "renderer_source",
+      "sha256": "c536a2244e5562e452f010283b0fcdde34e6d007bec43195287944efd4aa53de",
+      "size_bytes": 7361
+    },
+    {
+      "id": "renderer-1d-wrapper",
+      "media_type": "text/x-shellscript",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_1d_validation_figures.sh",
+      "role": "renderer_source",
+      "sha256": "d69952ff4bc473ec2aab362ab59815978d7d903727019d0d9a6dd67f86d691d7",
+      "size_bytes": 1870
+    },
+    {
+      "id": "renderer-2d-generator",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
+      "role": "renderer_source",
+      "sha256": "2610e8fc8f8c01c17740038fe188caf8781fe0ebead4ecf893388cc134e7b598",
+      "size_bytes": 17941
+    },
+    {
+      "id": "renderer-2d-provenance",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
+      "role": "renderer_source",
+      "sha256": "295170e4fe40297eac7fc1d1c637a84945c57ad9ef479dab92d1dc2fe7b9bb94",
+      "size_bytes": 17581
+    },
+    {
+      "id": "renderer-2d-validator",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
+      "role": "renderer_source",
+      "sha256": "85754589f4e398173664e09aa3435541e5db1c9cc17b8ea4f9ddf04bd23da718",
+      "size_bytes": 5837
+    },
+    {
+      "id": "renderer-2d-wrapper",
+      "media_type": "text/x-shellscript",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
+      "role": "renderer_source",
+      "sha256": "5f33bf9a60f8abe66f93a2ded7f6bc4a8b847b96fcffee3472594136fad61c96",
+      "size_bytes": 4713
+    },
+    {
+      "id": "renderer-estaillades-3d-generator",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py",
+      "role": "renderer_source",
+      "sha256": "d83757eca4e2890a85e387edc5eaaa4e675db846698f2c56aaa4b045de4c312d",
+      "size_bytes": 43742
+    },
+    {
+      "id": "renderer-estaillades-3d-wrapper",
+      "media_type": "text/x-shellscript",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_3d_volume_pyvista_egl.sh",
+      "role": "renderer_source",
+      "sha256": "bc3f4a79cea01e0f9575cd2a64ad86827e2db7d66f28214032e685ea04f497d1",
+      "size_bytes": 679
+    },
+    {
+      "id": "renderer-estaillades-checkpoint-validator",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/validate_estaillades_checkpoint.py",
+      "role": "renderer_source",
+      "sha256": "100dfb715e5184eeeb0576fbbb7eb98a58af3f2e7b2f0c2abd051192a6f64dc5",
+      "size_bytes": 6557
+    },
+    {
+      "id": "renderer-estaillades-field-io",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/openfoam_field_io.py",
+      "role": "renderer_source",
+      "sha256": "a97a55a93545e88770e4a756b2076ebeee07d1783eae2451e306f8dd2c275b81",
+      "size_bytes": 3066
+    },
+    {
+      "id": "renderer-estaillades-temporal",
+      "media_type": "text/x-python",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_estaillades_temporal_plot.py",
+      "role": "renderer_source",
+      "sha256": "9314531bea99301975e423c55ddf8f4f0d68826228749d07d83ffb841554d936",
+      "size_bytes": 9282
+    },
+    {
+      "id": "renderer-estaillades-wrapper",
+      "media_type": "text/x-shellscript",
+      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh",
+      "role": "renderer_source",
+      "sha256": "066aae94d56a235cc3918f29f2c3a807a8c6648f41766e22d139ac9932caf4a1",
+      "size_bytes": 3396
+    }
+  ],
+  "figures": [
+    {
+      "artifact_binding_id": "figure-01-png",
+      "case": {
+        "id": "1d-linear-retardation",
+        "label": "One-dimensional calcium retardation benchmark",
+        "provenance_semantics": "The schema-version-1 run snapshot is a historical record with launch-time absolute paths and dirty-checkout state; its retained bytes are authoritative within that record only."
+      },
+      "claim_role": "Validates aqueous transport and linear-limit surface retardation against cell-averaged analytical profiles.",
+      "comparison": {
+        "method_roles": [
+          {
+            "id": "geochemfoam-aqueous-only",
+            "label": "GeoChemFoam aqueous-only transport",
+            "role": "numerical control"
+          },
+          {
+            "id": "geochemfoam-surface-enabled",
+            "label": "GeoChemFoam surface-enabled transport",
+            "role": "numerical method under validation"
+          },
+          {
+            "id": "cell-averaged-analytical",
+            "label": "Cell-averaged analytical advection-diffusion-retardation solution",
+            "role": "reference"
+          }
+        ],
+        "quantity_roles": [
+          "Normalized aqueous Ca2+ concentration profile",
+          "Normalized Surf_aCa+ loading profile"
+        ],
+        "reference_basis": "Numerical and analytical profiles use the same one-dimensional cells, physical parameters, and t = 10 s comparison time."
+      },
+      "figure_id": "figure-01",
+      "manuscript_number": 1,
+      "material_binding_ids": [
+        "data-1d-aqueous-profile",
+        "data-1d-analytical-comparison",
+        "data-1d-batch-secant",
+        "data-1d-surface-loading",
+        "data-1d-surface-profile"
+      ],
+      "provenance": [
+        {
+          "binding_id": "provenance-1d-run",
+          "record_kind": "historical-run-snapshot",
+          "semantics": "Preserves the historical runtime, paper state, executable path, and selected hashed inputs without asserting the bounded Figure 2 schema."
+        }
+      ],
+      "renderer": {
+        "command": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_1d_validation_figures.sh",
+        "environment": {
+          "availability": "not_recorded",
+          "description": "No retained renderer package-version record is claimed for the accepted Figure 1 raster.",
+          "reference_binding_ids": []
+        },
+        "source_binding_ids": [
+          "renderer-1d-profile",
+          "renderer-1d-wrapper"
+        ]
+      }
+    },
+    {
+      "artifact_binding_id": "figure-02-png",
+      "case": {
+        "id": "2d-4straightfractures",
+        "label": "Two-dimensional four-fracture Pb transport case",
+        "provenance_semantics": "The accepted figure is governed by the bounded Figure 2 schema-version-3 record together with separate schema-version-1 launch and completed-run records."
+      },
+      "claim_role": "Shows Pb transport and strong-site HFO occupancy contrast between fractures and the microporous phase at the accepted output time.",
+      "comparison": {
+        "method_roles": [
+          {
+            "id": "dbs-reactive-transport",
+            "label": "DBS pore-micropore reactive transport",
+            "role": "numerical method"
+          },
+          {
+            "id": "dzombak-morel-two-site-hfo",
+            "label": "Dzombak-Morel strong-site and weak-site HFO surface complexation",
+            "role": "chemical surface model"
+          }
+        ],
+        "quantity_roles": [
+          "Fracture and microporous geometry",
+          "Normalized aqueous Pb2+ concentration",
+          "Strong-site Hfo_sOPb+ occupancy"
+        ],
+        "reference_basis": "All panels use the accepted higher-load case at t = 20000 s; the scientific comparison is spatial transport and sorption contrast, not a second numerical method."
+      },
+      "figure_id": "figure-02",
+      "manuscript_number": 2,
+      "material_binding_ids": [
+        "data-2d-fracture-metadata",
+        "data-2d-fracture-raw",
+        "data-2d-intrinsic-surface-log",
+        "data-2d-reactive-surface-log",
+        "evidence-2d-validation"
+      ],
+      "provenance": [
+        {
+          "binding_id": "provenance-2d-figure",
+          "record_kind": "bounded-figure-record",
+          "semantics": "The bounded Figure 2 record authenticates the accepted raster, renderer sources, archived run manifest, and retained run-output hashes using its own portable-root convention."
+        },
+        {
+          "binding_id": "provenance-2d-launch",
+          "record_kind": "launch-record",
+          "semantics": "The launch record preserves the preflight, source, runtime, and initial-state evidence present when the accepted run started."
+        },
+        {
+          "binding_id": "provenance-2d-run",
+          "record_kind": "completed-run-record",
+          "semantics": "The completed-run record preserves realized transport, runtime artifacts, surface construction, and retained output hashes."
+        }
+      ],
+      "renderer": {
+        "command": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
+        "environment": {
+          "availability": "partially_recorded",
+          "description": "The bounded Figure 2 record identifies the renderer repository, base commit, curated dirty source state, and authoritative source hashes but does not claim a complete package lock.",
+          "reference_binding_ids": [
+            "provenance-2d-figure"
+          ]
+        },
+        "source_binding_ids": [
+          "renderer-2d-generator",
+          "renderer-2d-provenance",
+          "renderer-2d-validator",
+          "renderer-2d-wrapper"
+        ]
+      }
+    },
+    {
+      "artifact_binding_id": "figure-04-png",
+      "case": {
+        "id": "3d-estaillades",
+        "label": "Three-dimensional Estaillades Sr-Ca exchange case",
+        "provenance_semantics": "The schema-version-1 record is an Estaillades-specific curation record for retained artifacts; it explicitly excludes bulky raw processor outputs from Git and is not promoted to another case schema."
+      },
+      "claim_role": "Shows the three-phase rock geometry and spatially resolved dissolved and adsorbed Sr-Ca exchange at t = 40 s.",
+      "comparison": {
+        "method_roles": [
+          {
+            "id": "dbs-three-phase-reactive-transport",
+            "label": "DBS pore-micropore reactive transport on the native 500-cubed image",
+            "role": "numerical method"
+          },
+          {
+            "id": "sr-ca-surface-exchange",
+            "label": "Sr-Ca surface-complexation exchange in the reactive microporous phase",
+            "role": "chemical mechanism"
+          }
+        ],
+        "quantity_roles": [
+          "Three-phase segmented geometry",
+          "Normalized dissolved Sr2+ and Ca2+ fields",
+          "Maximum-normalized incremental Surf_aSr+"
+        ],
+        "reference_basis": "The aqueous fields share the pore-plus-micropore mobile-water support, while the sorbed increment is shown on the reactive surface support at t = 40 s."
+      },
+      "figure_id": "figure-04",
+      "manuscript_number": 4,
+      "material_binding_ids": [
+        "data-estaillades-metadata",
+        "data-estaillades-raw",
+        "evidence-estaillades-surface-area"
+      ],
+      "provenance": [
+        {
+          "binding_id": "provenance-estaillades-run",
+          "record_kind": "case-curation-record",
+          "semantics": "Authenticates the retained Figure 4 raster, source image, renderer hashes, production runtime identity, surface-area evidence, and the bounded raw-output retention policy."
+        }
+      ],
+      "renderer": {
+        "command": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh",
+        "environment": {
+          "availability": "recorded",
+          "description": "The Estaillades curation record identifies the gcfoam environment and retained Matplotlib, NumPy, and PyVista versions relevant to the accepted renderings.",
+          "reference_binding_ids": [
+            "provenance-estaillades-run"
+          ]
+        },
+        "source_binding_ids": [
+          "renderer-estaillades-3d-generator",
+          "renderer-estaillades-3d-wrapper",
+          "renderer-estaillades-field-io",
+          "renderer-estaillades-wrapper"
+        ]
+      }
+    },
+    {
+      "artifact_binding_id": "figure-06-png",
+      "case": {
+        "id": "1d-linear-retardation",
+        "label": "One-dimensional calcium retardation benchmark",
+        "provenance_semantics": "The schema-version-1 run snapshot is a historical record with launch-time absolute paths and dirty-checkout state; its retained bytes are authoritative within that record only."
+      },
+      "claim_role": "Validates aqueous-only and surface-retarded outlet breakthrough against matched finite-domain references and distinguishes the semi-infinite approximation.",
+      "comparison": {
+        "method_roles": [
+          {
+            "id": "geochemfoam-aqueous-only",
+            "label": "GeoChemFoam aqueous-only transport",
+            "role": "numerical control"
+          },
+          {
+            "id": "geochemfoam-surface-enabled",
+            "label": "GeoChemFoam surface-enabled transport",
+            "role": "numerical method under validation"
+          },
+          {
+            "id": "finite-domain-reference",
+            "label": "Finite-domain advection-diffusion solution with matched boundary conditions",
+            "role": "primary analytical reference"
+          },
+          {
+            "id": "ogata-banks-semi-infinite",
+            "label": "Ogata-Banks semi-infinite solution",
+            "role": "contextual analytical reference"
+          }
+        ],
+        "quantity_roles": [
+          "Outlet Ca2+ concentration normalized by inlet concentration",
+          "Aqueous and surface-retarded breakthrough time"
+        ],
+        "reference_basis": "Numerical curves and the primary finite-domain reference use matched inlet and outlet boundary conditions; Ogata-Banks is retained only as the semi-infinite comparator."
+      },
+      "figure_id": "figure-06",
+      "manuscript_number": 6,
+      "material_binding_ids": [
+        "data-1d-analytical-comparison",
+        "data-1d-aqueous-outlet",
+        "data-1d-batch-secant",
+        "data-1d-surface-outlet"
+      ],
+      "provenance": [
+        {
+          "binding_id": "provenance-1d-run",
+          "record_kind": "historical-run-snapshot",
+          "semantics": "Preserves the historical runtime, paper state, executable path, and selected hashed inputs without asserting the bounded Figure 2 schema."
+        }
+      ],
+      "renderer": {
+        "command": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_1d_validation_figures.sh",
+        "environment": {
+          "availability": "not_recorded",
+          "description": "No retained renderer package-version record is claimed for the accepted Figure 6 raster.",
+          "reference_binding_ids": []
+        },
+        "source_binding_ids": [
+          "renderer-1d-breakthrough",
+          "renderer-1d-wrapper"
+        ]
+      }
+    },
+    {
+      "artifact_binding_id": "figure-08-png",
+      "case": {
+        "id": "3d-estaillades",
+        "label": "Three-dimensional Estaillades Sr-Ca exchange case",
+        "provenance_semantics": "The schema-version-1 record is an Estaillades-specific curation record for retained artifacts; it explicitly excludes bulky raw processor outputs from Git and is not promoted to another case schema."
+      },
+      "claim_role": "Quantifies the temporal dissolved and adsorbed Sr-Ca exchange response over the accepted seven-checkpoint sequence.",
+      "comparison": {
+        "method_roles": [
+          {
+            "id": "dbs-three-phase-reactive-transport",
+            "label": "DBS pore-micropore reactive transport on the native 500-cubed image",
+            "role": "numerical method"
+          },
+          {
+            "id": "pore-volume-weighted-aqueous-diagnostic",
+            "label": "Pore-volume-weighted aqueous inventory diagnostic",
+            "role": "aqueous comparison basis"
+          },
+          {
+            "id": "surface-area-weighted-sorbed-diagnostic",
+            "label": "Surface-area-weighted incremental sorbed inventory diagnostic",
+            "role": "surface comparison basis"
+          }
+        ],
+        "quantity_roles": [
+          "Pore-volume-weighted Ca2+ divided by initial concentration",
+          "Pore-volume-weighted Sr2+ divided by inlet concentration",
+          "Signed incremental Surf_aCa+ and Surf_aSr+ normalized by the largest absolute change"
+        ],
+        "reference_basis": "All aqueous and sorbed series use the same retained times from 0 to 120 s; aqueous and surface quantities retain their distinct physical weighting supports."
+      },
+      "figure_id": "figure-08",
+      "manuscript_number": 8,
+      "material_binding_ids": [
+        "data-estaillades-metadata",
+        "data-estaillades-raw",
+        "evidence-estaillades-bounds",
+        "evidence-estaillades-surface-area",
+        "evidence-estaillades-temporal"
+      ],
+      "provenance": [
+        {
+          "binding_id": "provenance-estaillades-run",
+          "record_kind": "case-curation-record",
+          "semantics": "Authenticates the retained Figure 8 raster and numerical sidecars, renderer hashes, production runtime identity, and the bounded raw-output retention policy."
+        }
+      ],
+      "renderer": {
+        "command": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh",
+        "environment": {
+          "availability": "recorded",
+          "description": "The Estaillades curation record identifies the gcfoam environment and retained Matplotlib, NumPy, and PyVista versions relevant to the accepted renderings.",
+          "reference_binding_ids": [
+            "provenance-estaillades-run"
+          ]
+        },
+        "source_binding_ids": [
+          "renderer-estaillades-checkpoint-validator",
+          "renderer-estaillades-field-io",
+          "renderer-estaillades-temporal",
+          "renderer-estaillades-wrapper"
+        ]
+      }
+    }
+  ],
+  "schema": "org.geochemfoam.paper.accepted-figure-provenance",
+  "schema_version": 1,
+  "scope": {
+    "description": "Accepted non-Kelvin manuscript artifacts only: Figures 1, 2, 4, 6, and 8 at reviewed paper commit cca2e5995a913bd5755ee111160867b0b8c970ac.",
+    "expected_figure_ids": [
+      "figure-01",
+      "figure-02",
+      "figure-04",
+      "figure-06",
+      "figure-08"
+    ],
+    "id": "accepted-nonkelvin-cca2e599"
+  }
+}

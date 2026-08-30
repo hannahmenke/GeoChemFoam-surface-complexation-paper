@@ -89,3 +89,18 @@ Repeatable figure commands:
 `fig13_two_scale_lithium_sorption_validation.png` is retained as an earlier
 analysis asset but is not referenced by the manuscript; the production
 Pe-sweep figures listed above supersede it.
+
+## Accepted non-Kelvin provenance check
+
+The authoritative machine-readable manifest for accepted Figures 1, 2, 4, 6,
+and 8 is `../accepted_nonkelvin_provenance.json`. It binds each retained PNG to
+its material data, renderer sources, and case-specific evidence without
+rewriting the historical provenance schemas. From the repository root, run:
+
+```sh
+papers/scalarTransportDBSFoam-phreeqc-surface-complexation/validate_accepted_nonkelvin_artifacts.sh
+```
+
+The command runs the fail-closed verifier and its tampering tests. It is also
+run before the normal manuscript build. The manifest is hand maintained; the
+verifier never discovers files or updates hashes.
