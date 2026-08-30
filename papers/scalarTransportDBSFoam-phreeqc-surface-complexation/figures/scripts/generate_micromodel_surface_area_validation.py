@@ -137,7 +137,7 @@ def add_axis_scale_bar(ax, length_mm: float = 2.0) -> None:
         color="white",
         ha="center",
         va="bottom",
-        fontsize=8,
+        fontsize=16,
         bbox=dict(facecolor="black", alpha=0.35, edgecolor="none", pad=1.5),
     )
 
@@ -185,6 +185,17 @@ def main() -> None:
     parser.add_argument("--output-png", required=True)
     parser.add_argument("--output-metrics", default=None)
     args = parser.parse_args()
+
+    # The 10.2-inch source prints at 4.64 inches. Typography is therefore
+    # authored at 16 pt or larger to retain at least 7 pt in the SI.
+    plt.rcParams.update(
+        {
+            "font.size": 16,
+            "axes.labelsize": 16,
+            "xtick.labelsize": 15,
+            "ytick.labelsize": 15,
+        }
+    )
 
     time_name = args.time
     asurf_time_name = args.asurf_time or time_name
@@ -358,7 +369,9 @@ def main() -> None:
             ax.set_ylabel("y [mm]")
             add_axis_scale_bar(ax)
 
-        ax_sr.set_title(title)
+        ax_sr.set_title(title, fontsize=17, pad=8)
+        for ax in (ax_sr, ax_area, ax_sorbed):
+            ax.tick_params(labelsize=16, length=5, width=1.0)
 
     top_axes[0, 0].text(
         0.025,
@@ -368,7 +381,7 @@ def main() -> None:
         rotation=90,
         ha="center",
         va="center",
-        fontsize=11,
+        fontsize=16,
     )
     top_axes[1, 0].text(
         0.025,
@@ -378,7 +391,7 @@ def main() -> None:
         rotation=90,
         ha="center",
         va="center",
-        fontsize=11,
+        fontsize=16,
     )
     top_axes[2, 0].text(
         0.025,
@@ -388,15 +401,17 @@ def main() -> None:
         rotation=90,
         ha="center",
         va="center",
-        fontsize=11,
+        fontsize=16,
     )
 
-    cbar_sr = fig.colorbar(im_sr, cax=fig.add_axes([0.928, row_y[0], 0.016, panel]))
-    cbar_sr.set_label(r"Sr/$C_{\mathrm{in}}$")
-    cbar_area = fig.colorbar(im_area, cax=fig.add_axes([0.928, row_y[1], 0.016, panel]), extend="max")
-    cbar_area.set_label(r"$a_{\mathrm{surf}} V$ [m$^2$ cell$^{-1}$]")
-    cbar_sorbed = fig.colorbar(im_sorbed, cax=fig.add_axes([0.928, row_y[2], 0.016, panel]), extend="max")
-    cbar_sorbed.set_label(r"$n_{\mathrm{Surf\_aSr+}}$ [kmol cell$^{-1}$]")
+    cbar_sr = fig.colorbar(im_sr, cax=fig.add_axes([0.880, row_y[0], 0.020, panel]))
+    cbar_sr.set_label(r"Sr/$C_{\mathrm{in}}$", fontsize=16)
+    cbar_area = fig.colorbar(im_area, cax=fig.add_axes([0.880, row_y[1], 0.020, panel]), extend="max")
+    cbar_area.set_label(r"$a_{\mathrm{surf}} V$ [m$^2$ cell$^{-1}$]", fontsize=16)
+    cbar_sorbed = fig.colorbar(im_sorbed, cax=fig.add_axes([0.880, row_y[2], 0.020, panel]), extend="max")
+    cbar_sorbed.set_label(r"$n_{\mathrm{Surf\_aSr+}}$ [kmol cell$^{-1}$]", fontsize=16)
+    for cbar in (cbar_sr, cbar_area, cbar_sorbed):
+        cbar.ax.tick_params(labelsize=16, length=5, width=1.0)
 
     output_png = Path(args.output_png)
     output_png.parent.mkdir(parents=True, exist_ok=True)

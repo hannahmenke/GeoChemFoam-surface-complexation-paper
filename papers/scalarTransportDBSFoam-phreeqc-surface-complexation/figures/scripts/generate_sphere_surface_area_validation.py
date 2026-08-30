@@ -216,7 +216,7 @@ def plot_sphere_render(ax, case_dir: Path) -> None:
         0.92,
         rf"$R/\Delta x = {int(meta['radius_over_dx'])}$",
         transform=ax.transAxes,
-        fontsize=10.5,
+        fontsize=14.0,
         bbox=dict(facecolor="white", edgecolor="#cccccc", alpha=0.92, boxstyle="round,pad=0.25"),
     )
 
@@ -259,7 +259,7 @@ def plot_circle_slice(ax, radius_over_dx: int, sigma_vox: float = 1.5) -> None:
         0.92,
         rf"$R/\Delta x = {radius_over_dx}$",
         transform=ax.transAxes,
-        fontsize=10.5,
+        fontsize=14.0,
         bbox=dict(facecolor="white", edgecolor="#cccccc", alpha=0.92, boxstyle="round,pad=0.25"),
     )
 
@@ -303,8 +303,8 @@ def plot_error_series(
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_color("#4a4a4a")
     ax.spines["bottom"].set_color("#4a4a4a")
-    ax.tick_params(direction="out", length=4, width=0.8, colors="#333333")
-    ax.set_title(title, fontsize=11.5, fontweight="bold", pad=8)
+    ax.tick_params(direction="out", length=5, width=1.0, colors="#333333")
+    ax.set_title(title, fontsize=14.0, fontweight="bold", pad=8)
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -319,11 +319,11 @@ def main() -> None:
 
     plt.rcParams.update(
         {
-            "font.size": 10.5,
-            "axes.labelsize": 10.5,
-            "xtick.labelsize": 9.5,
-            "ytick.labelsize": 9.5,
-            "legend.fontsize": 10.0,
+            "font.size": 14.0,
+            "axes.labelsize": 14.0,
+            "xtick.labelsize": 14.0,
+            "ytick.labelsize": 14.0,
+            "legend.fontsize": 14.0,
         }
     )
     fig = plt.figure(figsize=(8.0, 6.4), constrained_layout=True)
@@ -339,23 +339,22 @@ def main() -> None:
     for col, radius in enumerate((8, 16)):
         circle_ax = fig.add_subplot(post_grid[0, col])
         plot_circle_slice(circle_ax, radius)
-        if col == 0:
-            circle_ax.set_title("2D circular-post slices", fontsize=11.5, fontweight="bold", pad=10)
 
     sphere_grid = grid[1, 0:2].subgridspec(1, 2, wspace=0.08)
     for col, level in enumerate(("sphere_r08", "sphere_r16")):
         sphere_ax = fig.add_subplot(sphere_grid[0, col], projection="3d")
         plot_sphere_render(sphere_ax, args.generated_dir / level)
-        if col == 0:
-            sphere_ax.set_title("3D voxelized spheres", fontsize=11.5, fontweight="bold", pad=10)
+
+    fig.text(0.29, 0.975, "2D post slices", ha="center", va="top", fontsize=14.0, fontweight="bold")
+    fig.text(0.29, 0.627, "3D voxelized spheres", ha="center", va="top", fontsize=14.0, fontweight="bold")
 
     circle_error_ax = fig.add_subplot(grid[0, 2])
     plot_error_series(
         circle_error_ax,
         circle_series,
         ["snappy", "dbs-smoothed-mc"],
-        "2D circular-post area error",
-        r"Post resolution $R / \Delta x$",
+        "2D post area error",
+        r"Post $R / \Delta x$",
         "Relative error",
         (-0.0025, 0.0025),
     )
@@ -366,7 +365,7 @@ def main() -> None:
         series,
         ["snappy", "dbs-smoothed-mc"],
         "3D sphere area error",
-        r"Sphere resolution $R / \Delta x$",
+        r"Sphere $R / \Delta x$",
         "Relative error",
         (-0.028, 0.012),
     )
@@ -387,7 +386,7 @@ def main() -> None:
         frameon=False,
         columnspacing=1.2,
         handlelength=1.3,
-        fontsize=9.2,
+        fontsize=14.0,
     )
     legend_ax.add_artist(geometry_legend)
     legend_ax.legend(

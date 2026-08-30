@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import argparse
 import json
 import sys
 import tempfile
@@ -174,7 +175,7 @@ def panel_label(ax: plt.Axes, label: str) -> None:
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=10,
+        fontsize=16,
         fontweight="bold",
         bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.75, "pad": 2},
     )
@@ -287,12 +288,23 @@ def add_geometry_render(fig: plt.Figure, spec, image: np.ndarray) -> None:
     ax = fig.add_subplot(spec)
     ax.imshow(render_geometry_image(image))
     ax.set_box_aspect(1)
-    ax.set_title("external-surface geometry", fontsize=9, pad=1)
+    ax.set_title("external-surface geometry", fontsize=16, pad=5)
     ax.set_axis_off()
     panel_label(ax, "a")
 
 
 def main() -> None:
+    global CASE_ROOT, OUTPUT, METRICS_JSON
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--case-root", type=Path, default=CASE_ROOT)
+    parser.add_argument("--output", type=Path, default=OUTPUT)
+    parser.add_argument("--metrics-json", type=Path, default=METRICS_JSON)
+    args = parser.parse_args()
+
+    CASE_ROOT = args.case_root.resolve()
+    OUTPUT = args.output.resolve()
+    METRICS_JSON = args.metrics_json.resolve()
+
     image = load_crop()
     summary = read_summary()
     snappy_field, snappy_faces = snappy_area_field()
@@ -315,18 +327,26 @@ def main() -> None:
     area_cmap.set_bad("#e5e5e5")
     diff_cmap = colormaps["coolwarm"].copy()
 
-    # Give every scientific panel the same grid footprint.  The final cell is
-    # reserved for the two colour scales so neither map is compressed by an
-    # attached colourbar.
-    fig = plt.figure(figsize=(10.8, 6.8), constrained_layout=True)
-    grid = fig.add_gridspec(2, 3, width_ratios=[1, 1, 1], height_ratios=[1, 1])
+    # A two-column, three-row layout gives every map a physically meaningful
+    # footprint at its final SI width. The 10.8-inch source prints at 4.94
+    # inches; the 16-pt minimum authored label therefore remains at least 7 pt.
+    plt.rcParams.update(
+        {
+            "font.size": 16,
+            "axes.labelsize": 16,
+            "xtick.labelsize": 16,
+            "ytick.labelsize": 16,
+        }
+    )
+    fig = plt.figure(figsize=(10.8, 15.6), constrained_layout=True)
+    grid = fig.add_gridspec(3, 2, width_ratios=[1, 1], height_ratios=[1, 1, 1])
     add_geometry_render(fig, grid[0, 0], image)
 
     extent_um = (0, NX * VOXEL_SIZE * 1e6, 0, NY * VOXEL_SIZE * 1e6)
     area_handle = None
     for spec, label, title, data in (
-        (grid[0, 1], "b", "snappyHexMesh binned wall area", projections["snappy"]),
-        (grid[0, 2], "c", "DBS smooth interface", projections["smooth"]),
+        (grid[0, 1], "b", "snappyHexMesh wall area", projections["snappy"]),
+        (grid[1, 0], "c", "DBS smooth area", projections["smooth"]),
     ):
         ax = fig.add_subplot(spec)
         area_handle = ax.imshow(
@@ -336,13 +356,13 @@ def main() -> None:
             norm=LogNorm(vmin=vmin, vmax=vmax),
             cmap=area_cmap,
         )
-        ax.set_title(title, fontsize=9)
+        ax.set_title(title, fontsize=16, pad=5)
         ax.set_box_aspect(1)
         ax.set_xlabel(r"$x$ [$\mu$m]")
         ax.set_ylabel(r"$y$ [$\mu$m]")
         panel_label(ax, label)
 
-    ax_diff = fig.add_subplot(grid[1, 0])
+    ax_diff = fig.add_subplot(grid[1, 1])
     diff_handle = ax_diff.imshow(
         difference_scaled,
         origin="lower",
@@ -350,33 +370,33 @@ def main() -> None:
         norm=TwoSlopeNorm(vmin=-diff_lim_scaled, vcenter=0.0, vmax=diff_lim_scaled),
         cmap=diff_cmap,
     )
-    ax_diff.set_title("DBS smooth interface $-$ snappyHexMesh")
+    ax_diff.set_title("DBS smooth area $-$ snappyHexMesh", fontsize=16, pad=5)
     ax_diff.set_box_aspect(1)
     ax_diff.set_xlabel(r"$x$ [$\mu$m]")
     ax_diff.set_ylabel(r"$y$ [$\mu$m]")
     panel_label(ax_diff, "d")
 
-    ax_profile = fig.add_subplot(grid[1, 1])
+    ax_profile = fig.add_subplot(grid[2, 0])
     x_um = (np.arange(NX) + 0.5) * VOXEL_SIZE * 1e6
-    ax_profile.plot(x_um, profiles["snappy"], color=SNAPPY_COLOR, lw=2.0, label="snappyHexMesh")
-    ax_profile.plot(x_um, profiles["smooth"], color=SMOOTH_COLOR, lw=2.0, label="DBS smooth interface")
+    ax_profile.plot(x_um, profiles["snappy"], color=SNAPPY_COLOR, lw=2.4, label="snappyHexMesh")
+    ax_profile.plot(x_um, profiles["smooth"], color=SMOOTH_COLOR, lw=2.4, label="DBS smooth interface")
     ax_profile.set_xlabel(r"$x$ [$\mu$m]")
     ax_profile.set_ylabel(r"area per $x$ slice [m$^2$]")
     ax_profile.set_box_aspect(1)
     ax_profile.grid(True, axis="y", color="#dddddd", lw=0.8)
-    ax_profile.legend(frameon=False, fontsize=8)
+    ax_profile.legend(frameon=False, fontsize=16)
     panel_label(ax_profile, "e")
 
-    ax_scales = fig.add_subplot(grid[1, 2])
+    ax_scales = fig.add_subplot(grid[2, 1])
     ax_scales.set_axis_off()
-    area_cax = ax_scales.inset_axes([0.08, 0.63, 0.84, 0.075])
-    diff_cax = ax_scales.inset_axes([0.08, 0.25, 0.84, 0.075])
+    area_cax = ax_scales.inset_axes([0.10, 0.66, 0.80, 0.075])
+    diff_cax = ax_scales.inset_axes([0.10, 0.28, 0.80, 0.075])
     area_cbar = fig.colorbar(area_handle, cax=area_cax, orientation="horizontal")
-    area_cbar.set_label(r"projected external area [m$^2$]", fontsize=8)
+    area_cbar.set_label(r"projected external area [m$^2$]", fontsize=16)
     diff_cbar = fig.colorbar(diff_handle, cax=diff_cax, orientation="horizontal")
-    diff_cbar.set_label(r"projected area difference [$10^{-10}$ m$^2$]", fontsize=8)
+    diff_cbar.set_label(r"projected area difference [$10^{-10}$ m$^2$]", fontsize=16)
     for cbar in (area_cbar, diff_cbar):
-        cbar.ax.tick_params(labelsize=7)
+        cbar.ax.tick_params(labelsize=16, length=5, width=1.0)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUTPUT, dpi=360)
