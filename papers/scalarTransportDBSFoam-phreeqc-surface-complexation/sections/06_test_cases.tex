@@ -36,9 +36,10 @@ accessible microporous water, and local HFO capacity.
     \centering
     \includegraphics[width=0.82\linewidth]{figures/png/fig02_2d_fractures.png}
     \caption{Pb$^{2+}$ transport and HFO occupancy at $t=20000$~s. From left:
-    segmented fracture geometry, dissolved $\mathrm{Pb}^{2+}/C_{\mathrm{in}}$,
-    and strong-site occupancy. Zero-area cells are masked in the occupancy
-    panel.}
+    segmented fracture geometry, dissolved $\mathrm{Pb}^{2+}/C_{\mathrm{in}}$
+    with logarithmic colour normalisation, and strong-site occupancy with
+    logarithmic colour normalisation. Zero-area cells are masked in the
+    occupancy panel.}
     \label{fig:2DFractures}
 \end{figure}
 
@@ -66,12 +67,14 @@ equilibrium constant ($\log K=-5.5$ versus $-5.85$ for Ca).
 The image produces chromatographic exchange rather than single-species
 retardation. Sr$^{2+}$ adsorption advances behind a Ca$^{2+}$ desorption wave,
 and loading follows the connected reactive microporosity
-(Figure~\ref{fig:3DEstaillades}). Across the accepted checkpoints from 0 to
+(Figure~\ref{fig:3DEstaillades}). Across the saved checkpoints from 0 to
 120~s, the porosity-weighted mean Sr$^{2+}$ concentration rises to $0.865$
 $C_{\mathrm{in}}$, while Ca$^{2+}$ falls from $1.000$ to $0.095$
 $C_{\mathrm{init}}$. Surface-area-weighted \texttt{Surf\_aSr+} increases
 monotonically as \texttt{Surf\_aCa+} decreases
-(Figure~\ref{fig:EstailladesTemporal}), directly identifying replacement of
+(Figure~\ref{fig:EstailladesTemporal}); the signed changes are referenced to
+$t=0$ and divided by the largest absolute change across both surface species
+and all plotted times. This directly identifies replacement of
 resident Ca by invading Sr.
 
 The temporal and spatial views provide complementary evidence for this
@@ -86,20 +89,23 @@ magnitude.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.53\linewidth]{figures/png/fig04_3d_estaillades.png}
+    \includegraphics[width=\linewidth]{figures/png/fig04_3d_estaillades.png}
     \caption{Estaillades exchange at $t=40$~s. Panels show the segmented
-    geometry, dissolved Sr$^{2+}$ and Ca$^{2+}$, and the incremental adsorbed
-    Sr$^{2+}$ loading. The plume enters from the left and loads the distributed
-    microporous surface.}
+    geometry, dissolved Sr$^{2+}/C_{\mathrm{in}}$ and
+    Ca$^{2+}/C_{\mathrm{init}}$, and the incremental adsorbed Sr$^{2+}$
+    loading relative to $t=0$, normalised by its maximum at 40~s. The plume
+    enters from the left and loads the distributed microporous surface.}
     \label{fig:3DEstaillades}
 \end{figure}
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.82\linewidth]{figures/png/fig08_estaillades_temporal.png}
+    \includegraphics[width=0.86\linewidth]{figures/png/fig08_estaillades_temporal.png}
     \caption{Estaillades exchange from 0 to 120~s. Porosity-weighted dissolved
     Ca$^{2+}$ and Sr$^{2+}$ (left) are paired with signed changes in
-    surface-area-weighted adsorbed amounts (right), showing Sr invasion and Ca
-    displacement in both inventories.}
+    surface-area-weighted adsorbed amounts (right). Each surface change is its
+    value minus that at $t=0$, divided by the largest absolute change across
+    both species and all plotted times, showing Sr invasion and Ca displacement
+    in both inventories.}
     \label{fig:EstailladesTemporal}
 \end{figure}

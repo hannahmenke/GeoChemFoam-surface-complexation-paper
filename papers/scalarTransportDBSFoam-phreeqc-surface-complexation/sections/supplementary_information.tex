@@ -40,30 +40,34 @@ mol\,m$^{-2}$. This sequence makes the units explicit:
 =\left[\frac{\mathrm{mol}}{\mathrm{m}^3_{\mathrm{bulk}}}\right].
 \]
 
-The same fixed porosity field defines mobile-water storage in OpenFOAM and
-solution volume in PHREEQC. Cells below \texttt{epsChemistryMin} are excluded
-from the fixed chemistry mapping, and their surface contribution is
+The porosity field defines mobile-water storage in OpenFOAM and solution volume
+in PHREEQC. Cells below \texttt{epsChemistryMin} are excluded from the fixed
+chemistry mapping, and their surface contribution is
 suppressed. The reported calculations use $10^{-3}$ as this threshold.
 
 \section{Discrete PHREEQCRM Coupling}
 
 All aqueous components, porosity, total reactive area, and surface-species
 fields are stored at cell centres. Darcy velocity is represented by face
-fluxes. Implicit Euler time integration, first-order upwind advection, and
-Gauss linear diffusion with non-orthogonality correction are used throughout.
+fluxes. Implicit Euler time integration and first-order upwind advection are
+used, with Gauss linear diffusion and non-orthogonality correction. The
+diffusion operator is linear; negative aqueous values are clipped before
+chemistry under the configured relative mass-addition limit.
 The surface-complexation cases select \texttt{mixtureType phreeqcMixture} in
 \texttt{constant/thermoPhysicalProperties}.
 
 At construction, every active finite-volume cell is registered as a PHREEQC
 solution. Reactive cells also receive a PHREEQC \texttt{SURFACE} definition
-whose area and site capacities are derived from the fixed fields. The mapping
-does not change during the run. Consequently, changing porosity or area would
-require reconstruction of the PHREEQCRM cells and lies outside the present
-implementation.
+whose area and site capacities are derived from the fixed fields. The active
+mapping does not change during the run. Porosity is, however, reread and set
+for every mapped PHREEQC cell at each chemistry correction. Reconstruction is
+needed only if a threshold crossing changes the active-cell map or its topology;
+changing the fixed area capacity likewise requires reconstruction.
 
 One timestep performs the following operations: (1) advance each aqueous
 species with the conservative DBS equation; (2) transfer aqueous and surface
-fields to PHREEQCRM; (3) refresh the fixed porosity values; (4) clip negative
+fields to PHREEQCRM; (3) reread porosity and set it in every mapped PHREEQC cell;
+(4) clip negative
 aqueous inputs to zero while measuring the mass introduced by clipping and
 abort if the configured relative bound is exceeded; (5) execute
 \texttt{runCells()}; and (6) transfer equilibrated aqueous and adsorbed states
@@ -141,6 +145,9 @@ three-dimensional path reconstructs triangles.
     \label{fig:si-controlled-area}
 \end{figure}
 
+Figure~\ref{fig:si-controlled-area} shows that the controlled reconstructions
+remain accurate in both the contour and isosurface branches.
+
 \subsection{Reactive image micromodel}
 
 The solid-grain micromodel compares two numerical representations of the same
@@ -156,11 +163,15 @@ $1.67\times10^{-5}$~m$^2$, respectively. The DBS-minus-reference differences
 are $+1.48\%$ in area, $-0.07\%$ in dissolved inventory, and $+1.68\%$ in
 sorbed inventory; the streamwise aqueous-profile L1 error is $0.48\%$.
 
+Figure~\ref{fig:si-micromodel-area} locates these agreement measures in the
+resolved-wall and DBS fields without treating their native supports as
+cellwise identical.
+
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.72\linewidth]{figures/png/fig10_hm12_surface_area_validation.png}
+    \includegraphics[width=0.90\linewidth]{figures/png/fig10_hm12_surface_area_validation.png}
     \caption{Resolved-wall and DBS micromodel comparison at 200~s. Rows show
-    dissolved Sr$^{2+}$, a common detail of cell-supported reactive area, and
+    dissolved Sr$^{2+}$, the cell-supported reactive-area field, and
     sorbed inventory. Resolved wall faces contribute to adjacent chemistry
     cells; the two methods retain their native numerical supports.}
     \label{fig:si-micromodel-area}
@@ -171,10 +182,16 @@ sorbed inventory; the streamwise aqueous-profile L1 error is $0.48\%$.
 A $128^3$ Estaillades crop is remapped so the micropore label is solid, thereby
 isolating the external pore--grain boundary. A body-fitted wall case and DBS
 reconstruction use the same Sr$^{2+}$/Ca$^{2+}$ chemistry and separately
-calibrated pressure drops. At 2.5~s the Darcy velocities agree within $1.12\%$.
+calibrated pressure drops of 0.0112 and 0.00925406150930~Pa, respectively,
+at $\nu=10^{-6}$~m$^2$\,s$^{-1}$. The DBS reconstruction uses an
+occupancy-Gaussian field with $\sigma=0.74$ voxel. At 2.5~s the Darcy
+velocities agree within $1.12\%$.
 The DBS area is $1.52\%$ greater and its sorbed Sr$^{2+}$ inventory is $1.84\%$
 lower. For visual comparison only, resolved wall faces are binned onto the
 image grid; reported integrals are calculated on native supports.
+
+Figure~\ref{fig:si-external-area} provides the corresponding volume, projected
+area, difference, and streamwise-profile comparison.
 
 \begin{figure}[htbp]
     \centering
@@ -188,28 +205,30 @@ image grid; reported integrals are calculated on native supports.
 
 \section{Application and Chemistry Specifications}
 
-Tables~\ref{tab:si-simParams} and~\ref{tab:si-chemParams} give the full
-parameters used by the one-dimensional benchmark and image applications. The
+Tables~\ref{tab:si-simParams} and~\ref{tab:si-chemParams} give the runtime
+parameters for the reported one-dimensional and image calculations and the
+associated chemical configurations. Every case uses its case-local
+\texttt{constant/GeoChem.dat} database. The
 2D fracture case uses eight MPI ranks with a $4\times2\times1$ decomposition;
 the reported Estaillades calculation uses 64 ranks with a
-$4\times4\times4$ decomposition. The Kelvin configuration is specified as a
-three-dimensional competition test, but its outputs do not enter the main
-paper's quantitative results.
+$4\times4\times4$ decomposition. The Kelvin column specifies only its
+three-dimensional competition chemistry and material configuration.
 
 \begin{table}[htbp]
 \centering
-\caption{Simulation and image parameters. Image sizes are in voxels.}
+\caption{Simulation and image parameters. Image sizes are in voxels;
+$D$ and $\nu$ are in m$^2$\,s$^{-1}$, $a_{\rm intr}$ in m$^{-1}$, and
+$\Delta p$ in Pa. Timing entries are $\Delta t$/write/$t_{\rm end}$ in s.}
 \label{tab:si-simParams}
 \scriptsize
-\setlength{\tabcolsep}{2.2pt}
-\begin{tabular}{@{}lcccccc@{}}
+\setlength{\tabcolsep}{1pt}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-Case & Image/grid ($\delta x$, $\mu$m) & Reactive label & $D$ (m$^2$\,s$^{-1}$) & $a_{\rm intr}$ (m$^{-1}$) & $\Delta t$ (s) & $t_{\rm end}$ (s)\\
+Case & Image/grid ($\delta x$, $\mu$m) & Reactive label & $D/a_{\rm intr}/\nu/\Delta p$ & $\Delta t$/write/$t_{\rm end}$\\
 \midrule
-1D Ca & --/$80\times1\times1$ (--) & uniform & $10^{-11}$ & $10^5$ & 0.25 & 80\\
-2D Pb/HFO & $500^2/250^2$ (100) & matrix (1) & $10^{-9}$ & $10^5$ & 0.25 & 20000\\
-3D Mn/Mg & $200^3/200^3$ (10) & micropore (2) & $10^{-9}$ & $10^5$ & 4 & 120\\
-3D Sr/Ca & $500^3/500^3$ (4) & micropore (2) & $10^{-9}$ & $10^5$ & 2 & 120\\
+1D Ca & --/$80\times1\times1$ (--) & uniform & $10^{-11}/10^5/10^{-6}$/-- & 0.25/10/80\\
+2D Pb/HFO & $500^2/250^2$ (100) & matrix (1) & $10^{-9}/10^5/10^{-6}/5\times10^{-5}$ & 0.25/2000/20000\\
+3D Sr/Ca & $500^3/500^3$ (4) & micropore (2) & $10^{-9}/10^5/10^{-6}/5\times10^{-5}$ & 2/20/120\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -240,8 +259,7 @@ Initial & Ca: 0 & Pb: approximately 0 & Mn: 0; Mg: $10^{-3}$ & Sr: 0; Ca: $10^{-
 The 2D case uses the Dzombak--Morel strong and weak HFO reactions for Pb
 \citep{dzombak1990surface}. In the Kelvin configuration, Mn binds to strong and
 weak HFO sites with $\log K=-0.40$ and $-3.50$, while Mg competes on weak sites
-with $\log K=-4.60$. Its initial sites are equilibrated against the Mg-bearing
-background. The Estaillades case uses
+with $\log K=-4.60$. The Estaillades case uses
 $\mathrm{Surf_aH}+\mathrm{Ca^{2+}}\rightleftharpoons
 \mathrm{Surf_aCa^+}+\mathrm{H^+}$ and the corresponding Sr reaction, with
 $\log K=-5.85$ and $-5.5$. Initial Ca occupancy is displaced by the invading
@@ -255,6 +273,15 @@ comparison. Both cases use a $3600\times1200\times1$ grid with $5~\mu$m cells,
 16 MPI ranks, $Pe=1$, $D=10^{-9}$~m$^2$\,s$^{-1}$, and prescribed Darcy velocity
 $5.46297\times10^{-5}$~m\,s$^{-1}$. The surface field is the sole intended
 input difference; 495 other input files were verified as matched.
+
+Both short cases use their case-local \texttt{GeoChem.dat} together with the
+same illustrative Li-selective sorbent chemistry. The surface reactions are
+$\mathrm{Sor\_aH}+\mathrm{Li^+}\rightleftharpoons\mathrm{Sor\_aLi}+\mathrm{H^+}$
+($\log K=-5.8$), and the corresponding Na$^+$, K$^+$, and Mg$^{2+}$ reactions
+have $\log K=-7.2$, $-7.0$, and $-7.4$, respectively. Initially Li-free brine
+contains 0.10~M Na, 0.01~M K, 0.01~M Mg, $10^{-12}$~M Li, and 0.13~M Cl at pH
+7; the inflow changes Li to $10^{-3}$~M and Cl to 0.131~M. These chemistry
+details describe only the reported short $Pe=1$ sensitivity.
 
 Three common checkpoints at 0.0058517566, 0.11703513, and 0.99564208~s meet
 the predefined material-response limits. The maximum absolute differences

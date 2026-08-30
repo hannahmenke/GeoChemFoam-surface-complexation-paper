@@ -4,8 +4,10 @@ All chemistry-bearing quantities---aqueous species, $\epsilon$,
 $a_{\mathrm{surf}}$, and surface species---are cell-centred; Darcy fluxes are
 evaluated on faces. Time integration uses implicit Euler, advection uses
 first-order upwind interpolation, and diffusion uses Gauss linear interpolation
-with non-orthogonality correction. These choices give a bounded first-order
-transport update consistent with the Lie split.
+with non-orthogonality correction. The temporal and advective discretisations
+are first order; the corrected diffusion operator is linear. Small negative
+aqueous values are clipped before chemistry under the stated mass-addition
+safeguard.
 
 The area field is generated before transport from the segmented image and read
 as a volume field. In quasi-two-dimensional cases, reconstructed contour length
@@ -27,7 +29,9 @@ The \texttt{phreeqcMixture} constructs one PHREEQC solution for every active
 finite-volume cell and a surface state for every reactive cell. Cells with
 $\epsilon<\texttt{epsChemistryMin}$ are excluded from the fixed mapping. The
 site densities and $a_{\mathrm{surf}}$ establish the initial capacities; the
-area and porosity fields remain fixed. At each timestep the solver transports
+area field remains fixed. At each chemistry correction, porosity is reread
+from the finite-volume field and set for every mapped PHREEQC cell. The solver
+then transports
 all aqueous species, clips negative inputs to zero subject to a fail-fast bound
 on the relative mass added, runs local equilibrium chemistry, and returns both
 aqueous and surface fields. OpenFOAM domain decomposition supplies process-level
@@ -36,7 +40,7 @@ parallelism, while each process uses one PhreeqcRM worker thread.
 This ordering preserves an auditable interface between the two operators. The
 transport solve advances $\theta C_i$ through face fluxes. One subsequent
 chemistry call transfers all components and surface species, refreshes the
-fixed solution volumes, executes \texttt{runCells()}, and copies the
+solution volumes from the porosity field, executes \texttt{runCells()}, and copies the
 equilibrated state back. Small negative values can arise from the transport
 discretisation near a front; clipping prevents invalid PHREEQC inputs, while
 the added-mass limit prevents clipping from silently becoming a material source.
@@ -47,10 +51,11 @@ also define the reported conservation test.
 The mapping is fixed for the duration of a calculation. This makes the number
 of chemistry cells, their solution volumes, and their surface capacities
 deterministic across timesteps and output times. It also defines the scope of
-the implementation: evolving porosity, mineral surface, or chemistry-mask
-topology would require rebuilding the PHREEQCRM mapping rather than simply
-overwriting a finite-volume field. The present tests avoid that ambiguity by
-holding these material fields fixed.
+the implementation: porosity values can change within the fixed active-cell
+map, but a threshold crossing that changes that map or its topology would
+require rebuilding the PHREEQCRM mapping. Changing mineral surface capacity
+likewise requires reconstruction. The present tests hold these material fields
+fixed.
 
 Complete output consists of the finite-volume fields and, when enabled, the
 matching rank-local PHREEQCRM state. A completion marker is published only
@@ -67,9 +72,12 @@ marker publication fails, the incomplete pair cannot be accepted on a later
 restart. This lifecycle is required because PHREEQCRM carries internal chemical
 state beyond the exported aqueous and \texttt{Surf\_*} fields.
 
+Figure~\ref{fig:dbsWorkflow} summarises this cell-local sequence and its
+matched output-state checkpoint.
+
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.58\linewidth]{figures/png/fig05_solver_workflow.png}
+    \includegraphics[width=0.78\linewidth]{figures/png/fig05_solver_workflow.png}
     \caption{Cell-local coupling in \texttt{reactiveTransportDBSFoam}. The
     constructor establishes the active-cell mapping and initial PHREEQCRM
     state. Each timestep advances aqueous transport, transfers the aqueous and
