@@ -32,8 +32,8 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
 \begin{table}[htbp]
     \centering
     \caption{Simulation parameters for all test cases. Image dimensions are
-    given in voxels; the voxel size $\delta x$ gives the physical cell size
-    in the original segmented image. Phase labels are integers in the segmented
+    given in voxels; the adopted image voxel spacing $\delta x$ sets the
+    physical scale used in each model. Phase labels are integers in the segmented
     image; the reactive phase column identifies the label to which the
     intrinsic surface-area density $a_{\mathrm{surf,intr}}$ is assigned (all
     other phases have $a_{\mathrm{surf}} = 0$ or carry only resolved interface
@@ -53,8 +53,8 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & Phase labels (reactive)
             & $D$ (m$^{2}$\,s$^{-1}$)
             & $a_{\mathrm{surf,intr}}$ (m$^{-1}$)
-            & $\Delta t$
-            & $t_{\mathrm{end}}$ \\
+            & $\Delta t$ (s)
+            & $t_{\mathrm{end}}$ (s) \\
         \midrule
         1D retardation
             & ---
@@ -72,7 +72,7 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & 1=matrix, 2=pore \; (1)
             & $10^{-9}$
             & $10^{5}$
-            & $5$
+            & $0.25$
             & $20000$ \\
         3D Kelvin (Mn$^{2+}$/Mg$^{2+}$)
             & $200^{3}$
@@ -201,40 +201,42 @@ Pb$^{2+}$ and other heavy-metal contaminants migrating through iron-rich
 fractured aquifers, acid mine drainage pathways, and engineered permeable
 reactive barriers where HFO is the primary sorbent phase.
 
-The chemistry models Pb$^{2+}$ sorption on hydrous ferric oxide (HFO) using the
-Dzombak--Morel two-site model \citep{dzombak1990surface}. Strong sites
-(Hfo$_s$) have intrinsic $\log K = +4.65$ (near-irreversible uptake at pH 7);
-weak sites (Hfo$_w$) have $\log K = +0.3$ (reversible bulk capacity). Site
-densities are $2 \times 10^{-4}$~mol~m$^{-2}$ (Hfo$_s$) and
-$6 \times 10^{-3}$~mol~m$^{-2}$ (Hfo$_w$). Inlet Pb$^{2+}$ concentration is
-$C_{\mathrm{in}} = 10^{-3}$~mol~L$^{-1}$ at pH~7; the initial domain is
-essentially Pb-free.
+The chemistry represents equilibrium Pb$^{2+}$ sorption on hydrous ferric
+oxide (HFO) using the Dzombak--Morel two-site model
+\citep{dzombak1990surface}. The strong and weak sites have intrinsic
+$\log K$ values of $+4.65$ and $+0.30$, respectively, and site densities of
+$2 \times 10^{-4}$ and $6 \times 10^{-3}$~mol~m$^{-2}$. The inlet
+Pb$^{2+}$ concentration is
+$C_{\mathrm{in}} = 10^{-3}$~mol~L$^{-1}$ at pH~7, while the initial domain
+is essentially Pb-free.
 
-The high conditional affinity of HFO for Pb$^{2+}$ at pH~7 still produces
-substantial retardation at this higher loading, but the stronger injection now
-drives an observable dissolved plume across most of the domain over the
-20000~s run. The reactive interface is the micropore-pore contact, with an
-intrinsic unresolved surface-area density
+At pH~7, HFO sorption retards dissolved Pb$^{2+}$ relative to conservative
+chloride, although the Pb$^{2+}$ plume spans most of the domain by
+$t=20000$~s. The total reactive-area field combines the reconstructed
+micropore--pore interface with an intrinsic unresolved surface-area density
 $a_{\mathrm{surf,intr}} = 10^{5}\ \mathrm{m^{-1}}$ assigned to the
-$\epsilon = 0.4$ micropore phase.
+label-1 microporous material. Its end-member porosity is $\epsilon=0.4$,
+with phase-fraction weighting applied in mixed computational cells.
 
-Figure~\ref{fig:2DFractures} reports the segmented geometry alongside the Pb$^{2+}$/C$_{\mathrm{in}}$ and strong-site occupancy
-Hfo$_s$OPb$^+$/Hfo$_{s,\mathrm{tot}}$ at $t = 20000$~s and reveals that Pb$^{2+}$ advances preferentially
-along fracture channels (faster transport path) relative to the micropore phase, while
-the strongest Pb uptake remains concentrated in reactive micropore cells near the
-inlet and around downstream fracture intersections.
+Figure~\ref{fig:2DFractures} shows the segmented geometry,
+Pb$^{2+}/C_{\mathrm{in}}$, and the strong-site occupancy
+Hfo$_s$\allowbreak OPb$^+$/\allowbreak Hfo$_{s,\mathrm{tot}}$ at $t=20000$~s. Dissolved Pb$^{2+}$
+concentrations are higher along the open fracture channels than in the adjacent
+microporous matrix. Strong-site occupancy is greatest near the inlet and is
+locally enhanced in microporous material adjacent to fracture intersections.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig02_2d_fractures.png}
-    \caption{Three-panel result for the 2D fracture-network case at
-    \mbox{$t = 20000\ \mathrm{s}$}. Left: segmented geometry (micropore in blue,
-    fracture pore space in white). Middle: log-scale normalised dissolved
-    Pb$^{2+}$ / $C_{\mathrm{in}}$ showing a plume that extends across most of
-    the domain, with fracture channels visible as faster transport pathways.
-    Right: log-scale strong-site occupancy
-    Hfo$_s$OPb$^+$/Hfo$_{s,\mathrm{tot}}$ in the micropore phase; the
-    fracture pore cells carry no surface area and appear blank.}
+    \caption{Dissolved Pb$^{2+}$ and strong-site occupancy in the 2D
+    fracture-network case at $t=20000$~s. Left: segmented geometry, with
+    microporous material in blue and open fracture space in white.
+    Middle: $Pb^{2+}/C_{\mathrm{in}}$ shown using logarithmic colour
+    normalisation; the fracture channels contain higher concentrations than the
+    adjacent microporous matrix. Right:
+    Hfo$_s$OPb$^+$/Hfo$_{s,\mathrm{tot}}$ shown using logarithmic colour
+    normalisation. Cells with zero reactive area are masked, leaving the open
+    fracture geometry visible.}
     \label{fig:2DFractures}
 \end{figure}
 

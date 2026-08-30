@@ -88,22 +88,25 @@ The \texttt{runCells()} call advances the chemistry cells held by that process.
 \subsection{Per-Timestep Algorithm}
 
 At startup, \texttt{reactiveTransportDBSFoam} reads the fixed porosity,
-velocity, pressure, species, and explicit total surface-area fields. The
-\texttt{phreeqcMixture} constructor then establishes a fixed mapping between
-active finite-volume cells and PhreeqcRM cells, caches the surface-area and
-site-capacity data, and initialises or restores the PHREEQCRM state. At each
-timestep, each aqueous transport equation is advanced in conservative DBS form
-using the implicit Euler--upwind discretization described above. A single call
-to \texttt{speciesMixture.correct()} then copies the aqueous and surface fields
-into PHREEQCRM, refreshes the fixed porosity values, clips negative aqueous
-inputs subject to the configured mass-error limit, executes
-\texttt{runCells()}, and copies the updated aqueous and surface species back to
-the finite-volume fields.
-The porosity and flow fields are not advanced in this PHREEQC mode. At
-configured output times, the solver writes the OpenFOAM aqueous and surface
-fields after the chemistry update. If a run is restarted without a complete
-PHREEQCRM dump, \texttt{phreeqcMixture} reconstructs the chemistry state from
-the latest written fields. Conservation is assessed
+velocity, pressure, aqueous-species, and total surface-area fields. The
+\texttt{phreeqcMixture} constructor establishes a fixed mapping between active
+finite-volume cells and PhreeqcRM cells and caches the surface-area and
+site-capacity data. Unless checkpoint restoration is explicitly requested, the
+chemistry state is initialised from the written aqueous and surface fields at
+the selected start time. When \texttt{phreeqcRestoreCheckpoint} is enabled, a
+complete matched checkpoint restores the serialized PHREEQCRM state;
+restoration fails if either checkpoint component is absent or inconsistent.
+
+At each timestep, the aqueous transport equations are advanced in conservative
+DBS form using the implicit Euler--upwind discretisation described above. A
+single call to \texttt{species}\allowbreak\texttt{Mixture.}\allowbreak\texttt{correct()} transfers the updated aqueous
+and surface fields to PHREEQCRM, refreshes the fixed porosity values, applies
+the configured mass-error guard to negative aqueous input, executes
+\texttt{runCells()}, and copies the equilibrated aqueous and surface species
+back to the finite-volume fields. At configured output times,
+checkpoint-enabled runs write the aqueous and surface fields together with the
+corresponding rank-local PHREEQCRM checkpoint and publish its completion marker
+only after the field write succeeds. Conservation is assessed
 from the written fields using the domain-integrated bulk inventory
 $M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
 \left( \theta C + a_{\mathrm{surf}}\Gamma \right)$
