@@ -244,6 +244,10 @@
   - snappy wall faces are binned to the Cartesian crop for the projected-area panels; global area and sorbed inventory are computed on each method's native support
 - reproducible entry point:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/runAllParallel.sh`
+- availability:
+  - the clean archive and submission source retain the rendered figure and its
+    renderer, not the raw mesh and field outputs; regenerate it only after the
+    case has completed through `runAll.sh` or `runAllParallel.sh`
 - case analyzer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/scripts/analyze_external_flow_validation.py`
 - renderer:

@@ -293,6 +293,15 @@ def add_geometry_render(fig: plt.Figure, spec, image: np.ndarray) -> None:
     panel_label(ax, "a")
 
 
+def recorded_path(path: Path) -> str:
+    """Return a stable repository-relative path, or an absolute external path."""
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(resolved)
+
+
 def main() -> None:
     global CASE_ROOT, OUTPUT, METRICS_JSON
     parser = argparse.ArgumentParser()
@@ -325,7 +334,11 @@ def main() -> None:
 
     area_cmap = colormaps["magma"].copy()
     area_cmap.set_bad("#e5e5e5")
+    area_cmap.set_under(area_cmap(0.0))
+    area_cmap.set_over(area_cmap(1.0))
     diff_cmap = colormaps["coolwarm"].copy()
+    diff_cmap.set_under(diff_cmap(0.0))
+    diff_cmap.set_over(diff_cmap(1.0))
 
     # A two-column, three-row layout gives every map a physically meaningful
     # footprint at its final SI width. The 10.8-inch source prints at 4.94
@@ -391,9 +404,9 @@ def main() -> None:
     ax_scales.set_axis_off()
     area_cax = ax_scales.inset_axes([0.10, 0.66, 0.80, 0.075])
     diff_cax = ax_scales.inset_axes([0.10, 0.28, 0.80, 0.075])
-    area_cbar = fig.colorbar(area_handle, cax=area_cax, orientation="horizontal")
+    area_cbar = fig.colorbar(area_handle, cax=area_cax, orientation="horizontal", extend="both")
     area_cbar.set_label(r"projected external area [m$^2$]", fontsize=16)
-    diff_cbar = fig.colorbar(diff_handle, cax=diff_cax, orientation="horizontal")
+    diff_cbar = fig.colorbar(diff_handle, cax=diff_cax, orientation="horizontal", extend="both")
     diff_cbar.set_label(r"projected area difference [$10^{-10}$ m$^2$]", fontsize=16)
     for cbar in (area_cbar, diff_cbar):
         cbar.ax.tick_params(labelsize=16, length=5, width=1.0)
@@ -403,8 +416,8 @@ def main() -> None:
     plt.close(fig)
 
     metrics = {
-        "output": str(OUTPUT.relative_to(REPO_ROOT)),
-        "case_root": str(CASE_ROOT.relative_to(REPO_ROOT)),
+        "output": recorded_path(OUTPUT),
+        "case_root": recorded_path(CASE_ROOT),
         "sigma_vox": SIGMA_VOX,
         "voxel_size": VOXEL_SIZE,
         "snappy_wall_faces": snappy_faces,
@@ -412,6 +425,7 @@ def main() -> None:
         "areas_from_fields": {key: float(np.sum(value)) for key, value in fields.items()},
         "summary": {key: value for key, value in summary.items() if key in {"snappy", "dbs-smoothsurface"}},
     }
+    METRICS_JSON.parent.mkdir(parents=True, exist_ok=True)
     METRICS_JSON.write_text(json.dumps(metrics, indent=2))
     print(json.dumps(metrics, indent=2))
 

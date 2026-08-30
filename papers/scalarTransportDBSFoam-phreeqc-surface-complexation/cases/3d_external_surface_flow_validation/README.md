@@ -40,3 +40,13 @@ The default reactive transport comparison time is `t = 2.5`, with `dt = 0.01`.
 Both cases use `epsChemistryMin = 1e-3`. The summary reports surface area,
 permeability/Darcy velocity, and sorbed Sr inventory relative to the resolved
 reference at that comparison time.
+
+## Figure regeneration and availability
+
+Figure~11 is rendered from completed case outputs by
+`figures/scripts/render_3d_external_surface_area_validation.sh`. The clean
+archive and flat submission source provide the published figure and renderer,
+but do not bundle the raw mesh and field outputs needed to regenerate it. A
+fresh clone must first generate the shared crop and complete either `runAll.sh`
+or `runAllParallel.sh`; regeneration then uses those outputs and is not
+presented as a byte-identical archive-only operation.
