@@ -39,7 +39,7 @@ With uniform porosity $\theta$ and surface-area density $a_{\mathrm{surf}}$,
 the retardation coefficient is
 $R = 1 + a_{\mathrm{surf}} K_s / \theta$,
 and the retarded concentration front satisfies the standard advection--diffusion
-equation with effective velocity $u / (\theta R)$ and effective
+equation with effective velocity $U_D / (\theta R)$ and effective
 diffusivity $D / R$.
 This configuration therefore isolates three coupled components of the
 implementation: the batch calibration used to extract $K_s$
@@ -50,13 +50,14 @@ matched aqueous-only case (\mbox{$a_{\mathrm{surf}} = 0$}), and a dilute batch
 pair used to estimate $K_s$ via the secant method.
 
 For the validated benchmark reported here,
-$K_s = 4.253 \times 10^{-6}$ and
+$K_s = 4.253 \times 10^{-6}$~m and
 $R = 1.851$, so the surface-enabled front travels at
 $1/R \approx 54\%$ of the aqueous-only front velocity.
 The mesh contains $80 \times 1 \times 1$ cells and uses a species diffusion
 coefficient of $10^{-11}\ \mathrm{m^2\,s^{-1}}$.
-The surface-enabled profile matches the retarded advection--diffusion reference
-with a relative L1-norm error of $1.35\%$ and $L_{\infty}$ error of $2.74\%$.
+The surface-enabled profile matches the cell-averaged retarded
+advection--diffusion reference with a relative L1-norm error of $1.34\%$ and
+$L_{\infty}$ error of $2.73\%$.
 The aqueous-only profile matches its unretarded reference with L1-norm and
 $L_{\infty}$ errors of $1.08\%$ and $5.97\%$, respectively.
 The field-level total-equivalent inventory---the domain integral of the combined
@@ -68,7 +69,7 @@ DBS formulation at near-percent bulk inventory accuracy. Because the domain
 geometry is uniform, any residual error reflects inaccuracies in the
 surface-chemistry coupling and the batch-secant estimation procedure rather than
 mesh or geometry artefacts. Figure~\ref{fig:1DRetardation} shows the spatial
-profiles at $t = 10$, and Figure~\ref{fig:1DBreakthrough} shows the
+profiles at $t = 10$~s, and Figure~\ref{fig:1DBreakthrough} shows the
 outlet breakthrough curves over the full run to $t = 80$~s.
 The surface-enabled front travels at $1/R$ of the aqueous-only velocity, so its
 breakthrough occurs at $R \approx 1.851$ times the aqueous-only breakthrough
@@ -85,7 +86,7 @@ agreement shown.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\linewidth]{figures/png/fig01_1d_retardation.png}
-    \caption{1D analytical retardation benchmark: spatial profiles at $t = 10$.
+    \caption{1D analytical retardation benchmark: spatial profiles at $t = 10$~s.
     Left: normalized aqueous Ca$^{2+}$ profiles for the aqueous-only and
     surface-enabled runs, compared against their matching cell-averaged
     advection-diffusion analytical solutions. Right: normalized adsorbed amount
@@ -104,8 +105,8 @@ agreement shown.
     Dashed lines are the finite-domain analytical reference; dash-dot lines are
     the semi-infinite Ogata--Banks solution~\citep{ogata1961solution}.
     Vertical dotted lines mark the advective breakthrough times
-    $t_{\mathrm{BT}} = L\theta/U$ (aqueous-only) and
-    $t_{\mathrm{BT}} = L\theta R/U$ (surface-enabled).}
+    $t_{\mathrm{BT}} = L\theta/U_D$ (aqueous-only) and
+    $t_{\mathrm{BT}} = L\theta R/U_D$ (surface-enabled).}
     \label{fig:1DBreakthrough}
 \end{figure}
 
@@ -469,10 +470,8 @@ Figures~\ref{fig:twoScaleErrorVsPe} and~\ref{fig:twoScalePeOneFields}.
 
 \begin{table}[htbp]
     \centering
-    \caption{Validation summary for the tracked 1D benchmark family.
-    ``Splitting'' refers to the operator-splitting (chemistry--transport)
-    consistency test; ``Timestep'' and ``Mesh'' are sensitivity studies on
-    the fixed 1D benchmark. The controlled-geometry, micromodel, and
+    \caption{Validation summary for the 1D benchmark family. The
+    controlled-geometry, micromodel, and
     external-surface validation blocks are
     reported separately because they test image-derived interface geometry
     rather than the 1D coupling alone.}
@@ -481,25 +480,12 @@ Figures~\ref{fig:twoScaleErrorVsPe} and~\ref{fig:twoScalePeOneFields}.
         \toprule
         Check & Metric & Result \\
         \midrule
-        Analytical 1D & Surface L1 norm / total drift & $1.35\%$ / $1.19\%$ \\
+        Analytical 1D & Surface L1 norm / total drift & $1.34\%$ / $1.19\%$ \\
         Closed-system batch pair & Inventory drift & $8.9\times10^{-10}$ / $1.1\times10^{-10}$ \\
-        Splitting     & Local / bulk drift        & $3$--$4.5\%$ / $<0.6\%$ \\
-        Timestep      & Local / bulk drift        & $\approx 3\%$ / $0.25\%$ \\
-        Mesh          & Front / total drift       & $2.5\times 10^{-7}$ / $0.37\%$ \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-A consistent pattern emerges across the 1D sensitivity studies: local
-(cell-level) drift reaches $3$--$4.5\%$ while bulk (volume-integrated) drift
-stays below $0.6\%$.
-This disparity indicates that operator-splitting and timestep errors are
-concentrated near the chemical front and cancel almost completely at the domain
-level, so global conservation properties are preserved even where local
-truncation errors are non-negligible.
-The near-zero front-position drift ($2.5 \times 10^{-7}$) from the mesh study
-confirms that the retardation-front position is not systematically biased by
-mesh resolution.
 The validation results therefore support the conservative coupling
 and the smooth-interface construction of $a_{\mathrm{surf}}$ used in the
 application cases that follow. Those cases then examine the additional

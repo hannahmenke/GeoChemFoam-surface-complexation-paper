@@ -23,7 +23,7 @@ In all cases the mobile-water chemistry mask is
 $\theta \le \theta_{\mathrm{mask}} = 10^{-3}$
 and PHREEQC thermodynamic data are drawn from the GeoChem.dat database
 distributed with GeoChemFoam.
-The 1D case uses a prescribed uniform inlet velocity $U = 10^{-6}\ \mathrm{m\,s^{-1}}$;
+The 1D case uses a prescribed uniform Darcy velocity $U_D = 10^{-6}\ \mathrm{m\,s^{-1}}$;
 the 2D and 3D image-based cases use a velocity field obtained from a
 prior \texttt{simpleDBSFoam} flow calculation with pressure drop
 $\Delta P = 5\times10^{-5}\ \mathrm{Pa}$ and kinematic viscosity
@@ -64,7 +64,7 @@ $\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
             & $10^{-11}$
             & $10^{5}$
             & $0.25$
-            & $10$ \\
+            & $80$ \\
         2D fractures (Pb$^{2+}$/HFO)
             & $500\times500\times1$
             & $100$
@@ -347,9 +347,9 @@ desorption wave precedes the Sr$^{2+}$ adsorption front, and the effective
 retardation of Sr$^{2+}$ is lower than the single-species prediction because
 Ca$^{2+}$ still competes for sites ahead of the front. Over the saved output
 sequence ($t = 0, 20, \ldots, 120$~s), the porosity-weighted mean
-Sr$^{2+}$ concentration rises from effectively zero to $0.858$
+Sr$^{2+}$ concentration rises from effectively zero to $0.865$
 $C_{\mathrm{in}}$, while the corresponding Ca$^{2+}$ concentration falls
-from $1.000$ to $0.096$ $C_{\mathrm{init}}$. Over the same interval,
+from $1.000$ to $0.095$ $C_{\mathrm{init}}$. Over the same interval,
 \mbox{$\Delta$\texttt{Surf\_aSr+}} increases monotonically while
 \mbox{$\Delta$\texttt{Surf\_aCa+}} becomes progressively more negative,
 quantifying the net replacement of Ca$^{2+}$ by Sr$^{2+}$ on the reactive

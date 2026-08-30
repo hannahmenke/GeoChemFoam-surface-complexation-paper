@@ -100,10 +100,10 @@ restoration fails if either checkpoint component is absent or inconsistent.
 At each timestep, the aqueous transport equations are advanced in conservative
 DBS form using the implicit Euler--upwind discretisation described above. A
 single call to \texttt{species}\allowbreak\texttt{Mixture.}\allowbreak\texttt{correct()} transfers the updated aqueous
-and surface fields to PHREEQCRM, refreshes the fixed porosity values, applies
-the configured mass-error guard to negative aqueous input, executes
-\texttt{runCells()}, and copies the equilibrated aqueous and surface species
-back to the finite-volume fields. At configured output times,
+and surface fields to PHREEQCRM, refreshes the fixed porosity values, clips
+negative aqueous inputs to zero subject to a fail-fast relative added-mass
+limit, executes \texttt{runCells()}, and copies the equilibrated aqueous and
+surface species back to the finite-volume fields. At configured output times,
 checkpoint-enabled runs write the aqueous and surface fields together with the
 corresponding rank-local PHREEQCRM checkpoint and publish its completion marker
 only after the field write succeeds. Conservation is assessed
@@ -129,8 +129,8 @@ composite implicit source term.
     state. Each timestep advances all aqueous species in conservative DBS
     form, after which \texttt{speciesMixture.correct()} transfers the aqueous
     and surface state to PHREEQCRM, executes \texttt{runCells()}, and returns
-    the updated species fields. At output times, the solver writes the updated
-    OpenFOAM aqueous and surface fields.}
+    the updated species fields. At output times, it writes the fields and, when
+    enabled, a matching complete PHREEQCRM checkpoint.}
     \label{fig:dbsWorkflow}
 \end{figure}
 
