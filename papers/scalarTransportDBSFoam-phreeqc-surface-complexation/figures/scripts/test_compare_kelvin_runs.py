@@ -219,6 +219,37 @@ class JsonAndGeometryTests(unittest.TestCase):
             with self.assertRaisesRegex(comparison.ComparisonError, "noncanonical"):
                 comparison.verify_absolute_record(record, "test log", roots=(allowed,))
 
+    def test_endpoint_restart_state_requires_exact_solver_field_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            endpoint = Path(tmp) / "0.5"
+            endpoint.mkdir()
+            for name in comparison.ENDPOINT_RESTART_STATE_FIELDS:
+                _, _, kind = comparison.FIELD_SPECS[name]
+                if kind == "cell_vector":
+                    foam_vector(endpoint / name, (0.0, 0.0, 0.0))
+                else:
+                    foam_scalar(endpoint / name, 0.0)
+            (endpoint / "phreeqc.dmp").write_bytes(b"checkpoint")
+            (endpoint / "phreeqc.complete").write_text("marker\n")
+            (endpoint / "uniform").mkdir()
+            self.assertEqual(
+                comparison.endpoint_state_field_names(endpoint),
+                comparison.ENDPOINT_RESTART_STATE_FIELDS,
+            )
+            (endpoint / "R").unlink()
+            with self.assertRaisesRegex(comparison.ComparisonError, r"missing=\['R'\]"):
+                comparison.endpoint_state_field_names(endpoint)
+            foam_scalar(endpoint / "R", 0.0)
+            extra = endpoint / "unexpectedState"
+            extra.write_text(
+                "FoamFile\n{\n format ascii;\n class volScalarField;\n"
+                " object unexpectedState;\n}\n"
+            )
+            with self.assertRaisesRegex(
+                comparison.ComparisonError, r"unexpected=\['unexpectedState'\]"
+            ):
+                comparison.endpoint_state_field_names(endpoint)
+
 
 class LifecycleTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -306,11 +337,18 @@ class LifecycleTests(unittest.TestCase):
                 comparison, "stage_dictionary_contract",
                 return_value={"noncontrol_snapshots": [], "canonical_control_contract": "x"},
             ),
+            mock.patch.object(
+                comparison, "endpoint_state_field_names",
+                return_value=comparison.ENDPOINT_RESTART_STATE_FIELDS,
+            ),
         )
 
     def run_chain(self) -> tuple[list[dict], list[dict], dict]:
         patchers = self.patches()
-        with patchers[0], patchers[1], patchers[2], patchers[3], patchers[4]:
+        with (
+            patchers[0], patchers[1], patchers[2], patchers[3], patchers[4],
+            patchers[5],
+        ):
             return comparison.verify_stage_chain(
                 self.payload, self.case, self.ranks, 0.5
             )
@@ -412,6 +450,7 @@ class ScientificGateTests(unittest.TestCase):
     def _case(
         self, root: Path, suffix: str, mn: float,
         endpoint_sorbed: float | None = None,
+        endpoint_r: float = 1.0,
     ) -> Path:
         case = root / suffix
         rank = case / "processor0"
@@ -428,7 +467,10 @@ class ScientificGateTests(unittest.TestCase):
                 total = endpoint_sorbed if time_name == "0.5" else 0.0
                 values["Surf_sOMn+"] = 0.25 * total
                 values["Surf_wOMn+"] = 0.75 * total
+            values["R"] = endpoint_r if time_name == "0.5" else 0.0
             for name, (_, _, kind) in comparison.FIELD_SPECS.items():
+                if name == "R" and time_name == "0":
+                    continue
                 if kind == "cell_vector":
                     foam_vector(directory / name, (0.0, 0.0, 0.0))
                 else:
@@ -494,6 +536,34 @@ class ScientificGateTests(unittest.TestCase):
                 {"defined": False, "quantiles": {}},
             )
             self.assertTrue(all(comparison.evaluate_restart(result)["checks"].values()))
+
+    def test_restart_complete_state_includes_reaction_rate_field(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            left = self._case(root, "left", 1.0, endpoint_r=1.0)
+            right = self._case(root, "right", 1.0, endpoint_r=2.0)
+            geometry = {
+                "addressing": np.array([0]), "volumes": np.array([2.0e-15]),
+                "centres": np.array([[5e-6, 5e-6, 5e-6]]), "x_index": np.array([0]),
+                "internal_face_count": 0,
+            }
+            with (
+                mock.patch.object(comparison, "RANK_COUNT", 1),
+                mock.patch.object(comparison, "GLOBAL_CELL_COUNT", 1),
+                mock.patch.object(comparison, "NX", 1),
+                mock.patch.object(comparison, "mesh_geometry", return_value=geometry),
+            ):
+                metrics = comparison.scientific_metrics(
+                    left, right, 0.5, 0.5, "uninterrupted", "restarted"
+                )
+            self.assertEqual(
+                metrics["complete_state_fieldwise_maximum_absolute_difference"]["R"],
+                1.0,
+            )
+            self.assertFalse(
+                comparison.evaluate_restart(metrics)["checks"]
+                ["complete_state_fields_within_combined_tolerance"]
+            )
 
     def test_scientific_metrics_reject_one_sided_zero_sorbed_front(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -733,6 +803,38 @@ class ScheduleAndCliTests(unittest.TestCase):
                 Path("accepted.json"),
             )
 
+    def test_restart_rejects_identity_different_from_accepted_convergence_pair(self) -> None:
+        uninterrupted = self.integrity(
+            comparison.ACCEPTED_DT_S,
+            [(0.0, comparison.RESTART_ENDPOINT_S, False)],
+        )
+        restarted = self.integrity(
+            comparison.ACCEPTED_DT_S,
+            [
+                (0.0, comparison.RESTART_SPLIT_S, False),
+                (comparison.RESTART_SPLIT_S, comparison.RESTART_ENDPOINT_S, True),
+            ],
+        )
+        with (
+            mock.patch.object(
+                comparison, "validate_convergence_acceptance",
+                return_value=({"pair_identity": {"stack": "convergence"}}, {}),
+            ),
+            mock.patch.object(
+                comparison, "validate_case",
+                side_effect=[({}, uninterrupted), ({}, restarted)],
+            ),
+            mock.patch.object(
+                comparison, "verify_pair_identity",
+                return_value={"stack": "restart"},
+            ),
+            self.assertRaisesRegex(comparison.ComparisonError, "pair identity differs"),
+        ):
+            comparison.compare_restart(
+                Path("uninterrupted"), Path("restarted"),
+                comparison.RESTART_ENDPOINT_S, Path("accepted.json"),
+            )
+
     def test_restart_requires_a_passing_current_convergence_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "convergence.json"
@@ -874,6 +976,8 @@ class Schema9EndToEndTests(unittest.TestCase):
             directory = rank / time_name
             directory.mkdir(parents=True)
             for name, (_, _, kind) in comparison.FIELD_SPECS.items():
+                if name == "R" and time_name == "0":
+                    continue
                 if kind == "cell_vector":
                     foam_vector(directory / name, (0.0, 0.0, 0.0))
                 else:
@@ -1111,6 +1215,7 @@ class Schema9EndToEndTests(unittest.TestCase):
                 self.assertEqual(
                     integrity["static_field_contract"]["times_s"], [0.0, 0.5]
                 )
+                self.assertIn("R", integrity["endpoint"]["field_statistics"])
                 foam_scalar(case / "processor0/0.5/H+", 2.0)
                 with self.assertRaisesRegex(comparison.ComparisonError, "Endpoint outputs changed"):
                     comparison.validate_case(case, 0.5)

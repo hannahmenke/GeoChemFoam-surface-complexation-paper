@@ -98,7 +98,15 @@ FIELD_SPECS: dict[str, tuple[str, tuple[int, ...], str]] = {
     "p": ("volScalarField", (0, 2, -2, 0, 0, 0, 0), "cell_scalar"),
     "U": ("volVectorField", (0, 1, -1, 0, 0, 0, 0), "cell_vector"),
     "phi": ("surfaceScalarField", (0, 3, -1, 0, 0, 0, 0), "face_scalar"),
+    "R": ("volScalarField", (0, 0, -1, 0, 0, 0, 0), "cell_scalar"),
 }
+INITIAL_STATE_FIELDS = frozenset(provenance.REQUIRED_INITIAL_FIELDS)
+ENDPOINT_RESTART_STATE_FIELDS = INITIAL_STATE_FIELDS | {"R"}
+CHECKPOINT_ARTIFACTS = frozenset(
+    {"phreeqc.dmp", "phreeqc.complete", "phreeqc.complete.tmp"}
+)
+if set(FIELD_SPECS) != ENDPOINT_RESTART_STATE_FIELDS:
+    raise RuntimeError("Kelvin endpoint field contracts do not match the solver state")
 FATAL_LOG_PATTERN = re.compile(
     r"FOAM FATAL|MPI_ABORT|PHREEQC error|Floating point exception|Segmentation fault",
     re.IGNORECASE,
@@ -543,6 +551,43 @@ def read_foam_field(path: Path, expected_size: int) -> dict[str, object]:
     }
 
 
+def endpoint_state_field_names(directory: Path) -> frozenset[str]:
+    """Discover the exact solver-written restart state at one endpoint."""
+    require(directory.is_dir() and not directory.is_symlink(),
+            f"Missing regular endpoint directory: {directory}")
+    names: set[str] = set()
+    for path in directory.iterdir():
+        if path.name in CHECKPOINT_ARTIFACTS:
+            require(not path.is_symlink(), f"Symlinked checkpoint artifact: {path}")
+            continue
+        if path.name == "uniform" and path.is_dir() and not path.is_symlink():
+            # OpenFOAM stores time metadata and function-object data here.
+            continue
+        require(path.is_file() and not path.is_symlink(),
+                f"Unexpected endpoint artifact: {path}")
+        try:
+            text = strip_foam_comments(path.read_text(encoding="ascii"), path)
+        except (OSError, UnicodeDecodeError) as error:
+            raise ComparisonError(f"Cannot inspect endpoint field {path}: {error}") from error
+        header = named_block(text, "FoamFile", path)
+        field_class = singleton_entry(header, "class", path)
+        require(
+            field_class in {"volScalarField", "volVectorField", "surfaceScalarField"},
+            f"Unexpected endpoint non-field artifact: {path} (class {field_class})",
+        )
+        require(singleton_entry(header, "object", path) == path.name,
+                f"Wrong object name in endpoint field: {path}")
+        require(path.name not in names, f"Duplicate endpoint state field: {path.name}")
+        names.add(path.name)
+    require(
+        names == ENDPOINT_RESTART_STATE_FIELDS,
+        "Endpoint restart-state field set differs: "
+        f"missing={sorted(ENDPOINT_RESTART_STATE_FIELDS - names)}, "
+        f"unexpected={sorted(names - ENDPOINT_RESTART_STATE_FIELDS)}",
+    )
+    return frozenset(names)
+
+
 def scalar_values(path: Path, expected_size: int) -> np.ndarray:
     values = np.asarray(read_foam_field(path, expected_size)["values"], dtype=np.float64)
     require(values.ndim == 1, f"Expected scalar field: {path}")
@@ -885,6 +930,7 @@ def verify_stage_chain(
                 f"Endpoint directories changed in {stage_id}")
         current_outputs: list[dict[str, object]] = []
         for rank in ranks:
+            endpoint_state_field_names(exact_time_directory(rank, end))
             current_outputs.extend(
                 call_provenance(
                     provenance.tree_records, exact_time_directory(rank, end), case,
@@ -970,7 +1016,8 @@ def scan_timepoint(
         internal_faces = read_label_list(rank / "constant/polyMesh/neighbour").size
         local_counts.append(int(addressing.size))
         directory = exact_time_directory(rank, time_value)
-        for name in CELL_SCALARS:
+        scalar_names = CELL_SCALARS + (() if time_value == 0.0 else ("R",))
+        for name in scalar_names:
             parsed = read_foam_field(directory / name, addressing.size)
             values = np.asarray(parsed["values"], dtype=np.float64)
             update_statistics(statistics, name, values)
@@ -1094,8 +1141,11 @@ def verify_pair_identity(
             "Pair did not use the same exact runtime root and source identity")
     require(left["runtime_artifacts"] == right["runtime_artifacts"],
             "Runtime binaries, libraries, compiler, MPI, or environment differ")
+    initialization_identity = snapshot_identity(
+        left["realized_initialization_dictionaries"]
+    )
     require(
-        snapshot_identity(left["realized_initialization_dictionaries"])
+        initialization_identity
         == snapshot_identity(right["realized_initialization_dictionaries"]),
         "Realized initialization dictionaries differ",
     )
@@ -1105,11 +1155,12 @@ def verify_pair_identity(
     left_initial = left["initial_case"]
     right_initial = right["initial_case"]
     require(left_initial == right_initial, "Initial decomposed fields or mesh differ")
-    require(left["surface"] | {"path": None} == right["surface"] | {"path": None},
+    surface_identity = left["surface"] | {"path": None}
+    intrinsic_surface_identity = left["intrinsic_surface"] | {"path": None}
+    require(surface_identity == right["surface"] | {"path": None},
             "Surface-construction evidence differs")
     require(
-        left["intrinsic_surface"] | {"path": None}
-        == right["intrinsic_surface"] | {"path": None},
+        intrinsic_surface_identity == right["intrinsic_surface"] | {"path": None},
         "Intrinsic-surface evidence differs",
     )
     left_stages = left.get("transport_stages")
@@ -1127,6 +1178,10 @@ def verify_pair_identity(
         **identity,
         "initial_case_sha256": left_initial["sha256"],
         "chemistry_and_case_inputs": left_inputs,
+        "surface_construction": surface_identity,
+        "intrinsic_surface_construction": intrinsic_surface_identity,
+        "realized_initialization_dictionaries": initialization_identity,
+        "realized_stage_dictionary_contract": left_contracts[0],
         "same_exact_runtime": True,
         "same_initial_decomposed_mesh_and_fields": True,
         "same_chemistry_geometry_and_case_inputs": True,
@@ -1224,17 +1279,25 @@ def scientific_metrics(
     geometry_min = math.inf
     geometry_max = -math.inf
     max_volume_deviation = 0.0
-    field_abs_difference = {name: [] for name in FIELD_SPECS}
-    field_left_norm = {name: [] for name in FIELD_SPECS}
-    field_right_norm = {name: [] for name in FIELD_SPECS}
-    boundary_abs_difference = {name: [] for name in FIELD_SPECS}
-    boundary_left_norm = {name: [] for name in FIELD_SPECS}
-    boundary_right_norm = {name: [] for name in FIELD_SPECS}
-    boundary_structure_equal = {name: True for name in FIELD_SPECS}
-    field_maximum_absolute_difference = {name: 0.0 for name in FIELD_SPECS}
-    field_maximum_absolute_magnitude = {name: 0.0 for name in FIELD_SPECS}
-    boundary_maximum_absolute_difference = {name: 0.0 for name in FIELD_SPECS}
-    boundary_maximum_absolute_magnitude = {name: 0.0 for name in FIELD_SPECS}
+    field_abs_difference = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
+    field_left_norm = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
+    field_right_norm = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
+    boundary_abs_difference = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
+    boundary_left_norm = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
+    boundary_right_norm = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
+    boundary_structure_equal = {name: True for name in ENDPOINT_RESTART_STATE_FIELDS}
+    field_maximum_absolute_difference = {
+        name: 0.0 for name in ENDPOINT_RESTART_STATE_FIELDS
+    }
+    field_maximum_absolute_magnitude = {
+        name: 0.0 for name in ENDPOINT_RESTART_STATE_FIELDS
+    }
+    boundary_maximum_absolute_difference = {
+        name: 0.0 for name in ENDPOINT_RESTART_STATE_FIELDS
+    }
+    boundary_maximum_absolute_magnitude = {
+        name: 0.0 for name in ENDPOINT_RESTART_STATE_FIELDS
+    }
 
     for rank_number in range(RANK_COUNT):
         left_rank = left_case / f"processor{rank_number}"
@@ -1258,7 +1321,8 @@ def scientific_metrics(
             max_volume_deviation, float(np.max(np.abs(volumes - CELL_VOLUME_M3)))
         )
         count = addressing.size
-        for name, (_, _, kind) in FIELD_SPECS.items():
+        for name in sorted(ENDPOINT_RESTART_STATE_FIELDS):
+            _, _, kind = FIELD_SPECS[name]
             field_count = (
                 int(left_geometry["internal_face_count"])
                 if kind == "face_scalar" else int(count)
@@ -1377,13 +1441,13 @@ def scientific_metrics(
         name: relative_field_norm(
             field_abs_difference[name], field_left_norm[name], field_right_norm[name]
         )
-        for name in FIELD_SPECS
+        for name in ENDPOINT_RESTART_STATE_FIELDS
     }
     boundary_l1 = {
         name: relative_field_norm(
             boundary_abs_difference[name], boundary_left_norm[name], boundary_right_norm[name]
         )
-        for name in FIELD_SPECS
+        for name in ENDPOINT_RESTART_STATE_FIELDS
     }
 
     fronts = {
@@ -1736,7 +1800,9 @@ def compare_restart(
     convergence_result: Path,
 ) -> dict[str, object]:
     exact_number(endpoint, RESTART_ENDPOINT_S, "required restart endpoint", 1e-15)
-    _, convergence_record = validate_convergence_acceptance(convergence_result)
+    convergence_artifact, convergence_record = validate_convergence_acceptance(
+        convergence_result
+    )
     require(
         uninterrupted_case.resolve() != restarted_case.resolve(),
         "Restart comparison cases must differ",
@@ -1776,6 +1842,10 @@ def compare_restart(
     )
     identity = verify_pair_identity(
         uninterrupted_manifest, restarted_manifest, uninterrupted_case, restarted_case
+    )
+    require(
+        identity == convergence_artifact.get("pair_identity"),
+        "Restart pair identity differs from the accepted convergence pair identity",
     )
     metrics = scientific_metrics(
         uninterrupted_case, restarted_case, endpoint, endpoint,
