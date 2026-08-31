@@ -35,7 +35,13 @@ python kelvin_provenance.py record-run \
     --manifest run_provenance.json \
     --case . \
     --control system/controlDict \
-    --thermo constant/thermoPhysicalProperties
+    --thermo constant/thermoPhysicalProperties \
+    --snapshot-root provenance/stages \
+    --dictionary constant/transportProperties \
+    --dictionary constant/thermoPhysicalProperties \
+    --dictionary system/postProcessDict \
+    --dictionary system/controlDict \
+    --dictionary system/fvSolution
 
 if [ -d "processor0" ]
 then

@@ -17,6 +17,12 @@ fi
 # shellcheck disable=SC1090
 source "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
 
+: "${KELVIN_EXPECTED_GCFOAM_COMMIT:?Set the independently reviewed GeoChemFoam commit}"
+: "${KELVIN_EXPECTED_GCFOAM_TREE:?Set the independently reviewed GeoChemFoam tree}"
+: "${KELVIN_EXPECTED_PHREEQCRM_GITLINK:?Set the independently reviewed GeoChemFoam PHREEQCRM gitlink}"
+: "${KELVIN_EXPECTED_PHREEQCRM_COMMIT:?Set the independently reviewed PHREEQCRM commit}"
+: "${KELVIN_EXPECTED_PHREEQCRM_TREE:?Set the independently reviewed PHREEQCRM tree}"
+
 # Mn2+ capture from Mg-rich water on a two-site HFO coating.
 # Mn is the target critical-metal species; Mg represents abundant brine
 # hardness competing weakly for the same weak HFO surface sites.
@@ -65,7 +71,11 @@ python "$repo_root/scripts/createASurfMarchingCubes.py" \
 python kelvin_provenance.py record \
     --paper "$repo_root" \
     --runtime "$GCFOAM_RUNTIME_ROOT" \
-    --runtime-commit "$(git -C "$GCFOAM_RUNTIME_ROOT" rev-parse HEAD)" \
+    --expected-runtime-commit "$KELVIN_EXPECTED_GCFOAM_COMMIT" \
+    --expected-runtime-tree "$KELVIN_EXPECTED_GCFOAM_TREE" \
+    --expected-phreeqcrm-gitlink "$KELVIN_EXPECTED_PHREEQCRM_GITLINK" \
+    --expected-phreeqcrm-commit "$KELVIN_EXPECTED_PHREEQCRM_COMMIT" \
+    --expected-phreeqcrm-tree "$KELVIN_EXPECTED_PHREEQCRM_TREE" \
     --surface-log createASurfReactive.out \
     --intrinsic-log createASurfIntrinsicReactive.out \
     --mode occupancyGaussian \
@@ -103,6 +113,12 @@ python kelvin_provenance.py record \
     --input "$repo_root/scripts/createASurfMarchingCubes.py" \
     --input "$repo_root/images/raw/Kelvin1-200x200x200.raw.tar.gz" \
     --input "$repo_root/images/raw/Kelvin1-200x200x200.txt" \
+    --snapshot-root provenance/initialization \
+    --dictionary constant/transportProperties \
+    --dictionary constant/thermoPhysicalProperties \
+    --dictionary system/postProcessDict \
+    --dictionary system/controlDict \
+    --dictionary system/fvSolution \
     --output run_provenance.json
 
 if [ -d "processor0" ]

@@ -21,6 +21,11 @@ source "$repo_root/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/ca
 : "${TOTAL_TIME:?Set TOTAL_TIME to the reviewed stage endpoint}"
 : "${WRITE_TIMESTEP:?Set WRITE_TIMESTEP to the reviewed stage interval}"
 : "${RUN_TIMESTEP:?Set RUN_TIMESTEP to the accepted timestep}"
+: "${KELVIN_EXPECTED_GCFOAM_COMMIT:?Set the independently reviewed GeoChemFoam commit}"
+: "${KELVIN_EXPECTED_GCFOAM_TREE:?Set the independently reviewed GeoChemFoam tree}"
+: "${KELVIN_EXPECTED_PHREEQCRM_GITLINK:?Set the independently reviewed GeoChemFoam PHREEQCRM gitlink}"
+: "${KELVIN_EXPECTED_PHREEQCRM_COMMIT:?Set the independently reviewed PHREEQCRM commit}"
+: "${KELVIN_EXPECTED_PHREEQCRM_TREE:?Set the independently reviewed PHREEQCRM tree}"
 
 run_task() {
   local name="$1"

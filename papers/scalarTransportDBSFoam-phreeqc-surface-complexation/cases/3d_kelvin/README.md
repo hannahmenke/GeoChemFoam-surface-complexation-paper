@@ -36,7 +36,8 @@ the injected Mn-bearing front is preferentially captured from Mg-rich water.
 
 ## Surface Area
 
-- interface-count `aSurf`
+- `aSurf` reconstructed from Gaussian-smoothed phase occupancy with
+  `sigma = 0.75` voxel
 - intrinsic micropore contribution inside label `2`
 - intrinsic micropore density: `1e5 1/m`
 
@@ -48,6 +49,11 @@ Run the full case from that directory:
 
 ```bash
 export GCFOAM_RUNTIME_ROOT=/absolute/path/to/reviewed-runtime
+export KELVIN_EXPECTED_GCFOAM_COMMIT=/reviewed/GeoChemFoam/commit
+export KELVIN_EXPECTED_GCFOAM_TREE=/reviewed/GeoChemFoam/tree
+export KELVIN_EXPECTED_PHREEQCRM_GITLINK=/reviewed/superproject/gitlink
+export KELVIN_EXPECTED_PHREEQCRM_COMMIT=/reviewed/PHREEQCRM/commit
+export KELVIN_EXPECTED_PHREEQCRM_TREE=/reviewed/PHREEQCRM/tree
 export TOTAL_TIME=/reviewed/stage/endpoint
 export WRITE_TIMESTEP=/reviewed/stage/interval
 export RUN_TIMESTEP=/accepted/timestep

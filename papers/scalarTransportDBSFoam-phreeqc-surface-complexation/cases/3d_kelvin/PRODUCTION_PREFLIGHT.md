@@ -287,8 +287,14 @@ cd /absolute/path/to/fresh-repository-worktree
 export KELVIN_REPO_ROOT=$PWD
 cd "$KELVIN_REPO_ROOT/tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation"
 export GCFOAM_RUNTIME_ROOT=/absolute/path/to/final-clean-runtime
+export KELVIN_EXPECTED_GCFOAM_COMMIT=/reviewed/GeoChemFoam/commit
+export KELVIN_EXPECTED_GCFOAM_TREE=/reviewed/GeoChemFoam/tree
+export KELVIN_EXPECTED_PHREEQCRM_GITLINK=/reviewed/superproject/gitlink
+export KELVIN_EXPECTED_PHREEQCRM_COMMIT=/reviewed/PHREEQCRM/commit
+export KELVIN_EXPECTED_PHREEQCRM_TREE=/reviewed/PHREEQCRM/tree
 source "$KELVIN_REPO_ROOT/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"
 cp system/controlDict1 system/controlDict
+cp system/fvSolution1 system/fvSolution
 foamDictionary system/controlDict -entry startFrom -set startTime
 foamDictionary system/controlDict -entry startTime -set 0
 foamDictionary system/controlDict -entry endTime -set 1
@@ -309,7 +315,7 @@ export GCFOAM_RUNTIME_ROOT=/absolute/path/to/final-clean-runtime
 export KELVIN_RANKS=32  # or 64 only if the benchmark gate selected it
 /home/hm114/.codex/skills/geochemfoam-detached/scripts/run_detached.sh \
   "$KELVIN_REPO_ROOT/tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation" \
-  'source "$KELVIN_REPO_ROOT/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"; export FOAM_SIGFPE=false OMP_NUM_THREADS=1; mpirun --bind-to core --map-by core -np "$KELVIN_RANKS" reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT_0_to_1.out' \
+  'source "$KELVIN_REPO_ROOT/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh"; export FOAM_SIGFPE=false OMP_NUM_THREADS=1; python kelvin_provenance.py record-run --manifest run_provenance.json --case . --control system/controlDict --thermo constant/thermoPhysicalProperties --snapshot-root provenance/stages --dictionary constant/transportProperties --dictionary constant/thermoPhysicalProperties --dictionary system/postProcessDict --dictionary system/controlDict --dictionary system/fvSolution; mpirun --bind-to core --map-by core -np "$KELVIN_RANKS" reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT_0_to_1.out' \
   kelvin_local_0_to_1
 ```
 
