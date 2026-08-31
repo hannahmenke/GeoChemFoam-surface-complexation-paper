@@ -37,7 +37,7 @@ IDENTITY_ENV = (
     "WM_COMPILE_OPTION", "WM_LABEL_OPTION", "WM_MPLIB", "WM_OPTIONS",
     "WM_PRECISION_OPTION", "WM_PROJECT", "WM_PROJECT_VERSION",
 )
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 def sha256(path: Path) -> str:
@@ -412,9 +412,11 @@ def verify_initial_dictionary_anchors(records: object, current: list[Path]) -> N
     for path in current:
         snapshot = anchors[path]
         if path == Path("system/controlDict"):
-            matches = immutable_control_digest(path) == immutable_control_digest(snapshot)
-        else:
-            matches = sha256(path) == sha256(snapshot)
+            # Initialization follows the flow stage.  The first transport
+            # attempt establishes the transport-control anchor; later stages
+            # are pinned to that recorded digest by validate_stage_invariants.
+            continue
+        matches = sha256(path) == sha256(snapshot)
         if not matches:
             raise SystemExit(f"Realised dictionary drifted from initialization: {path}")
 
@@ -481,22 +483,34 @@ def checkpoint_record(time_dir: Path, expected_time: float) -> dict[str, object]
         raise SystemExit(f"PHREEQCRM checkpoint hash mismatch in {marker}")
     return {
         "time": marker_time,
-        "dump": {"path": str(dump.resolve()), "sha256": dump_sha},
-        "marker": file_record(marker),
+        "dump": {
+            "path": str(dump.resolve()),
+            "size": dump.stat().st_size,
+            "sha256": dump_sha,
+        },
+        "marker": {**file_record(marker), "size": marker.stat().st_size},
     }
 
 
-def tree_records(root: Path, case: Path, excluded: set[str] | None = None) -> list[dict[str, str]]:
+def tree_records(
+    root: Path, case: Path, excluded: set[str] | None = None
+) -> list[dict[str, object]]:
     excluded = excluded or set()
     records = []
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         if path.name in excluded:
             continue
-        records.append({"path": str(path.relative_to(case)), "sha256": sha256(path)})
+        records.append(
+            {
+                "path": str(path.relative_to(case)),
+                "size": path.stat().st_size,
+                "sha256": sha256(path),
+            }
+        )
     return records
 
 
-def records_digest(records: list[dict[str, str]]) -> str:
+def records_digest(records: list[dict[str, object]]) -> str:
     return sha256_text(json.dumps(records, sort_keys=True, separators=(",", ":")))
 
 
@@ -561,7 +575,61 @@ def validate_stage_invariants(
         raise SystemExit(
             "Interrupted Kelvin stage recovery must start within its attempted interval"
         )
+    if float(controls["endTime"]) != previous_end:
+        raise SystemExit("Interrupted Kelvin recovery must preserve the attempted endpoint")
     return "recovery"
+
+
+def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
+    if not isinstance(records, list):
+        raise SystemExit("Malformed Kelvin checkpoint chain records")
+    identities = []
+    for record in records:
+        if not isinstance(record, dict):
+            raise SystemExit("Malformed Kelvin checkpoint chain record")
+        dump = record.get("dump")
+        marker = record.get("marker")
+        if not isinstance(dump, dict) or not isinstance(marker, dict):
+            raise SystemExit("Malformed Kelvin checkpoint artifact record")
+        rank = str(record.get("rank", ""))
+        time_name = str(record.get("time_name", ""))
+        identities.append(
+            {
+                "rank": rank,
+                "time": record.get("time"),
+                "dump_path": f"{rank}/{time_name}/phreeqc.dmp",
+                "dump_size": dump.get("size"),
+                "dump_sha256": dump.get("sha256"),
+                "marker_path": f"{rank}/{time_name}/phreeqc.complete",
+                "marker_size": marker.get("size"),
+                "marker_sha256": marker.get("sha256"),
+            }
+        )
+    return sorted(identities, key=lambda item: str(item["rank"]))
+
+
+def validate_start_handoff(
+    relation: str,
+    start_records: list[dict[str, object]],
+    checkpoints: list[dict[str, object]],
+    previous: object,
+) -> None:
+    if relation not in {"continuation", "retry"}:
+        return
+    if not isinstance(previous, dict):
+        raise SystemExit("Missing authoritative Kelvin handoff stage")
+    if relation == "continuation":
+        authoritative_fields = previous.get("endpoint_rank_outputs")
+        authoritative_checkpoints = previous.get("endpoint_checkpoints")
+    else:
+        authoritative_fields = previous.get("start_rank_inputs")
+        authoritative_checkpoints = previous.get("restart_checkpoints")
+    if start_records != authoritative_fields:
+        raise SystemExit("Kelvin start fields do not match the authoritative prior state")
+    if checkpoint_chain_identity(checkpoints) != checkpoint_chain_identity(
+        authoritative_checkpoints
+    ):
+        raise SystemExit("Kelvin start checkpoint does not match the authoritative prior state")
 
 
 def validate_recorded_runtime(payload: dict[str, object]) -> None:
@@ -665,7 +733,11 @@ def run_config(args: argparse.Namespace) -> None:
                 raise SystemExit(f"Stale checkpoint files in fresh-start directory: {stale}")
         else:
             checkpoints.append(
-                {"rank": rank.name, **checkpoint_record(start_dir, start_time)}
+                {
+                    "rank": rank.name,
+                    "time_name": start_dir.name,
+                    **checkpoint_record(start_dir, start_time),
+                }
             )
     initial_identity = records_digest(initial_records)
     chain_relation = validate_stage_invariants(
@@ -676,6 +748,10 @@ def run_config(args: argparse.Namespace) -> None:
         initial_identity,
         dictionary_identity,
         control_identity,
+    )
+    previous_stage = stages[-1] if stages else None
+    validate_start_handoff(
+        chain_relation, start_records, checkpoints, previous_stage
     )
     stage_base = f"{controls['startTime']:g}_to_{controls['endTime']:g}"
     attempt = 1
@@ -797,7 +873,13 @@ def finalise_run(args: argparse.Namespace) -> None:
                 {"phreeqc.dmp", "phreeqc.complete", "phreeqc.complete.tmp"},
             )
         )
-        checkpoints.append({"rank": rank.name, **checkpoint_record(endpoint_dir, endpoint)})
+        checkpoints.append(
+            {
+                "rank": rank.name,
+                "time_name": endpoint_dir.name,
+                **checkpoint_record(endpoint_dir, endpoint),
+            }
+        )
     stage.update(
         {
             "status": "completed",

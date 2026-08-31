@@ -61,21 +61,21 @@ completed pilots used interim GeoChemFoam commit
 Those measurements are valid for planning, but they cannot certify a different
 merged production binary.
 
-### 2. The tracked Kelvin case is not the pilot-tested case
+### 2. Historical base-case integration gap
 
-**Measured:** the executable Kelvin case tracked by the reviewed paper head is
+**Measured at base commit `019f7e4c`:** the executable Kelvin case was
 `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`.
 The paper `cases/3d_kelvin` directory contains documentation, not a second case
-copy.  The tracked tutorial uses HFO-prefixed surface-field names, whereas all
-completed pilots use the project `Surf_*` convention.  The figure wrapper is
-also hard-coded to that tutorial and requests HFO-prefixed fields in both its
+copy.  At that base commit, the tracked tutorial used HFO-prefixed surface-field
+names, whereas all completed pilots used the project `Surf_*` convention.  The
+base-commit figure wrapper requested HFO-prefixed fields in both its
 `required_fields` list and renderer arguments; the pilots wrote
 `Surf_sOMn+`, `Surf_wOMn+`, and `Surf_wOMg+`.
 
 Nine logical tracked inputs differ; the first row comprises both the template
 and realised dictionary, so ten file paths differ.  The pilot manifest recorded
 the first seven rows but omitted the two orchestrating scripts in the final two
-rows.  `Reviewed` is the canonical tutorial at the paper head; `Pilot` is the
+rows.  `Reviewed` is the canonical tutorial at base commit `019f7e4c`; `Pilot` is the
 preserved completed paper-case copy from which the measurements were made:
 
 | Canonical relative input | Reviewed SHA-256 | Pilot SHA-256 | Material difference |
@@ -90,24 +90,25 @@ preserved completed paper-case copy from which the measurements were made:
 | `runAll.sh` | `1c9d9c0e8b8532f4dd81b723987a45834a87c70589bd8fa9cd344ddf81c5db07` | `897746015273b2b7620964aa272f68d719999b240799f3d5c3c457be5e9559ff` | paper runtime configuration and selected-runtime logging |
 | `deleteReactiveTransport.sh` | `4dd4999413df2a3fab6b72dde113e9f1a08792f637deed63f077863fa115817b` | `ea8ef45b9339dead1218f34fbce97ace0b97bceeebca20a3e568aeed1943d92e` | provenance cleanup and `Surf_*` field/master names |
 
-The pilot `kelvin_provenance.py` is also absent from the reviewed tree, and the
-pilot cases contain untracked realised inputs and outputs.
+The pilot `kelvin_provenance.py` was also absent from that base tree, and the
+pilot cases contained untracked realised inputs and outputs.
 
-**Minimum coherent remediation, required before rerunning acceptance pilots:**
+**Current canonical integration:** the tracked head resolves this historical
+gap as one coherent case change.  The following are invariants that must remain
+true for acceptance and production:
 
-1. Keep the tracked tutorial above as the single canonical source and production
-   bundle; keep `papers/.../cases/3d_kelvin` documentation-only.  Integrate and
-   independently review all nine logical input changes plus the missing
-   `kelvin_provenance.py` there as one coherent case change.
+1. The tracked tutorial above is the single canonical source and production
+   bundle; `papers/.../cases/3d_kelvin` remains documentation-only.  It contains
+   the reviewed nine logical input changes and `kelvin_provenance.py`.
 2. Keep `configure_runtime.sh` at
    `papers/.../cases/configure_runtime.sh`.  Resolve it from the repository root
    in every tutorial script and detached command; do not rely on a case-relative
    `../configure_runtime.sh` path.
-3. Update the wrapper's `required_fields` and renderer arguments together from
-   the stale HFO-prefixed names to the tracked `Surf_*` names.  The Python
+3. The wrapper's `required_fields` and renderer arguments use the tracked
+   `Surf_*` names.  The Python
    renderers already accept field names as arguments; do not add ion-name or
    surface-name special cases to solver or adapter code.
-4. Regenerate a clean tutorial case from that commit and prove its manifest
+4. Regenerate each clean tutorial case from the accepted commit and prove its manifest
    covers all ten tracked paths, `kelvin_provenance.py`, chemistry, geometry,
    decomposed initial fields, runtime, solver, and linked libraries.  No local
    patch or untracked input may remain.

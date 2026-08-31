@@ -287,7 +287,9 @@ class StagedRestartTests(unittest.TestCase):
         self._write_fields(zero)
         for name in PROVENANCE.REQUIRED_POLYMESH_FILES:
             (mesh / name).write_text(f"{name}\n")
-        self._write_control(0.0, 1.0, 0.1, False)
+        self._write_control(
+            0.0, 1.0, 1.0, False, application="simpleDBSFoam"
+        )
         initialization_records = []
         for relative in PROVENANCE.REQUIRED_REALIZED_DICTIONARIES:
             snapshot = self.case / "initialization" / relative
@@ -309,6 +311,7 @@ class StagedRestartTests(unittest.TestCase):
             "transport_stages": [],
         }
         (self.case / "manifest.json").write_text(json.dumps(manifest) + "\n")
+        self._write_control(0.0, 1.0, 0.1, False)
         self.dictionary_paths = list(PROVENANCE.REQUIRED_REALIZED_DICTIONARIES)
 
     def tearDown(self) -> None:
@@ -424,12 +427,12 @@ class StagedRestartTests(unittest.TestCase):
             self._record_stage()
 
         self._write_control(1.0, 2.0, 0.2, True)
-        with self.assertRaisesRegex(SystemExit, "drifted from initialization"):
+        with self.assertRaisesRegex(SystemExit, "deltaT changed"):
             self._record_stage()
 
         self._write_control(1.0, 2.0, 0.1, True)
         self._write_control(1.0, 2.0, 0.1, True, application="wrongSolver")
-        with self.assertRaisesRegex(SystemExit, "drifted from initialization"):
+        with self.assertRaisesRegex(SystemExit, "immutable control settings changed"):
             self._record_stage()
 
         self._write_control(1.0, 2.0, 0.1, True)
@@ -466,6 +469,15 @@ class StagedRestartTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "not contiguous"):
             self._record_stage()
 
+    def test_flow_control_snapshot_allows_first_transport_anchor(self) -> None:
+        self._record_stage()
+        stage = json.loads((self.case / "manifest.json").read_text())["transport_stages"][0]
+        self.assertEqual(stage["deltaT"], 0.1)
+        self.assertEqual(
+            stage["immutable_control_sha256"],
+            PROVENANCE.immutable_control_digest(self.case / "system" / "controlDict"),
+        )
+
     def test_write_interval_must_span_stage(self) -> None:
         control = self.case / "system" / "controlDict"
         control.write_text(control.read_text().replace("writeInterval 1.0", "writeInterval 0.5"))
@@ -482,6 +494,36 @@ class StagedRestartTests(unittest.TestCase):
         stages = json.loads((self.case / "manifest.json").read_text())["transport_stages"]
         self.assertEqual([stage["status"] for stage in stages], ["completed", "attempted", "attempted"])
         self.assertEqual(stages[-1]["chain_relation"], "recovery")
+
+    def test_recovery_cannot_change_interrupted_target(self) -> None:
+        self._complete_initial_stage()
+        self._write_control(1.0, 5.0, 0.1, True)
+        self._record_stage()
+        self._make_checkpoint(3.0)
+        self._write_control(3.0, 10.0, 0.1, True)
+        with self.assertRaisesRegex(SystemExit, "preserve the attempted endpoint"):
+            self._record_stage()
+
+    def test_continuation_rejects_substituted_field_or_checkpoint(self) -> None:
+        self._complete_initial_stage()
+        field = self.case / "processor0" / "1" / "Mn+2"
+        original_field = field.read_bytes()
+        field.write_text("internalField uniform 9;\n")
+        self._write_control(1.0, 2.0, 0.1, True)
+        with self.assertRaisesRegex(SystemExit, "start fields do not match"):
+            self._record_stage()
+        field.write_bytes(original_field)
+
+        dump = self.case / "processor0" / "1" / "phreeqc.dmp"
+        marker = self.case / "processor0" / "1" / "phreeqc.complete"
+        dump.write_bytes(b"self-consistent-replacement")
+        digest = hashlib.sha256(dump.read_bytes()).hexdigest()
+        marker.write_text(
+            "GeoChemFoam-PHREEQCRM-checkpoint 1\n"
+            f"time 1\ndumpSize {dump.stat().st_size}\ndumpSHA256 {digest}\n"
+        )
+        with self.assertRaisesRegex(SystemExit, "start checkpoint does not match"):
+            self._record_stage()
 
     def test_uncompleted_endpoint_outside_interval_and_backtrack_fail(self) -> None:
         self._complete_initial_stage()
