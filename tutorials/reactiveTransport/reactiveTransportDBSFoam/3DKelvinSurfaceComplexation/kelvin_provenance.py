@@ -37,7 +37,7 @@ IDENTITY_ENV = (
     "WM_COMPILE_OPTION", "WM_LABEL_OPTION", "WM_MPLIB", "WM_OPTIONS",
     "WM_PRECISION_OPTION", "WM_PROJECT", "WM_PROJECT_VERSION",
 )
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 
 def sha256(path: Path) -> str:
@@ -334,10 +334,30 @@ def scalar_file(path: Path) -> int:
 def control_values(path: Path) -> dict[str, object]:
     text = path.read_text()
     values: dict[str, object] = {}
-    start_from = re.findall(r"^\s*startFrom\s+(\S+)\s*;", text, re.M)
-    if len(start_from) != 1 or start_from[0] != "startTime":
-        raise SystemExit(f"{path} must use startFrom startTime")
-    values["startFrom"] = "startTime"
+    required_words = {
+        "application": "reactiveTransportDBSFoam",
+        "startFrom": "startTime",
+        "stopAt": "endTime",
+        "writeControl": "adjustableRunTime",
+        "writeFormat": "ascii",
+        "writeCompression": "off",
+        "timeFormat": "general",
+        "runTimeModifiable": "yes",
+    }
+    for key, expected in required_words.items():
+        matches = re.findall(rf"^\s*{key}\s+(\S+)\s*;", text, re.M)
+        if len(matches) != 1 or matches[0] != expected:
+            raise SystemExit(f"{path} must contain exactly one {key} {expected}")
+        values[key] = expected
+    required_integers = {"purgeWrite": 0, "writePrecision": 16, "timePrecision": 8}
+    for key, expected in required_integers.items():
+        matches = re.findall(rf"^\s*{key}\s+([+\-]?\d+)\s*;", text, re.M)
+        if len(matches) != 1 or int(matches[0]) != expected:
+            raise SystemExit(f"{path} must contain exactly one {key} {expected}")
+        values[key] = expected
+    for forbidden in ("adjustTimeStep", "maxCo"):
+        if re.search(rf"^\s*{forbidden}\s+", text, re.M):
+            raise SystemExit(f"{path} must not define {forbidden}")
     for key in ("startTime", "endTime", "deltaT", "writeInterval"):
         matches = re.findall(rf"^\s*{key}\s+([0-9.eE+\-]+)\s*;", text, re.M)
         if len(matches) != 1:
@@ -348,6 +368,11 @@ def control_values(path: Path) -> dict[str, object]:
         if len(matches) != 1:
             raise SystemExit(f"Expected exactly one boolean {key} in {path}")
         values[key] = matches[0] == "true"
+    if not all(
+        math.isfinite(float(values[key]))
+        for key in ("startTime", "endTime", "deltaT", "writeInterval")
+    ):
+        raise SystemExit("Kelvin transport times and timestep must be finite")
     if values["endTime"] <= values["startTime"]:
         raise SystemExit("endTime must be greater than startTime")
     if values["deltaT"] <= 0 or values["writeInterval"] <= 0:
@@ -431,6 +456,9 @@ def exact_ranks(case: Path, count: int) -> list[Path]:
             f"Kelvin processor directories are not contiguous: expected={expected}, "
             f"actual={sorted(actual)}"
         )
+    symlinks = [name for name in expected if actual[name].is_symlink()]
+    if symlinks:
+        raise SystemExit(f"Kelvin processor directories must not be symlinks: {symlinks}")
     return [actual[name] for name in expected]
 
 
@@ -439,6 +467,8 @@ def numeric_time_directory(rank: Path, value: float) -> Path:
     for path in rank.iterdir():
         if not path.is_dir():
             continue
+        if path.is_symlink():
+            raise SystemExit(f"Kelvin time directory must not be a symlink: {path}")
         try:
             candidate = float(path.name)
         except ValueError:
@@ -450,10 +480,15 @@ def numeric_time_directory(rank: Path, value: float) -> Path:
     return matches[0]
 
 
-def checkpoint_record(time_dir: Path, expected_time: float) -> dict[str, object]:
+def checkpoint_record(
+    time_dir: Path, expected_time: float, case: Path, rank: str
+) -> dict[str, object]:
     dump = time_dir / "phreeqc.dmp"
     marker = time_dir / "phreeqc.complete"
     pending = time_dir / "phreeqc.complete.tmp"
+    for artifact in (dump, marker, pending):
+        if artifact.is_symlink():
+            raise SystemExit(f"Kelvin checkpoint artifact must not be a symlink: {artifact}")
     if pending.exists():
         raise SystemExit(f"Pending PHREEQCRM checkpoint marker exists: {pending}")
     if not dump.is_file() or not marker.is_file():
@@ -481,14 +516,28 @@ def checkpoint_record(time_dir: Path, expected_time: float) -> dict[str, object]
     dump_sha = sha256(dump)
     if dump_sha != parsed["dumpSHA256"]:
         raise SystemExit(f"PHREEQCRM checkpoint hash mismatch in {marker}")
+    expected_parent = case / rank / time_dir.name
+    if time_dir != expected_parent:
+        raise SystemExit(f"Kelvin checkpoint directory is not canonical: {time_dir}")
+    try:
+        dump_relative = dump.relative_to(case)
+        marker_relative = marker.relative_to(case)
+        dump.resolve().relative_to(case.resolve())
+        marker.resolve().relative_to(case.resolve())
+    except ValueError as error:
+        raise SystemExit(f"Kelvin checkpoint path escapes the case: {time_dir}") from error
     return {
         "time": marker_time,
         "dump": {
-            "path": str(dump.resolve()),
+            "path": str(dump_relative),
             "size": dump.stat().st_size,
             "sha256": dump_sha,
         },
-        "marker": {**file_record(marker), "size": marker.stat().st_size},
+        "marker": {
+            "path": str(marker_relative),
+            "size": marker.stat().st_size,
+            "sha256": sha256(marker),
+        },
     }
 
 
@@ -500,6 +549,8 @@ def tree_records(
     for path in sorted(item for item in root.rglob("*") if item.is_file()):
         if path.name in excluded:
             continue
+        if path.is_symlink():
+            raise SystemExit(f"Kelvin field or mesh artifact must not be a symlink: {path}")
         records.append(
             {
                 "path": str(path.relative_to(case)),
@@ -569,21 +620,17 @@ def validate_stage_invariants(
         return "continuation"
     if status != "attempted":
         raise SystemExit("Previous Kelvin stage has an invalid lifecycle status")
-    if same_attempt:
-        return "retry"
-    if start <= previous_start or start >= previous_end:
-        raise SystemExit(
-            "Interrupted Kelvin stage recovery must start within its attempted interval"
-        )
-    if float(controls["endTime"]) != previous_end:
-        raise SystemExit("Interrupted Kelvin recovery must preserve the attempted endpoint")
-    return "recovery"
+    if not same_attempt:
+        raise SystemExit("An attempted Kelvin stage permits only an exact retry")
+    return "retry"
 
 
 def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
     if not isinstance(records, list):
         raise SystemExit("Malformed Kelvin checkpoint chain records")
     identities = []
+    ranks = set()
+    paths = set()
     for record in records:
         if not isinstance(record, dict):
             raise SystemExit("Malformed Kelvin checkpoint chain record")
@@ -593,14 +640,38 @@ def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
             raise SystemExit("Malformed Kelvin checkpoint artifact record")
         rank = str(record.get("rank", ""))
         time_name = str(record.get("time_name", ""))
+        dump_path = f"{rank}/{time_name}/phreeqc.dmp"
+        marker_path = f"{rank}/{time_name}/phreeqc.complete"
+        if dump.get("path") != dump_path or marker.get("path") != marker_path:
+            raise SystemExit("Kelvin checkpoint record has a noncanonical path")
+        if not re.fullmatch(r"processor\d+", rank) or not time_name:
+            raise SystemExit("Kelvin checkpoint record has an invalid rank or time")
+        try:
+            named_time = float(time_name)
+            recorded_time = float(record["time"])
+            dump_size = int(dump["size"])
+            marker_size = int(marker["size"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise SystemExit("Kelvin checkpoint record has invalid identity values") from error
+        if not math.isclose(named_time, recorded_time, rel_tol=0.0, abs_tol=1.0e-12):
+            raise SystemExit("Kelvin checkpoint record time and path disagree")
+        if dump_size < 0 or marker_size <= 0:
+            raise SystemExit("Kelvin checkpoint record has invalid artifact sizes")
+        for artifact in (dump, marker):
+            if not re.fullmatch(r"[0-9a-f]{64}", str(artifact.get("sha256", ""))):
+                raise SystemExit("Kelvin checkpoint record has an invalid artifact hash")
+        if rank in ranks or dump_path in paths or marker_path in paths:
+            raise SystemExit("Kelvin checkpoint record has a duplicate rank or path")
+        ranks.add(rank)
+        paths.update((dump_path, marker_path))
         identities.append(
             {
                 "rank": rank,
                 "time": record.get("time"),
-                "dump_path": f"{rank}/{time_name}/phreeqc.dmp",
+                "dump_path": dump_path,
                 "dump_size": dump.get("size"),
                 "dump_sha256": dump.get("sha256"),
-                "marker_path": f"{rank}/{time_name}/phreeqc.complete",
+                "marker_path": marker_path,
                 "marker_size": marker.get("size"),
                 "marker_sha256": marker.get("sha256"),
             }
@@ -736,7 +807,7 @@ def run_config(args: argparse.Namespace) -> None:
                 {
                     "rank": rank.name,
                     "time_name": start_dir.name,
-                    **checkpoint_record(start_dir, start_time),
+                    **checkpoint_record(start_dir, start_time, case, rank.name),
                 }
             )
     initial_identity = records_digest(initial_records)
@@ -877,7 +948,7 @@ def finalise_run(args: argparse.Namespace) -> None:
             {
                 "rank": rank.name,
                 "time_name": endpoint_dir.name,
-                **checkpoint_record(endpoint_dir, endpoint),
+                **checkpoint_record(endpoint_dir, endpoint, case, rank.name),
             }
         )
     stage.update(

@@ -61,7 +61,9 @@ completed pilots used interim GeoChemFoam commit
 Those measurements are valid for planning, but they cannot certify a different
 merged production binary.
 
-### 2. Historical base-case integration gap
+## Resolved canonical case integration
+
+### Historical base-case integration gap
 
 **Measured at base commit `019f7e4c`:** the executable Kelvin case was
 `tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation`.
@@ -330,9 +332,10 @@ asked.
 The case wrapper records the stage as `attempted` before launching.  It changes
 that record to `completed` only after a zero solver exit, a clean endpoint in
 the solver log, and valid endpoint fields and checkpoint pairs on every rank.
-An interrupted attempt therefore remains explicit: a recovery may start only
-from an all-rank validated checkpoint inside that attempted interval.  A
-normal continuation must start at the last completed endpoint.
+An interrupted attempt therefore remains explicit and may only be retried from
+its recorded authoritative start with the identical interval and controls.  A
+normal continuation must start at the last completed endpoint.  Intermediate
+outputs from an interrupted attempt are not authenticated restart states.
 
 At stage completion, require status 0, solver `End`, the intended endpoint,
 and on every rank:
@@ -341,12 +344,13 @@ and on every rank:
 - no `phreeqc.complete.tmp` or other checkpoint temporary remains; and
 - the marker magic, time, dump size, and dump SHA-256 all validate.
 
-On a crash, preserve and hash the logs and incomplete artifacts first.  Select
-only the latest time whose marker/dump pair validates on every rank.  Restore
-with the identical runtime, inputs, timestep, rank count, and decomposition.
-Never restore from a time after manual/utility field modification.  Any later
-incomplete directory must be quarantined outside the restart copy; it must not
-be mistaken for evidence or overwrite the last complete checkpoint.
+On a crash, preserve and hash the logs and incomplete artifacts first.  Retry
+the exact attempted interval from its recorded start state with the identical
+runtime, inputs, timestep, rank count, and decomposition.  Quarantine every
+later incomplete or intermediate directory outside the retry copy.  Do not
+promote it to a restart state, even if it contains a self-consistent marker and
+dump.  If the intended endpoint and clean solver log are both complete, rerun
+the provenance finalisation check instead of creating a different stage.
 
 ## Production acceptance
 

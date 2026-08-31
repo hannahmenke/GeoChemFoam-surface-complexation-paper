@@ -333,9 +333,12 @@ class StagedRestartTests(unittest.TestCase):
         application: str = "reactiveTransportDBSFoam",
     ) -> None:
         (self.case / "system" / "controlDict").write_text(
-            f"application {application};\nstartFrom {start_from};\n"
+            f"application {application};\nstartFrom {start_from};\nstopAt endTime;\n"
             f"startTime {start};\nendTime {end};\n"
             f"deltaT {delta_t};\nwriteInterval {end - start};\n"
+            "writeControl adjustableRunTime;\npurgeWrite 0;\n"
+            "writeFormat ascii;\nwritePrecision 16;\nwriteCompression off;\n"
+            "timeFormat general;\ntimePrecision 8;\nrunTimeModifiable yes;\n"
             "phreeqcRestartCheckpoints true;\n"
             f"phreeqcRestoreCheckpoint {'true' if restore else 'false'};\n"
         )
@@ -432,7 +435,7 @@ class StagedRestartTests(unittest.TestCase):
 
         self._write_control(1.0, 2.0, 0.1, True)
         self._write_control(1.0, 2.0, 0.1, True, application="wrongSolver")
-        with self.assertRaisesRegex(SystemExit, "immutable control settings changed"):
+        with self.assertRaisesRegex(SystemExit, "application reactiveTransportDBSFoam"):
             self._record_stage()
 
         self._write_control(1.0, 2.0, 0.1, True)
@@ -484,16 +487,17 @@ class StagedRestartTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "writeInterval must equal"):
             self._record_stage()
 
-    def test_interrupted_attempt_can_resume_only_inside_validated_interval(self) -> None:
+    def test_interrupted_attempt_rejects_fabricated_intermediate_state(self) -> None:
         self._complete_initial_stage()
         self._write_control(1.0, 5.0, 0.1, True)
         self._record_stage()
         self._make_checkpoint(3.0)
+        (self.case / "processor0" / "3" / "Mn+2").write_text(
+            "internalField uniform 99;\n"
+        )
         self._write_control(3.0, 5.0, 0.1, True)
-        self._record_stage()
-        stages = json.loads((self.case / "manifest.json").read_text())["transport_stages"]
-        self.assertEqual([stage["status"] for stage in stages], ["completed", "attempted", "attempted"])
-        self.assertEqual(stages[-1]["chain_relation"], "recovery")
+        with self.assertRaisesRegex(SystemExit, "permits only an exact retry"):
+            self._record_stage()
 
     def test_recovery_cannot_change_interrupted_target(self) -> None:
         self._complete_initial_stage()
@@ -501,7 +505,7 @@ class StagedRestartTests(unittest.TestCase):
         self._record_stage()
         self._make_checkpoint(3.0)
         self._write_control(3.0, 10.0, 0.1, True)
-        with self.assertRaisesRegex(SystemExit, "preserve the attempted endpoint"):
+        with self.assertRaisesRegex(SystemExit, "permits only an exact retry"):
             self._record_stage()
 
     def test_continuation_rejects_substituted_field_or_checkpoint(self) -> None:
@@ -525,18 +529,108 @@ class StagedRestartTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "start checkpoint does not match"):
             self._record_stage()
 
+    def test_attempted_stage_allows_exact_authenticated_retry(self) -> None:
+        self._complete_initial_stage()
+        self._write_control(1.0, 2.0, 0.1, True)
+        self._record_stage()
+        field = self.case / "processor0" / "1" / "Mn+2"
+        original = field.read_bytes()
+        field.write_text("internalField uniform 88;\n")
+        with self.assertRaisesRegex(SystemExit, "start fields do not match"):
+            self._record_stage()
+        field.write_bytes(original)
+        self._record_stage()
+        stages = json.loads((self.case / "manifest.json").read_text())["transport_stages"]
+        self.assertEqual(stages[-1]["chain_relation"], "retry")
+        self.assertEqual(stages[-1]["start_rank_inputs"], stages[-2]["start_rank_inputs"])
+        self.assertEqual(
+            PROVENANCE.checkpoint_chain_identity(stages[-1]["restart_checkpoints"]),
+            PROVENANCE.checkpoint_chain_identity(stages[-2]["restart_checkpoints"]),
+        )
+
     def test_uncompleted_endpoint_outside_interval_and_backtrack_fail(self) -> None:
         self._complete_initial_stage()
         self._write_control(1.0, 5.0, 0.1, True)
         self._record_stage()
         self._make_checkpoint(5.0)
         self._write_control(5.0, 6.0, 0.1, True)
-        with self.assertRaisesRegex(SystemExit, "within its attempted interval"):
+        with self.assertRaisesRegex(SystemExit, "permits only an exact retry"):
             self._record_stage()
 
         self._make_checkpoint(6.0)
         self._write_control(6.0, 7.0, 0.1, True)
-        with self.assertRaisesRegex(SystemExit, "within its attempted interval"):
+        with self.assertRaisesRegex(SystemExit, "permits only an exact retry"):
+            self._record_stage()
+
+    def test_first_transport_control_contract_fails_closed(self) -> None:
+        control = self.case / "system" / "controlDict"
+        original = control.read_text()
+        mutations = {
+            "wrong application": original.replace(
+                "application reactiveTransportDBSFoam;", "application wrongSolver;"
+            ),
+            "wrong purge": original.replace("purgeWrite 0;", "purgeWrite 1;"),
+            "wrong write control": original.replace(
+                "writeControl adjustableRunTime;", "writeControl timeStep;"
+            ),
+            "adjust time step": original + "adjustTimeStep true;\n",
+            "max Co": original + "maxCo 99;\n",
+            "duplicate application": original + "application reactiveTransportDBSFoam;\n",
+            "nonfinite timestep": original.replace("deltaT 0.1;", "deltaT 1e999;"),
+        }
+        for label, text in mutations.items():
+            with self.subTest(label=label):
+                control.write_text(text)
+                with self.assertRaises(SystemExit):
+                    self._record_stage()
+        control.write_text(original)
+
+    def test_checkpoint_handoff_rejects_fabricated_historical_paths(self) -> None:
+        self._complete_initial_stage()
+        manifest = self.case / "manifest.json"
+        original = json.loads(manifest.read_text())
+        payload = json.loads(json.dumps(original))
+        checkpoint = payload["transport_stages"][0]["endpoint_checkpoints"][0]
+        checkpoint["dump"]["path"] = "/fabricated/dump"
+        checkpoint["marker"]["path"] = "/fabricated/marker"
+        manifest.write_text(json.dumps(payload) + "\n")
+        self._write_control(1.0, 2.0, 0.1, True)
+        with self.assertRaisesRegex(SystemExit, "noncanonical path"):
+            self._record_stage()
+
+        payload = json.loads(json.dumps(original))
+        payload["transport_stages"][0]["endpoint_checkpoints"].append(
+            json.loads(json.dumps(payload["transport_stages"][0]["endpoint_checkpoints"][0]))
+        )
+        manifest.write_text(json.dumps(payload) + "\n")
+        with self.assertRaisesRegex(SystemExit, "duplicate rank or path"):
+            self._record_stage()
+
+    def test_symlinked_rank_time_or_checkpoint_fails_closed(self) -> None:
+        rank = self.case / "processor0"
+        backing = self.case / "rank-backing"
+        rank.rename(backing)
+        rank.symlink_to(backing, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, "processor directories must not be symlinks"):
+            self._record_stage()
+        rank.unlink()
+        backing.rename(rank)
+
+        target = self.case / "time-target"
+        target.mkdir()
+        self._write_fields(target)
+        (rank / "2").symlink_to(target, target_is_directory=True)
+        self._write_control(2.0, 3.0, 0.1, True)
+        with self.assertRaisesRegex(SystemExit, "time directory must not be a symlink"):
+            self._record_stage()
+        (rank / "2").unlink()
+
+        self._make_checkpoint(2.0)
+        marker = rank / "2" / "phreeqc.complete"
+        marker_backing = rank / "2" / "marker-backing"
+        marker.rename(marker_backing)
+        marker.symlink_to(marker_backing.name)
+        with self.assertRaisesRegex(SystemExit, "checkpoint artifact must not be a symlink"):
             self._record_stage()
 
     def test_completed_stage_rejects_backtrack(self) -> None:
