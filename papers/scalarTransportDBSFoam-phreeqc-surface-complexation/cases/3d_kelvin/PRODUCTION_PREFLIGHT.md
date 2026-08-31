@@ -326,6 +326,13 @@ outer log must be nonempty, the recorded PID must exist, and the solver log
 must show the intended start time/runtime.  Do not poll thereafter unless
 asked.
 
+The case wrapper records the stage as `attempted` before launching.  It changes
+that record to `completed` only after a zero solver exit, a clean endpoint in
+the solver log, and valid endpoint fields and checkpoint pairs on every rank.
+An interrupted attempt therefore remains explicit: a recovery may start only
+from an all-rank validated checkpoint inside that attempted interval.  A
+normal continuation must start at the last completed endpoint.
+
 At stage completion, require status 0, solver `End`, the intended endpoint,
 and on every rank:
 

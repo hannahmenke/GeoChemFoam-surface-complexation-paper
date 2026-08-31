@@ -65,10 +65,16 @@ then
     export NP="$(find processor* -maxdepth 0 -type d -print | wc -l)"
     echo -e "Run reactiveTransportDBSFoam in parallel on $NP processors"
     if [[ "${PLATFORM:-}" == "ARCHER2" ]]; then
-        srun reactiveTransportDBSFoam -parallel > "$solver_log"
+        srun reactiveTransportDBSFoam -parallel > "$solver_log" 2>&1
     else
-        mpirun "${mpi_args[@]}" -np "$NP" reactiveTransportDBSFoam -parallel > "$solver_log"
+        mpirun "${mpi_args[@]}" -np "$NP" reactiveTransportDBSFoam -parallel > "$solver_log" 2>&1
     fi
 else
-    reactiveTransportDBSFoam > "$solver_log"
+    reactiveTransportDBSFoam > "$solver_log" 2>&1
 fi
+
+python kelvin_provenance.py finalise-run \
+    --manifest run_provenance.json \
+    --case . \
+    --control system/controlDict \
+    --solver-log "$solver_log"

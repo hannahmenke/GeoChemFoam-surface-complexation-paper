@@ -37,7 +37,7 @@ IDENTITY_ENV = (
     "WM_COMPILE_OPTION", "WM_LABEL_OPTION", "WM_MPLIB", "WM_OPTIONS",
     "WM_PRECISION_OPTION", "WM_PROJECT", "WM_PROJECT_VERSION",
 )
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 def sha256(path: Path) -> str:
@@ -265,9 +265,13 @@ def snapshot_dictionaries(root: Path, paths: list[Path]) -> list[dict[str, objec
 
 
 def require_realized_dictionaries(paths: list[Path]) -> None:
-    missing = [path for path in REQUIRED_REALIZED_DICTIONARIES if path not in paths]
-    if missing:
-        raise SystemExit(f"Missing required realised dictionaries: {missing}")
+    required = set(REQUIRED_REALIZED_DICTIONARIES)
+    supplied = set(paths)
+    if supplied != required or len(paths) != len(required):
+        raise SystemExit(
+            "Realised dictionary set differs from the required Kelvin set: "
+            f"missing={sorted(required - supplied)}, extra={sorted(supplied - required)}"
+        )
 
 
 def immutable_dictionary_digest(paths: list[Path]) -> str:
@@ -348,6 +352,13 @@ def control_values(path: Path) -> dict[str, object]:
         raise SystemExit("endTime must be greater than startTime")
     if values["deltaT"] <= 0 or values["writeInterval"] <= 0:
         raise SystemExit("deltaT and writeInterval must be positive")
+    if not math.isclose(
+        float(values["writeInterval"]),
+        float(values["endTime"]) - float(values["startTime"]),
+        rel_tol=0.0,
+        abs_tol=1.0e-12,
+    ):
+        raise SystemExit("writeInterval must equal endTime - startTime")
     return values
 
 
@@ -382,6 +393,43 @@ def verify_dictionary_snapshots(records: object) -> None:
         path = Path(str(snapshot.get("path", "")))
         if not path.is_file() or sha256(path) != snapshot.get("sha256"):
             raise SystemExit(f"Realised dictionary snapshot changed or disappeared: {path}")
+
+
+def verify_initial_dictionary_anchors(records: object, current: list[Path]) -> None:
+    if not isinstance(records, list):
+        raise SystemExit("Manifest has no initialization dictionary anchors")
+    anchors = {}
+    for record in records:
+        if not isinstance(record, dict) or not isinstance(record.get("snapshot"), dict):
+            raise SystemExit("Malformed initialization dictionary anchor")
+        source = Path(str(record.get("source", "")))
+        snapshot = Path(str(record["snapshot"].get("path", "")))
+        if source in anchors:
+            raise SystemExit(f"Duplicate initialization dictionary anchor: {source}")
+        anchors[source] = snapshot
+    if set(anchors) != set(REQUIRED_REALIZED_DICTIONARIES):
+        raise SystemExit("Initialization dictionary anchors are incomplete")
+    for path in current:
+        snapshot = anchors[path]
+        if path == Path("system/controlDict"):
+            matches = immutable_control_digest(path) == immutable_control_digest(snapshot)
+        else:
+            matches = sha256(path) == sha256(snapshot)
+        if not matches:
+            raise SystemExit(f"Realised dictionary drifted from initialization: {path}")
+
+
+def exact_ranks(case: Path, count: int) -> list[Path]:
+    if count <= 0:
+        raise SystemExit("Kelvin decomposition entries must be positive")
+    actual = {path.name: path for path in case.glob("processor*") if path.is_dir()}
+    expected = [f"processor{rank}" for rank in range(count)]
+    if set(actual) != set(expected):
+        raise SystemExit(
+            f"Kelvin processor directories are not contiguous: expected={expected}, "
+            f"actual={sorted(actual)}"
+        )
+    return [actual[name] for name in expected]
 
 
 def numeric_time_directory(rank: Path, value: float) -> Path:
@@ -460,7 +508,7 @@ def validate_stage_invariants(
     initial_identity: str,
     dictionary_identity: str,
     control_identity: str,
-) -> None:
+) -> str:
     stages = payload.get("transport_stages")
     if not isinstance(stages, list):
         raise SystemExit("Manifest has no transport stage list")
@@ -476,7 +524,7 @@ def validate_stage_invariants(
     if not stages:
         if not math.isclose(start, 0.0, rel_tol=0.0, abs_tol=1.0e-12):
             raise SystemExit("The first recorded Kelvin stage must start at zero")
-        return
+        return "initial"
     first = stages[0]
     if not isinstance(first, dict):
         raise SystemExit("Malformed first Kelvin stage record")
@@ -494,14 +542,26 @@ def validate_stage_invariants(
     previous = stages[-1]
     if not isinstance(previous, dict):
         raise SystemExit("Malformed previous Kelvin stage record")
+    status = previous.get("status")
+    previous_start = float(previous["startTime"])
+    previous_end = float(previous["endTime"])
     same_attempt = (
-        float(previous["startTime"]) == start
-        and float(previous["endTime"]) == float(controls["endTime"])
+        previous_start == start
+        and previous_end == float(controls["endTime"])
     )
-    if not same_attempt and not math.isclose(
-        start, float(previous["endTime"]), rel_tol=0.0, abs_tol=1.0e-12
-    ):
-        raise SystemExit("Kelvin stage does not continue from the previous endpoint")
+    if status == "completed":
+        if not math.isclose(start, previous_end, rel_tol=0.0, abs_tol=1.0e-12):
+            raise SystemExit("Kelvin stage backtracks or skips the last completed endpoint")
+        return "continuation"
+    if status != "attempted":
+        raise SystemExit("Previous Kelvin stage has an invalid lifecycle status")
+    if same_attempt:
+        return "retry"
+    if start <= previous_start or start >= previous_end:
+        raise SystemExit(
+            "Interrupted Kelvin stage recovery must start within its attempted interval"
+        )
+    return "recovery"
 
 
 def validate_recorded_runtime(payload: dict[str, object]) -> None:
@@ -538,7 +598,8 @@ def run_config(args: argparse.Namespace) -> None:
     ):
         raise SystemExit("Surface chemistry changed after initialization")
     verify_file_records(chemistry.get("files"))
-    verify_dictionary_snapshots(payload.get("realized_initialization_dictionaries"))
+    initialization_dictionaries = payload.get("realized_initialization_dictionaries")
+    verify_dictionary_snapshots(initialization_dictionaries)
     stages = payload.get("transport_stages")
     if not isinstance(stages, list):
         raise SystemExit("Manifest has no transport stage list")
@@ -547,6 +608,7 @@ def run_config(args: argparse.Namespace) -> None:
             raise SystemExit("Malformed Kelvin stage record")
         verify_dictionary_snapshots(stage.get("dictionaries"))
     require_realized_dictionaries(args.dictionary)
+    verify_initial_dictionary_anchors(initialization_dictionaries, args.dictionary)
     dictionary_identity = immutable_dictionary_digest(args.dictionary)
     case = args.case.resolve()
     expected_ranks = 1
@@ -555,9 +617,7 @@ def run_config(args: argparse.Namespace) -> None:
         value = scalar_file(case / "system" / key)
         decomposition[key] = value
         expected_ranks *= value
-    ranks = sorted(path for path in case.glob("processor*") if path.is_dir())
-    if len(ranks) != expected_ranks:
-        raise SystemExit(f"Expected {expected_ranks} ranks from decomposition, found {len(ranks)}")
+    ranks = exact_ranks(case, expected_ranks)
     start_time = float(controls["startTime"])
     masters = []
     initial_records = []
@@ -608,7 +668,7 @@ def run_config(args: argparse.Namespace) -> None:
                 {"rank": rank.name, **checkpoint_record(start_dir, start_time)}
             )
     initial_identity = records_digest(initial_records)
-    validate_stage_invariants(
+    chain_relation = validate_stage_invariants(
         payload,
         controls,
         expected_ranks,
@@ -627,6 +687,9 @@ def run_config(args: argparse.Namespace) -> None:
         **controls,
         "stage_id": stage_name,
         "attempt": attempt,
+        "status": "attempted",
+        "chain_relation": chain_relation,
+        "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "rank_count": expected_ranks,
         "decomposition": decomposition,
         "initial_case_identity_sha256": initial_identity,
@@ -646,6 +709,108 @@ def run_config(args: argparse.Namespace) -> None:
     payload.setdefault("transport_stages", []).append(stage)
     args.manifest.write_text(json.dumps(payload, indent=2) + "\n")
     print(f"Updated {args.manifest} for stage {stage_name}")
+
+
+def clean_solver_log(path: Path, endpoint: float) -> dict[str, str]:
+    if not path.is_file():
+        raise SystemExit(f"Missing Kelvin solver log: {path}")
+    text = path.read_text(errors="replace")
+    if re.search(r"FOAM FATAL|MPI_ABORT|Segmentation fault|Floating point exception", text):
+        raise SystemExit(f"Kelvin solver log contains a fatal error: {path}")
+    times = list(re.finditer(r"^\s*Time\s*=\s*([0-9.eE+\-]+)\s*$", text, re.M))
+    if not times or not math.isclose(
+        float(times[-1].group(1)), endpoint, rel_tol=0.0, abs_tol=1.0e-12
+    ):
+        raise SystemExit(f"Kelvin solver log does not reach endpoint {endpoint:g}: {path}")
+    ends = list(re.finditer(r"^\s*End\s*$", text, re.M))
+    if not ends or ends[-1].start() < times[-1].start():
+        raise SystemExit(f"Kelvin solver log has no clean End after its endpoint: {path}")
+    return file_record(path)
+
+
+def finalise_run(args: argparse.Namespace) -> None:
+    payload = json.loads(args.manifest.read_text())
+    if (
+        payload.get("case_id") != "3d_kelvin"
+        or payload.get("schema_version") != SCHEMA_VERSION
+    ):
+        raise SystemExit("Manifest is not the current Kelvin provenance schema")
+    validate_recorded_runtime(payload)
+    controls = control_values(args.control)
+    stages = payload.get("transport_stages")
+    if not isinstance(stages, list) or not stages or not isinstance(stages[-1], dict):
+        raise SystemExit("Manifest has no Kelvin stage to finalise")
+    stage = stages[-1]
+    if stage.get("status") != "attempted":
+        raise SystemExit("Latest Kelvin stage is not an uncompleted attempt")
+    chemistry = payload.get("chemistry")
+    if not isinstance(chemistry, dict):
+        raise SystemExit("Manifest has no immutable Kelvin inputs")
+    verify_file_records(chemistry.get("files"))
+    initialization_dictionaries = payload.get("realized_initialization_dictionaries")
+    verify_dictionary_snapshots(initialization_dictionaries)
+    verify_dictionary_snapshots(stage.get("dictionaries"))
+    dictionaries = list(REQUIRED_REALIZED_DICTIONARIES)
+    verify_initial_dictionary_anchors(initialization_dictionaries, dictionaries)
+    if immutable_dictionary_digest(dictionaries) != stage.get("immutable_dictionary_sha256"):
+        raise SystemExit("Kelvin immutable dictionaries changed before finalisation")
+    if immutable_control_digest(args.control) != stage.get("immutable_control_sha256"):
+        raise SystemExit("Kelvin immutable control settings changed before finalisation")
+    for key in (
+        "startFrom", "startTime", "endTime", "deltaT", "writeInterval",
+        "phreeqcRestartCheckpoints", "phreeqcRestoreCheckpoint",
+    ):
+        if controls[key] != stage.get(key):
+            raise SystemExit(f"Kelvin controls changed before finalisation: {key}")
+    endpoint = float(controls["endTime"])
+    log_record = clean_solver_log(args.solver_log, endpoint)
+    case = args.case.resolve()
+    decomposition = {
+        key: scalar_file(case / "system" / key) for key in ("NPX", "NPY", "NPZ")
+    }
+    if decomposition != stage.get("decomposition"):
+        raise SystemExit("Kelvin decomposition changed before finalisation")
+    ranks = exact_ranks(case, int(stage["rank_count"]))
+    initial_records = []
+    for rank in ranks:
+        initial_records.extend(tree_records(rank / "0", case))
+        initial_records.extend(tree_records(rank / "constant" / "polyMesh", case))
+    if records_digest(initial_records) != stage.get("initial_case_identity_sha256"):
+        raise SystemExit("Kelvin initial fields or mesh changed before finalisation")
+    outputs = []
+    checkpoints = []
+    endpoint_directories = []
+    for rank in ranks:
+        endpoint_dir = numeric_time_directory(rank, endpoint)
+        endpoint_directories.append(
+            {"rank": rank.name, "path": str(endpoint_dir.resolve()), "time_name": endpoint_dir.name}
+        )
+        missing = [
+            name for name in REQUIRED_INITIAL_FIELDS if not (endpoint_dir / name).is_file()
+        ]
+        if missing:
+            raise SystemExit(f"Incomplete Kelvin endpoint fields in {endpoint_dir}: {missing}")
+        outputs.extend(
+            tree_records(
+                endpoint_dir,
+                case,
+                {"phreeqc.dmp", "phreeqc.complete", "phreeqc.complete.tmp"},
+            )
+        )
+        checkpoints.append({"rank": rank.name, **checkpoint_record(endpoint_dir, endpoint)})
+    stage.update(
+        {
+            "status": "completed",
+            "solver_exit_status": 0,
+            "completed_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "solver_log": log_record,
+            "endpoint_time_directories": endpoint_directories,
+            "endpoint_rank_outputs": outputs,
+            "endpoint_checkpoints": checkpoints,
+        }
+    )
+    args.manifest.write_text(json.dumps(payload, indent=2) + "\n")
+    print(f"Finalised {stage['stage_id']} in {args.manifest}")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -677,6 +842,12 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--snapshot-root", type=Path, required=True)
     run.add_argument("--dictionary", action="append", type=Path, default=[])
     run.set_defaults(func=run_config)
+    finalise = sub.add_parser("finalise-run")
+    finalise.add_argument("--manifest", type=Path, required=True)
+    finalise.add_argument("--case", type=Path, required=True)
+    finalise.add_argument("--control", type=Path, required=True)
+    finalise.add_argument("--solver-log", type=Path, required=True)
+    finalise.set_defaults(func=finalise_run)
     return main
 
 
