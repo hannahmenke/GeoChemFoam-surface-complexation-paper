@@ -151,8 +151,13 @@ class JsonAndGeometryTests(unittest.TestCase):
     def test_front_quantiles_use_raw_monotone_inventory(self) -> None:
         with mock.patch.object(comparison, "NX", 4):
             fronts = comparison.front_positions(np.array([1.0, 1.0, 2.0, 6.0]))
-            self.assertEqual(fronts["x10"]["cell_index"], 0)
-            self.assertEqual(fronts["x50"]["cell_index"], 3)
+            self.assertTrue(fronts["defined"])
+            self.assertEqual(fronts["quantiles"]["x10"]["cell_index"], 0)
+            self.assertEqual(fronts["quantiles"]["x50"]["cell_index"], 3)
+            self.assertEqual(
+                comparison.front_positions(np.zeros(4)),
+                {"defined": False, "quantiles": {}},
+            )
             with self.assertRaisesRegex(comparison.ComparisonError, "require clipping"):
                 comparison.front_positions(np.array([1.0, -2.0, 3.0, 4.0]))
             with self.assertRaisesRegex(comparison.ComparisonError, "negative bins"):
@@ -393,12 +398,21 @@ class ScientificGateTests(unittest.TestCase):
                 name: True for name in comparison.FIELD_SPECS
             },
             "front_differences": {
-                comparison.MN_FREE: {"x10": {"cell_index_delta": 0}},
-                comparison.MN_SORBED: {"x90": {"cell_index_delta": front_shift}},
+                comparison.MN_FREE: {
+                    "defined": True,
+                    "quantiles": {"x10": {"cell_index_delta": 0}},
+                },
+                comparison.MN_SORBED: {
+                    "defined": True,
+                    "quantiles": {"x90": {"cell_index_delta": front_shift}},
+                },
             },
         }
 
-    def _case(self, root: Path, suffix: str, mn: float) -> Path:
+    def _case(
+        self, root: Path, suffix: str, mn: float,
+        endpoint_sorbed: float | None = None,
+    ) -> Path:
         case = root / suffix
         rank = case / "processor0"
         for time_name in ("0", "0.5"):
@@ -410,6 +424,10 @@ class ScientificGateTests(unittest.TestCase):
                 "Mg+2": 3.0, "Cl-": 4.0, "Surf_sOMn+": 0.25,
                 "Surf_wOMn+": 0.75, "Surf_wOMg+": 0.5,
             }
+            if endpoint_sorbed is not None:
+                total = endpoint_sorbed if time_name == "0.5" else 0.0
+                values["Surf_sOMn+"] = 0.25 * total
+                values["Surf_wOMn+"] = 0.75 * total
             for name, (_, _, kind) in comparison.FIELD_SPECS.items():
                 if kind == "cell_vector":
                     foam_vector(directory / name, (0.0, 0.0, 0.0))
@@ -448,6 +466,56 @@ class ScientificGateTests(unittest.TestCase):
             self.assertFalse(result["mass_balance_scope"]["boundary_flux_closure_evaluated"])
             self.assertIn("neither complete elemental inventories", result["mass_balance_scope"]["reason"])
 
+    def test_scientific_metrics_accept_both_zero_sorbed_fronts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            left = self._case(root, "left", 1.0, endpoint_sorbed=0.0)
+            right = self._case(root, "right", 1.0, endpoint_sorbed=0.0)
+            geometry = {
+                "addressing": np.array([0]), "volumes": np.array([2.0e-15]),
+                "centres": np.array([[5e-6, 5e-6, 5e-6]]), "x_index": np.array([0]),
+                "internal_face_count": 0,
+            }
+            with (
+                mock.patch.object(comparison, "RANK_COUNT", 1),
+                mock.patch.object(comparison, "GLOBAL_CELL_COUNT", 1),
+                mock.patch.object(comparison, "NX", 1),
+                mock.patch.object(comparison, "mesh_geometry", return_value=geometry),
+            ):
+                result = comparison.scientific_metrics(
+                    left, right, 0.5, 0.5, "uninterrupted", "restarted"
+                )
+            self.assertEqual(
+                result["fronts"]["uninterrupted"][comparison.MN_SORBED],
+                {"defined": False, "quantiles": {}},
+            )
+            self.assertEqual(
+                result["front_differences"][comparison.MN_SORBED],
+                {"defined": False, "quantiles": {}},
+            )
+            self.assertTrue(all(comparison.evaluate_restart(result)["checks"].values()))
+
+    def test_scientific_metrics_reject_one_sided_zero_sorbed_front(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            left = self._case(root, "left", 1.0, endpoint_sorbed=0.0)
+            right = self._case(root, "right", 1.0, endpoint_sorbed=1.0)
+            geometry = {
+                "addressing": np.array([0]), "volumes": np.array([2.0e-15]),
+                "centres": np.array([[5e-6, 5e-6, 5e-6]]), "x_index": np.array([0]),
+                "internal_face_count": 0,
+            }
+            with (
+                mock.patch.object(comparison, "RANK_COUNT", 1),
+                mock.patch.object(comparison, "GLOBAL_CELL_COUNT", 1),
+                mock.patch.object(comparison, "NX", 1),
+                mock.patch.object(comparison, "mesh_geometry", return_value=geometry),
+                self.assertRaisesRegex(comparison.ComparisonError, "defined in only one"),
+            ):
+                comparison.scientific_metrics(
+                    left, right, 0.5, 0.5, "uninterrupted", "restarted"
+                )
+
     def test_convergence_thresholds_are_strict_and_transparent(self) -> None:
         metrics = {
             "relative_endpoint_reported_species_amount_difference": {
@@ -459,8 +527,14 @@ class ScientificGateTests(unittest.TestCase):
                 comparison.MN_FREE: 0.001, comparison.MN_SORBED: 0.002
             },
             "front_differences": {
-                comparison.MN_FREE: {"x10": {"cell_index_delta": 0}},
-                comparison.MN_SORBED: {"x90": {"cell_index_delta": 1}},
+                comparison.MN_FREE: {
+                    "defined": True,
+                    "quantiles": {"x10": {"cell_index_delta": 0}},
+                },
+                comparison.MN_SORBED: {
+                    "defined": True,
+                    "quantiles": {"x90": {"cell_index_delta": 1}},
+                },
             },
         }
         result = comparison.evaluate_convergence(metrics)
@@ -475,6 +549,16 @@ class ScientificGateTests(unittest.TestCase):
         metrics = self.restart_metrics(front_shift=1)
         result = comparison.evaluate_restart(metrics)
         self.assertFalse(result["checks"]["front_indices_identical"])
+
+    def test_restart_gate_does_not_fabricate_an_empty_front_shift(self) -> None:
+        metrics = self.restart_metrics()
+        metrics["front_differences"] = {
+            phase: {"defined": False, "quantiles": {}}
+            for phase in (comparison.MN_FREE, comparison.MN_SORBED)
+        }
+        result = comparison.evaluate_restart(metrics)
+        self.assertIsNone(result["evaluated"]["maximum_front_cell_shift"])
+        self.assertTrue(result["checks"]["front_indices_identical"])
 
     def test_restart_gate_catches_unreported_hydrogen_field_difference(self) -> None:
         metrics = self.restart_metrics(hydrogen_difference=0.5)
@@ -678,8 +762,14 @@ class ScheduleAndCliTests(unittest.TestCase):
                     comparison.MN_FREE: 0.001, comparison.MN_SORBED: 0.001,
                 },
                 "front_differences": {
-                    comparison.MN_FREE: {"x10": {"cell_index_delta": 0}},
-                    comparison.MN_SORBED: {"x90": {"cell_index_delta": 1}},
+                    comparison.MN_FREE: {
+                        "defined": True,
+                        "quantiles": {"x10": {"cell_index_delta": 0}},
+                    },
+                    comparison.MN_SORBED: {
+                        "defined": True,
+                        "quantiles": {"x90": {"cell_index_delta": 1}},
+                    },
                 },
             }
             acceptance = comparison.evaluate_convergence(metrics)

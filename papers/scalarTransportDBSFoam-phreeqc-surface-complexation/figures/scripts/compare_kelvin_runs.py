@@ -1175,24 +1175,35 @@ def inventory_totals(parts: dict[str, list[float]]) -> dict[str, float]:
     return result
 
 
-def front_positions(profile: np.ndarray) -> dict[str, dict[str, object]]:
+def front_positions(profile: np.ndarray) -> dict[str, Any]:
     require(bool(np.all(np.isfinite(profile))), "Inventory profile is non-finite")
     require(bool(np.all(profile >= 0.0)),
             "Inventory profile contains negative bins; front location would require clipping")
     total = float(np.sum(profile, dtype=np.float64))
-    require(total > 0.0 and math.isfinite(total), "Cannot locate a front in an empty profile")
+    require(math.isfinite(total), "Inventory profile total is non-finite")
+    if total == 0.0:
+        return {"defined": False, "quantiles": {}}
     cumulative = np.cumsum(profile, dtype=np.float64)
     require(bool(np.all(np.diff(cumulative) >= 0.0)),
             "Inventory profile is not monotone after nonnegative validation")
-    result: dict[str, dict[str, object]] = {}
+    quantiles: dict[str, dict[str, object]] = {}
     for quantile in FRONT_QUANTILES:
         index = int(np.searchsorted(cumulative, quantile * total, side="left"))
         require(0 <= index < NX, "Front index is outside the Kelvin domain")
-        result[f"x{int(100 * quantile)}"] = {
+        quantiles[f"x{int(100 * quantile)}"] = {
             "cell_index": index,
             "position_m": (index + 0.5) * CELL_SIZE_M,
         }
-    return result
+    return {"defined": True, "quantiles": quantiles}
+
+
+def front_cell_shifts(deltas: dict[str, dict[str, Any]]) -> list[int]:
+    return [
+        abs(int(record["cell_index_delta"]))
+        for phase in deltas.values()
+        if phase["defined"]
+        for record in phase["quantiles"].values()
+    ]
 
 
 def scientific_metrics(
@@ -1381,15 +1392,33 @@ def scientific_metrics(
     }
     front_deltas: dict[str, dict[str, object]] = {}
     for phase in (MN_FREE, MN_SORBED):
-        front_deltas[phase] = {}
-        for key in fronts[left_label][phase]:
-            left_front = fronts[left_label][phase][key]
-            right_front = fronts[right_label][phase][key]
+        left_phase = fronts[left_label][phase]
+        right_phase = fronts[right_label][phase]
+        require(
+            left_phase["defined"] == right_phase["defined"],
+            f"{phase} front is defined in only one comparison case",
+        )
+        phase_deltas: dict[str, object] = {
+            "defined": left_phase["defined"], "quantiles": {},
+        }
+        if not left_phase["defined"]:
+            front_deltas[phase] = phase_deltas
+            continue
+        left_quantiles = left_phase["quantiles"]
+        right_quantiles = right_phase["quantiles"]
+        require(left_quantiles.keys() == right_quantiles.keys(),
+                f"{phase} front quantiles differ between comparison cases")
+        quantile_deltas: dict[str, dict[str, object]] = {}
+        for key in left_quantiles:
+            left_front = left_quantiles[key]
+            right_front = right_quantiles[key]
             index_delta = int(left_front["cell_index"]) - int(right_front["cell_index"])
-            front_deltas[phase][key] = {
+            quantile_deltas[key] = {
                 "cell_index_delta": index_delta,
                 "position_delta_m": index_delta * CELL_SIZE_M,
             }
+        phase_deltas["quantiles"] = quantile_deltas
+        front_deltas[phase] = phase_deltas
 
     changes = {
         left_label: {name: left_total[name] - left_initial[name] for name in left_total},
@@ -1432,7 +1461,8 @@ def scientific_metrics(
         "complete_state_boundary_structure_equal": boundary_structure_equal,
         "front_definition": (
             "x-locations of 10%, 50%, and 90% cumulative free Mn+2 aqueous-species "
-            "amount or selected Mn-bearing surface-complex-species amount"
+            "amount or selected Mn-bearing surface-complex-species amount; a front is "
+            "undefined, with no quantiles compared, when the phase amount is exactly zero"
         ),
         "fronts": fronts,
         "front_differences": front_deltas,
@@ -1459,11 +1489,8 @@ def evaluate_convergence(metrics: dict[str, Any]) -> dict[str, object]:
     deltas = metrics["front_differences"]
     inventory_values = {name: inventory[name] for name in (MN_FREE, MN_SORBED, MN_REPORTED)}
     l1_values = {name: l1[name] for name in (MN_FREE, MN_SORBED)}
-    front_cells = [
-        abs(int(record["cell_index_delta"]))
-        for phase in deltas.values() for record in phase.values()
-    ]
-    maximum_cells = max(front_cells)
+    front_cells = front_cell_shifts(deltas)
+    maximum_cells = max(front_cells) if front_cells else None
     return {
         "tolerances": {
             "Mn_reported_species_amount_relative": {
@@ -1477,7 +1504,9 @@ def evaluate_convergence(metrics: dict[str, Any]) -> dict[str, object]:
             "Mn_reported_species_amount_relative": inventory_values,
             "Mn_spatial_relative_L1": l1_values,
             "maximum_front_cell_shift": maximum_cells,
-            "maximum_front_relative_domain_shift": maximum_cells / NX,
+            "maximum_front_relative_domain_shift": (
+                None if maximum_cells is None else maximum_cells / NX
+            ),
         },
         "checks": {
             "Mn_reported_species_amounts_below_1pct": all(
@@ -1486,8 +1515,10 @@ def evaluate_convergence(metrics: dict[str, Any]) -> dict[str, object]:
             "Mn_spatial_L1_below_1pct": all(
                 value < CONVERGENCE_RELATIVE_TOLERANCE for value in l1_values.values()
             ),
-            "fronts_within_one_cell": maximum_cells <= 1,
-            "fronts_below_1pct_domain": maximum_cells / NX < 0.01,
+            "fronts_within_one_cell": maximum_cells is None or maximum_cells <= 1,
+            "fronts_below_1pct_domain": (
+                maximum_cells is None or maximum_cells / NX < 0.01
+            ),
         },
     }
 
@@ -1511,10 +1542,7 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
     field_scale = metrics["complete_state_fieldwise_maximum_absolute_magnitude"]
     boundary_absolute = metrics["complete_state_boundary_maximum_absolute_difference"]
     boundary_scale = metrics["complete_state_boundary_maximum_absolute_magnitude"]
-    front_cells = [
-        abs(int(record["cell_index_delta"]))
-        for phase in deltas.values() for record in phase.values()
-    ]
+    front_cells = front_cell_shifts(deltas)
     return {
         "tolerances": {
             "reported_species_amount_combined": {
@@ -1552,7 +1580,7 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
             "complete_state_fieldwise_maximum_absolute_magnitude": field_scale,
             "complete_state_boundary_maximum_absolute_difference": boundary_absolute,
             "complete_state_boundary_maximum_absolute_magnitude": boundary_scale,
-            "maximum_front_cell_shift": max(front_cells),
+            "maximum_front_cell_shift": max(front_cells) if front_cells else None,
         },
         "checks": {
             "reported_species_amounts_within_combined_tolerance": all(
@@ -1587,7 +1615,7 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
                 for name in boundary_l1
             ),
             "boundary_structures_identical": all(boundary_structure.values()),
-            "front_indices_identical": max(front_cells) == 0,
+            "front_indices_identical": not front_cells or max(front_cells) == 0,
         },
     }
 
