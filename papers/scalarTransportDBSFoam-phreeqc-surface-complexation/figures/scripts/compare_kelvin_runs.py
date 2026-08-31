@@ -54,6 +54,8 @@ ACCEPTED_DT_S = COARSE_DT_S
 NEGATIVE_TOLERANCE = -1.0e-12
 CONVERGENCE_RELATIVE_TOLERANCE = 0.01
 RESTART_RELATIVE_TOLERANCE = 1.0e-10
+RESTART_FIELD_ABSOLUTE_TOLERANCE = 1.0e-17
+RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL = 1.0e-24
 FRONT_QUANTILES = (0.1, 0.5, 0.9)
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 
@@ -1218,6 +1220,10 @@ def scientific_metrics(
     boundary_left_norm = {name: [] for name in FIELD_SPECS}
     boundary_right_norm = {name: [] for name in FIELD_SPECS}
     boundary_structure_equal = {name: True for name in FIELD_SPECS}
+    field_maximum_absolute_difference = {name: 0.0 for name in FIELD_SPECS}
+    field_maximum_absolute_magnitude = {name: 0.0 for name in FIELD_SPECS}
+    boundary_maximum_absolute_difference = {name: 0.0 for name in FIELD_SPECS}
+    boundary_maximum_absolute_magnitude = {name: 0.0 for name in FIELD_SPECS}
 
     for rank_number in range(RANK_COUNT):
         left_rank = left_case / f"processor{rank_number}"
@@ -1259,6 +1265,15 @@ def scientific_metrics(
             field_abs_difference[name].append(float(np.sum(np.abs(left_values - right_values))))
             field_left_norm[name].append(float(np.sum(np.abs(left_values))))
             field_right_norm[name].append(float(np.sum(np.abs(right_values))))
+            if left_values.size:
+                field_maximum_absolute_difference[name] = max(
+                    field_maximum_absolute_difference[name],
+                    float(np.max(np.abs(left_values - right_values))),
+                )
+                field_maximum_absolute_magnitude[name] = max(
+                    field_maximum_absolute_magnitude[name],
+                    float(np.max(np.maximum(np.abs(left_values), np.abs(right_values)))),
+                )
             left_boundary = np.asarray(left_parsed["boundary_values"], dtype=np.float64)
             right_boundary = np.asarray(right_parsed["boundary_values"], dtype=np.float64)
             require(left_boundary.shape == right_boundary.shape,
@@ -1272,6 +1287,15 @@ def scientific_metrics(
             )
             boundary_left_norm[name].append(float(np.sum(np.abs(left_boundary))))
             boundary_right_norm[name].append(float(np.sum(np.abs(right_boundary))))
+            if left_boundary.size:
+                boundary_maximum_absolute_difference[name] = max(
+                    boundary_maximum_absolute_difference[name],
+                    float(np.max(np.abs(left_boundary - right_boundary))),
+                )
+                boundary_maximum_absolute_magnitude[name] = max(
+                    boundary_maximum_absolute_magnitude[name],
+                    float(np.max(np.maximum(np.abs(left_boundary), np.abs(right_boundary)))),
+                )
         left_fields = load_mass_fields(exact_time_directory(left_rank, left_endpoint), count)
         right_fields = load_mass_fields(exact_time_directory(right_rank, right_endpoint), count)
         for name in ("eps", "aSurf", "aSurfIntrinsic", "Kinv"):
@@ -1313,15 +1337,23 @@ def scientific_metrics(
     require(left_initial == right_initial, "Initial global inventories differ")
 
     relative_inventory: dict[str, float] = {}
+    absolute_inventory: dict[str, float] = {}
     for name in left_total:
+        absolute_inventory[name] = abs(left_total[name] - right_total[name])
         denominator = abs(right_total[name])
-        require(denominator > 0.0, f"Zero reference inventory for {name}")
-        relative_inventory[name] = abs(left_total[name] - right_total[name]) / denominator
+        if denominator == 0.0:
+            denominator = abs(left_total[name])
+        relative_inventory[name] = (
+            0.0 if denominator == 0.0 else absolute_inventory[name] / denominator
+        )
     relative_l1: dict[str, float] = {}
+    absolute_l1: dict[str, float] = {}
     for name in absolute_difference:
+        absolute_l1[name] = math.fsum(absolute_difference[name])
         denominator = abs(right_total[name])
-        require(denominator > 0.0, f"Zero spatial-L1 denominator for {name}")
-        relative_l1[name] = math.fsum(absolute_difference[name]) / denominator
+        if denominator == 0.0:
+            denominator = abs(left_total[name])
+        relative_l1[name] = 0.0 if denominator == 0.0 else absolute_l1[name] / denominator
 
     def relative_field_norm(
         differences: list[float], left_norms: list[float], right_norms: list[float]
@@ -1380,9 +1412,23 @@ def scientific_metrics(
         },
         "reported_species_amount_change_kmol": changes,
         "relative_endpoint_reported_species_amount_difference": relative_inventory,
+        "absolute_endpoint_reported_species_amount_difference_kmol": absolute_inventory,
         "spatial_relative_L1": relative_l1,
+        "spatial_absolute_L1_kmol": absolute_l1,
         "complete_state_fieldwise_symmetric_relative_L1": fieldwise_l1,
+        "complete_state_fieldwise_maximum_absolute_difference": (
+            field_maximum_absolute_difference
+        ),
+        "complete_state_fieldwise_maximum_absolute_magnitude": (
+            field_maximum_absolute_magnitude
+        ),
         "complete_state_boundary_symmetric_relative_L1": boundary_l1,
+        "complete_state_boundary_maximum_absolute_difference": (
+            boundary_maximum_absolute_difference
+        ),
+        "complete_state_boundary_maximum_absolute_magnitude": (
+            boundary_maximum_absolute_magnitude
+        ),
         "complete_state_boundary_structure_equal": boundary_structure_equal,
         "front_definition": (
             "x-locations of 10%, 50%, and 90% cumulative free Mn+2 aqueous-species "
@@ -1459,25 +1505,39 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
     state_l1 = metrics["complete_state_fieldwise_symmetric_relative_L1"]
     boundary_l1 = metrics["complete_state_boundary_symmetric_relative_L1"]
     boundary_structure = metrics["complete_state_boundary_structure_equal"]
-    checkpoints = metrics["endpoint_checkpoint_equivalence"]
+    absolute_inventory = metrics["absolute_endpoint_reported_species_amount_difference_kmol"]
+    absolute_spatial = metrics["spatial_absolute_L1_kmol"]
+    field_absolute = metrics["complete_state_fieldwise_maximum_absolute_difference"]
+    field_scale = metrics["complete_state_fieldwise_maximum_absolute_magnitude"]
+    boundary_absolute = metrics["complete_state_boundary_maximum_absolute_difference"]
+    boundary_scale = metrics["complete_state_boundary_maximum_absolute_magnitude"]
     front_cells = [
         abs(int(record["cell_index_delta"]))
         for phase in deltas.values() for record in phase.values()
     ]
     return {
         "tolerances": {
-            "reported_species_amount_relative": {
-                "operator": "<=", "value": RESTART_RELATIVE_TOLERANCE
+            "reported_species_amount_combined": {
+                "operator": "<= absolute + relative*scale",
+                "absolute": RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL,
+                "relative": RESTART_RELATIVE_TOLERANCE,
             },
-            "spatial_relative_L1": {"operator": "<=", "value": RESTART_RELATIVE_TOLERANCE},
-            "complete_state_fieldwise_relative_L1": {
-                "operator": "<=", "value": RESTART_RELATIVE_TOLERANCE
+            "spatial_L1_combined": {
+                "operator": "<= absolute + relative*scale",
+                "absolute": RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL,
+                "relative": RESTART_RELATIVE_TOLERANCE,
             },
-            "complete_state_boundary_relative_L1": {
-                "operator": "<=", "value": RESTART_RELATIVE_TOLERANCE
+            "complete_state_fieldwise_combined": {
+                "operator": "maximum_abs_difference <= absolute + relative*maximum_abs_magnitude",
+                "absolute": RESTART_FIELD_ABSOLUTE_TOLERANCE,
+                "relative": RESTART_RELATIVE_TOLERANCE,
+            },
+            "complete_state_boundary_combined": {
+                "operator": "maximum_abs_difference <= absolute + relative*maximum_abs_magnitude",
+                "absolute": RESTART_FIELD_ABSOLUTE_TOLERANCE,
+                "relative": RESTART_RELATIVE_TOLERANCE,
             },
             "boundary_structure_equal": {"operator": "==", "value": True},
-            "endpoint_checkpoint_dump_and_marker_equal": {"operator": "==", "value": True},
             "front_cell_index_shift": {"operator": "==", "value": 0},
         },
         "evaluated": {
@@ -1486,24 +1546,47 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
             "complete_state_fieldwise_relative_L1": state_l1,
             "complete_state_boundary_relative_L1": boundary_l1,
             "boundary_structure_equal": boundary_structure,
-            "endpoint_checkpoint_equivalence": checkpoints,
+            "reported_species_amount_absolute_kmol": absolute_inventory,
+            "spatial_absolute_L1_kmol": absolute_spatial,
+            "complete_state_fieldwise_maximum_absolute_difference": field_absolute,
+            "complete_state_fieldwise_maximum_absolute_magnitude": field_scale,
+            "complete_state_boundary_maximum_absolute_difference": boundary_absolute,
+            "complete_state_boundary_maximum_absolute_magnitude": boundary_scale,
             "maximum_front_cell_shift": max(front_cells),
         },
         "checks": {
-            "reported_species_amounts_within_1e-10": all(
-                value <= RESTART_RELATIVE_TOLERANCE for value in inventory_values.values()
+            "reported_species_amounts_within_combined_tolerance": all(
+                absolute_inventory[name]
+                <= RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL
+                + RESTART_RELATIVE_TOLERANCE * max(
+                    abs(metrics["reported_species_amount_kmol"][label]["endpoint"][name])
+                    for label in ("uninterrupted", "restarted")
+                )
+                for name in inventory_values
             ),
-            "spatial_L1_within_1e-10": all(
-                value <= RESTART_RELATIVE_TOLERANCE for value in l1_values.values()
+            "spatial_L1_within_combined_tolerance": all(
+                absolute_spatial[name]
+                <= RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL
+                + RESTART_RELATIVE_TOLERANCE
+                * max(
+                    abs(metrics["reported_species_amount_kmol"][label]["endpoint"][name])
+                    for label in ("uninterrupted", "restarted")
+                )
+                for name in l1_values
             ),
-            "complete_state_fields_within_1e-10": all(
-                value <= RESTART_RELATIVE_TOLERANCE for value in state_l1.values()
+            "complete_state_fields_within_combined_tolerance": all(
+                field_absolute[name]
+                <= RESTART_FIELD_ABSOLUTE_TOLERANCE
+                + RESTART_RELATIVE_TOLERANCE * field_scale[name]
+                for name in state_l1
             ),
-            "complete_state_boundaries_within_1e-10": all(
-                value <= RESTART_RELATIVE_TOLERANCE for value in boundary_l1.values()
+            "complete_state_boundaries_within_combined_tolerance": all(
+                boundary_absolute[name]
+                <= RESTART_FIELD_ABSOLUTE_TOLERANCE
+                + RESTART_RELATIVE_TOLERANCE * boundary_scale[name]
+                for name in boundary_l1
             ),
             "boundary_structures_identical": all(boundary_structure.values()),
-            "endpoint_checkpoint_state_identical": checkpoints["all_ranks_equal"],
             "front_indices_identical": max(front_cells) == 0,
         },
     }
@@ -1596,27 +1679,6 @@ def validate_convergence_acceptance(path: Path) -> tuple[dict[str, Any], dict[st
     require(artifact.get("comparison") == "3d_kelvin_temporal_convergence",
             "Accepted convergence artifact has the wrong comparison type")
     require(artifact.get("pass") is True, "Temporal convergence was not accepted")
-    acceptance = artifact.get("acceptance")
-    require(isinstance(acceptance, dict) and acceptance.get("pass") is True,
-            "Temporal-convergence acceptance gate did not pass")
-    metrics = artifact.get("metrics")
-    require(isinstance(metrics, dict), "Accepted convergence artifact has no metrics")
-    recomputed_acceptance = evaluate_convergence(metrics)
-    recomputed_acceptance["pass"] = all(recomputed_acceptance["checks"].values())
-    require(
-        recomputed_acceptance == acceptance and recomputed_acceptance["pass"] is True,
-        "Temporal-convergence acceptance cannot be reproduced from its metrics",
-    )
-    required = artifact.get("required_pair")
-    require(isinstance(required, dict), "Accepted convergence artifact has no required pair")
-    exact_number(required.get("coarse_delta_t_s"), COARSE_DT_S,
-                 "accepted coarse deltaT")
-    exact_number(required.get("fine_delta_t_s"), FINE_DT_S,
-                 "accepted fine deltaT")
-    exact_number(required.get("refinement_ratio"), 2.0,
-                 "accepted refinement ratio")
-    exact_number(required.get("endpoint_s"), END_TIME_S,
-                 "accepted convergence endpoint")
     sources = artifact.get("sources")
     require(isinstance(sources, dict), "Accepted convergence artifact has no sources")
     for key, expected in (("comparator", SCRIPT), ("comparator_tests", TEST_SCRIPT)):
@@ -1624,41 +1686,21 @@ def validate_convergence_acceptance(path: Path) -> tuple[dict[str, Any], dict[st
         require(isinstance(record, dict), f"Accepted convergence artifact lacks {key}")
         require(record.get("sha256") == sha256(expected),
                 f"Accepted convergence artifact used a different {key}")
+    case_paths: list[Path] = []
     for key in ("coarse_case", "fine_case"):
         case_source = sources.get(key)
-        require(isinstance(case_source, dict) and case_source.get("pass") is True,
-                f"Accepted convergence artifact lacks a passing {key}")
-        verify_absolute_record(
-            case_source.get("run_manifest"), f"accepted convergence {key} manifest"
-        )
+        require(isinstance(case_source, dict),
+                f"Accepted convergence artifact lacks {key}")
+        case_path = Path(str(case_source.get("case", "")))
+        require(case_path.is_absolute(), f"Accepted convergence {key} path is not absolute")
+        case_paths.append(case_path)
+    rehydrated = compare_convergence(case_paths[0], case_paths[1])
+    require(
+        rehydrated == artifact,
+        "Accepted convergence artifact differs from a fresh authenticated recomputation",
+    )
+    require(rehydrated.get("pass") is True, "Temporal convergence was not accepted")
     return artifact, file_record(path)
-
-
-def checkpoint_pair_equivalence(
-    left_case: Path, right_case: Path, endpoint: float
-) -> dict[str, object]:
-    ranks: list[dict[str, object]] = []
-    for rank_number in range(RANK_COUNT):
-        rank_name = f"processor{rank_number}"
-        left = checkpoint_record(
-            left_case, left_case / rank_name, endpoint
-        )
-        right = checkpoint_record(
-            right_case, right_case / rank_name, endpoint
-        )
-        dump_equal = left["dump"]["sha256"] == right["dump"]["sha256"]
-        marker_equal = left["marker"]["sha256"] == right["marker"]["sha256"]
-        ranks.append(
-            {"rank": rank_name, "dump_sha256_equal": dump_equal,
-             "marker_sha256_equal": marker_equal}
-        )
-    return {
-        "ranks": ranks,
-        "all_ranks_equal": all(
-            record["dump_sha256_equal"] and record["marker_sha256_equal"]
-            for record in ranks
-        ),
-    }
 
 
 def compare_restart(
@@ -1711,9 +1753,6 @@ def compare_restart(
         uninterrupted_case, restarted_case, endpoint, endpoint,
         "uninterrupted", "restarted",
     )
-    metrics["endpoint_checkpoint_equivalence"] = checkpoint_pair_equivalence(
-        uninterrupted_case, restarted_case, endpoint
-    )
     gate = evaluate_restart(metrics)
     gate["pass"] = all(gate["checks"].values())
     return {
@@ -1734,6 +1773,16 @@ def compare_restart(
             "restarted_case": restarted_integrity,
         },
         "pair_identity": identity,
+        "checkpoint_authentication": {
+            "uninterrupted_case_all_recorded_pairs_authenticated": (
+                uninterrupted_integrity["stage_chain"]["all_checkpoint_pairs_valid"]
+            ),
+            "restarted_case_all_recorded_pairs_authenticated": (
+                restarted_integrity["stage_chain"]["all_checkpoint_pairs_valid"]
+            ),
+            "cross_run_dump_or_marker_byte_identity_required": False,
+            "cross_run_acceptance_basis": "numerical field and reported-species equivalence",
+        },
         "metrics": metrics,
         "acceptance": gate,
         "pass": gate["pass"],

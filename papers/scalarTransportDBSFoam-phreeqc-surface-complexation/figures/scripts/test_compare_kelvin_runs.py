@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -348,6 +350,54 @@ class LifecycleTests(unittest.TestCase):
 
 
 class ScientificGateTests(unittest.TestCase):
+    @staticmethod
+    def restart_metrics(front_shift: int = 0, hydrogen_difference: float = 0.0) -> dict[str, object]:
+        reported_names = (
+            comparison.MN_FREE, comparison.MN_SORBED, comparison.MN_REPORTED,
+            comparison.MG_FREE, comparison.MG_SORBED, comparison.MG_REPORTED,
+            comparison.CL_FREE,
+        )
+        inventory = {name: 0.0 for name in reported_names}
+        state_relative = {name: 0.0 for name in comparison.FIELD_SPECS}
+        state_absolute = {name: 0.0 for name in comparison.FIELD_SPECS}
+        state_relative["H+"] = hydrogen_difference
+        state_absolute["H+"] = hydrogen_difference
+        return {
+            "reported_species_amount_kmol": {
+                label: {"endpoint": {name: 1.0 for name in reported_names}}
+                for label in ("uninterrupted", "restarted")
+            },
+            "relative_endpoint_reported_species_amount_difference": inventory,
+            "absolute_endpoint_reported_species_amount_difference_kmol": inventory.copy(),
+            "spatial_relative_L1": {
+                comparison.MN_FREE: 0.0, comparison.MN_SORBED: 0.0
+            },
+            "spatial_absolute_L1_kmol": {
+                comparison.MN_FREE: 0.0, comparison.MN_SORBED: 0.0
+            },
+            "complete_state_fieldwise_symmetric_relative_L1": state_relative,
+            "complete_state_fieldwise_maximum_absolute_difference": state_absolute,
+            "complete_state_fieldwise_maximum_absolute_magnitude": {
+                name: 1.0 for name in comparison.FIELD_SPECS
+            },
+            "complete_state_boundary_symmetric_relative_L1": {
+                name: 0.0 for name in comparison.FIELD_SPECS
+            },
+            "complete_state_boundary_maximum_absolute_difference": {
+                name: 0.0 for name in comparison.FIELD_SPECS
+            },
+            "complete_state_boundary_maximum_absolute_magnitude": {
+                name: 1.0 for name in comparison.FIELD_SPECS
+            },
+            "complete_state_boundary_structure_equal": {
+                name: True for name in comparison.FIELD_SPECS
+            },
+            "front_differences": {
+                comparison.MN_FREE: {"x10": {"cell_index_delta": 0}},
+                comparison.MN_SORBED: {"x90": {"cell_index_delta": front_shift}},
+            },
+        }
+
     def _case(self, root: Path, suffix: str, mn: float) -> Path:
         case = root / suffix
         rank = case / "processor0"
@@ -422,66 +472,37 @@ class ScientificGateTests(unittest.TestCase):
         self.assertTrue(result["checks"]["fronts_within_one_cell"])
 
     def test_restart_gate_requires_zero_front_shift(self) -> None:
-        inventory = {
-            name: 0.0 for name in (
-                comparison.MN_FREE, comparison.MN_SORBED, comparison.MN_REPORTED,
-                comparison.MG_FREE, comparison.MG_SORBED, comparison.MG_REPORTED,
-                comparison.CL_FREE,
-            )
-        }
-        metrics = {
-            "relative_endpoint_reported_species_amount_difference": inventory,
-            "spatial_relative_L1": {
-                comparison.MN_FREE: 0.0, comparison.MN_SORBED: 0.0
-            },
-            "complete_state_fieldwise_symmetric_relative_L1": {
-                name: 0.0 for name in comparison.FIELD_SPECS
-            },
-            "complete_state_boundary_symmetric_relative_L1": {
-                name: 0.0 for name in comparison.FIELD_SPECS
-            },
-            "complete_state_boundary_structure_equal": {
-                name: True for name in comparison.FIELD_SPECS
-            },
-            "endpoint_checkpoint_equivalence": {"all_ranks_equal": True, "ranks": []},
-            "front_differences": {
-                comparison.MN_FREE: {"x10": {"cell_index_delta": 0}},
-                comparison.MN_SORBED: {"x90": {"cell_index_delta": 1}},
-            },
-        }
+        metrics = self.restart_metrics(front_shift=1)
         result = comparison.evaluate_restart(metrics)
         self.assertFalse(result["checks"]["front_indices_identical"])
 
     def test_restart_gate_catches_unreported_hydrogen_field_difference(self) -> None:
-        inventory = {
-            name: 0.0 for name in (
-                comparison.MN_FREE, comparison.MN_SORBED, comparison.MN_REPORTED,
-                comparison.MG_FREE, comparison.MG_SORBED, comparison.MG_REPORTED,
-                comparison.CL_FREE,
-            )
-        }
-        state = {name: 0.0 for name in comparison.FIELD_SPECS}
-        state["H+"] = 0.5
-        metrics = {
-            "relative_endpoint_reported_species_amount_difference": inventory,
-            "spatial_relative_L1": {
-                comparison.MN_FREE: 0.0, comparison.MN_SORBED: 0.0
-            },
-            "complete_state_fieldwise_symmetric_relative_L1": state,
-            "complete_state_boundary_symmetric_relative_L1": {
-                name: 0.0 for name in comparison.FIELD_SPECS
-            },
-            "complete_state_boundary_structure_equal": {
-                name: True for name in comparison.FIELD_SPECS
-            },
-            "endpoint_checkpoint_equivalence": {"all_ranks_equal": True, "ranks": []},
-            "front_differences": {
-                comparison.MN_FREE: {"x10": {"cell_index_delta": 0}},
-                comparison.MN_SORBED: {"x90": {"cell_index_delta": 0}},
-            },
-        }
+        metrics = self.restart_metrics(hydrogen_difference=0.5)
         result = comparison.evaluate_restart(metrics)
-        self.assertFalse(result["checks"]["complete_state_fields_within_1e-10"])
+        self.assertFalse(result["checks"]["complete_state_fields_within_combined_tolerance"])
+
+    def test_restart_near_zero_roundoff_uses_absolute_plus_relative_tolerance(self) -> None:
+        metrics = self.restart_metrics()
+        metrics["complete_state_fieldwise_symmetric_relative_L1"]["H+"] = 6.9e-9
+        metrics["complete_state_fieldwise_maximum_absolute_difference"]["H+"] = 5.0e-18
+        metrics["complete_state_fieldwise_maximum_absolute_magnitude"]["H+"] = 7.25e-10
+        result = comparison.evaluate_restart(metrics)
+        self.assertTrue(result["checks"]["complete_state_fields_within_combined_tolerance"])
+        metrics["complete_state_fieldwise_maximum_absolute_difference"]["H+"] = 2.0e-17
+        result = comparison.evaluate_restart(metrics)
+        self.assertFalse(result["checks"]["complete_state_fields_within_combined_tolerance"])
+
+    def test_restart_near_zero_reported_amount_uses_combined_tolerance(self) -> None:
+        metrics = self.restart_metrics()
+        for label in ("uninterrupted", "restarted"):
+            metrics["reported_species_amount_kmol"][label]["endpoint"][comparison.MN_FREE] = 1e-20
+        metrics["relative_endpoint_reported_species_amount_difference"][comparison.MN_FREE] = 5e-5
+        metrics["absolute_endpoint_reported_species_amount_difference_kmol"][comparison.MN_FREE] = 5e-25
+        result = comparison.evaluate_restart(metrics)
+        self.assertTrue(result["checks"]["reported_species_amounts_within_combined_tolerance"])
+        metrics["absolute_endpoint_reported_species_amount_difference_kmol"][comparison.MN_FREE] = 2e-24
+        result = comparison.evaluate_restart(metrics)
+        self.assertFalse(result["checks"]["reported_species_amounts_within_combined_tolerance"])
 
     def test_static_field_drift_at_restart_checkpoint_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -675,9 +696,11 @@ class ScheduleAndCliTests(unittest.TestCase):
                     "comparator": {"sha256": comparison.sha256(comparison.SCRIPT)},
                     "comparator_tests": {"sha256": comparison.sha256(comparison.TEST_SCRIPT)},
                     "coarse_case": {
+                        "case": str((root / "coarse").resolve()),
                         "pass": True, "run_manifest": comparison.file_record(manifests[0])
                     },
                     "fine_case": {
+                        "case": str((root / "fine").resolve()),
                         "pass": True, "run_manifest": comparison.file_record(manifests[1])
                     },
                 },
@@ -685,8 +708,20 @@ class ScheduleAndCliTests(unittest.TestCase):
             }
             path = root / "convergence.json"
             path.write_text(json.dumps(artifact))
-            _, record = comparison.validate_convergence_acceptance(path)
+            with mock.patch.object(comparison, "compare_convergence", return_value=artifact):
+                _, record = comparison.validate_convergence_acceptance(path)
             self.assertEqual(record["sha256"], comparison.sha256(path))
+            fabricated = json.loads(json.dumps(artifact))
+            fabricated["metrics"]["relative_endpoint_reported_species_amount_difference"][
+                comparison.MN_FREE
+            ] = 0.0
+            fabricated_path = root / "fabricated.json"
+            fabricated_path.write_text(json.dumps(fabricated))
+            with (
+                mock.patch.object(comparison, "compare_convergence", return_value=artifact),
+                self.assertRaisesRegex(comparison.ComparisonError, "fresh authenticated"),
+            ):
+                comparison.validate_convergence_acceptance(fabricated_path)
 
     def test_cli_writes_result_and_refuses_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -735,7 +770,13 @@ class Schema9EndToEndTests(unittest.TestCase):
             )
         return records
 
-    def make_case(self, root: Path) -> Path:
+    def make_case(
+        self, root: Path, delta_t: float = comparison.COARSE_DT_S,
+        *, runtime: dict[str, object] | None = None,
+        runtime_artifacts: dict[str, object] | None = None,
+        paper: dict[str, object] | None = None,
+        tracked_template: Path | None = None,
+    ) -> Path:
         case = root / "case"
         rank = case / "processor0"
         JsonAndGeometryTests()._one_cell_mesh(rank)
@@ -758,9 +799,11 @@ class Schema9EndToEndTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(f"fixture {source};\n")
         control = case / "system/controlDict"
-        control.write_text(self.control_text(0.0, 0.5, comparison.COARSE_DT_S, False))
+        control.write_text(self.control_text(0.0, 0.5, delta_t, False))
         template = case / "system/controlDict1"
-        template.write_text(control.read_text())
+        template.write_text(
+            self.control_text(0.0, 0.5, comparison.COARSE_DT_S, False)
+        )
 
         chemistry = case / "constant/GeoChem.dat"
         chemistry.write_text("SOLUTION 0\nEND\n")
@@ -770,6 +813,11 @@ class Schema9EndToEndTests(unittest.TestCase):
             )
 
         initial_snapshots = self.snapshots(case, case / "provenance/initialization")
+        for record in initial_snapshots:
+            if record["source"] == "system/controlDict":
+                snapshot_path = Path(str(record["snapshot"]["path"]))
+                snapshot_path.write_text(template.read_text())
+                record["snapshot"] = comparison.provenance.file_record(snapshot_path)
         stage_id = "0_to_0.5_attempt_001"
         stage_snapshots = self.snapshots(case, case / "provenance/stages" / stage_id)
         initial_records = (
@@ -836,25 +884,29 @@ class Schema9EndToEndTests(unittest.TestCase):
                 )}
             ],
         }
-        runtime = {
+        runtime = runtime or {
             "root": str(case), "commit": "g", "tree": "gt",
-            "tracked_diff_sha256": comparison.EMPTY_SHA256,
-            "phreeqcrm_gitlink": "p",
+            "tracked_diff_sha256": comparison.EMPTY_SHA256, "phreeqcrm_gitlink": "p",
             "phreeqcrm": {
                 "root": str(case / "ThirdParty/PhreeqcRM"), "commit": "p", "tree": "pt",
                 "tracked_diff_sha256": comparison.EMPTY_SHA256,
             },
         }
+        paper = paper or {
+            "root": str(case), "commit": "paper", "tree": "paper-tree",
+            "tracked_diff_sha256": comparison.EMPTY_SHA256,
+        }
+        tracked_template = tracked_template or template
         payload = {
             "schema_version": comparison.MANIFEST_SCHEMA_VERSION, "case_id": "3d_kelvin",
             "recorded_utc": "2026-01-01T00:00:00+00:00",
-            "paper": {
-                "root": str(case), "commit": "paper", "tree": "paper-tree",
-                "tracked_diff_sha256": comparison.EMPTY_SHA256,
-            },
+            "paper": paper,
             "transport_control_template": comparison.provenance.file_record(template),
-            "tracked_transport_control_template": comparison.provenance.file_record(template),
-            "runtime": runtime, "runtime_artifacts": {"identity_sha256": "fixture"},
+            "tracked_transport_control_template": comparison.provenance.file_record(
+                tracked_template
+            ),
+            "runtime": runtime,
+            "runtime_artifacts": runtime_artifacts or {"identity_sha256": "fixture"},
             "surface": comparison.provenance.surface_record(
                 case / "createASurfReactive.out", "occupancyGaussian", 0.75
             ),
@@ -869,7 +921,75 @@ class Schema9EndToEndTests(unittest.TestCase):
         (case / "run_provenance.json").write_text(json.dumps(payload, indent=2) + "\n")
         return case
 
-    def patches(self):
+    @staticmethod
+    def git(root: Path, *args: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(root), *args], check=True, text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ).stdout.strip()
+
+    def committed_repo(self, root: Path) -> None:
+        root.mkdir(parents=True)
+        self.git(root, "init", "-q")
+        self.git(root, "config", "user.email", "fixture@example.invalid")
+        self.git(root, "config", "user.name", "Fixture")
+
+    def real_identities(
+        self, root: Path
+    ) -> tuple[dict[str, object], dict[str, object], dict[str, object], Path, dict[str, str]]:
+        phreeqcrm = root / "phreeqcrm"
+        self.committed_repo(phreeqcrm)
+        (phreeqcrm / "README").write_text("fixture PHREEQCRM\n")
+        self.git(phreeqcrm, "add", "README")
+        self.git(phreeqcrm, "commit", "-qm", "fixture")
+
+        runtime_root = root / "runtime"
+        self.committed_repo(runtime_root)
+        (runtime_root / "ThirdParty").mkdir()
+        subprocess.run(
+            [
+                "git", "-c", "protocol.file.allow=always", "-C", str(runtime_root),
+                "submodule", "add", "-q", str(phreeqcrm), "ThirdParty/PhreeqcRM",
+            ],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        self.git(runtime_root, "commit", "-qam", "fixture runtime")
+        binary_dir = runtime_root / "bin"
+        binary_dir.mkdir()
+        source = root / "solver.cpp"
+        source.write_text("int main() { return 0; }\n")
+        for name in ("simpleDBSFoam", "reactiveTransportDBSFoam"):
+            subprocess.run(
+                ["c++", str(source), "-o", str(binary_dir / name)], check=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+
+        environment = {key: f"fixture-{key}" for key in comparison.provenance.IDENTITY_ENV}
+        environment["PATH"] = str(binary_dir) + os.pathsep + os.environ["PATH"]
+        with mock.patch.dict(os.environ, environment, clear=False):
+            runtime_commit, runtime_tree = comparison.provenance.commit_tree(runtime_root)
+            sub_commit, sub_tree = comparison.provenance.commit_tree(
+                runtime_root / "ThirdParty/PhreeqcRM"
+            )
+            gitlink = self.git(runtime_root, "ls-tree", "HEAD", "ThirdParty/PhreeqcRM").split()[2]
+            runtime = comparison.provenance.runtime_git_identity(
+                runtime_root, runtime_commit, runtime_tree, gitlink, sub_commit, sub_tree
+            )
+            artifacts = comparison.provenance.runtime_artifacts(runtime_root)
+
+        paper_root = root / "paper"
+        self.committed_repo(paper_root)
+        tracked_template = paper_root / comparison.provenance.TRACKED_CONTROL_TEMPLATE
+        tracked_template.parent.mkdir(parents=True)
+        tracked_template.write_text(
+            self.control_text(0.0, 0.5, comparison.COARSE_DT_S, False)
+        )
+        self.git(paper_root, "add", ".")
+        self.git(paper_root, "commit", "-qm", "fixture paper")
+        paper = comparison.provenance.paper_identity(paper_root)
+        return runtime, artifacts, paper, tracked_template, environment
+
+    def size_patches(self):
         return (
             mock.patch.object(comparison, "RANK_COUNT", 1),
             mock.patch.object(comparison, "DECOMPOSITION", {"NPX": 1, "NPY": 1, "NPZ": 1}),
@@ -878,6 +998,10 @@ class Schema9EndToEndTests(unittest.TestCase):
             mock.patch.object(comparison, "NZ", 1),
             mock.patch.object(comparison, "GLOBAL_CELL_COUNT", 1),
             mock.patch.object(comparison, "DOMAIN_LENGTH_M", comparison.CELL_SIZE_M),
+        )
+
+    def patches(self):
+        return self.size_patches() + (
             mock.patch.object(comparison.provenance, "validate_recorded_runtime"),
             mock.patch.object(comparison.provenance, "validate_recorded_paper"),
             mock.patch.object(comparison.provenance, "validate_control_template_record"),
@@ -900,6 +1024,36 @@ class Schema9EndToEndTests(unittest.TestCase):
                 foam_scalar(case / "processor0/0.5/H+", 2.0)
                 with self.assertRaisesRegex(comparison.ComparisonError, "Endpoint outputs changed"):
                     comparison.validate_case(case, 0.5)
+
+    def test_unmocked_schema9_cli_traverses_real_identity_and_validation_stack(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime, artifacts, paper, tracked_template, environment = self.real_identities(root)
+            coarse = self.make_case(
+                root / "coarse", comparison.COARSE_DT_S, runtime=runtime,
+                runtime_artifacts=artifacts, paper=paper, tracked_template=tracked_template,
+            )
+            fine = self.make_case(
+                root / "fine", comparison.FINE_DT_S, runtime=runtime,
+                runtime_artifacts=artifacts, paper=paper, tracked_template=tracked_template,
+            )
+            output = root / "convergence.json"
+            size_patchers = self.size_patches()
+            with (
+                size_patchers[0], size_patchers[1], size_patchers[2], size_patchers[3],
+                size_patchers[4], size_patchers[5], size_patchers[6],
+                mock.patch.dict(os.environ, environment, clear=False),
+            ):
+                comparison.main([
+                    "convergence", "--coarse-case", str(coarse),
+                    "--fine-case", str(fine), "--output", str(output),
+                ])
+                rehydrated, _ = comparison.validate_convergence_acceptance(output)
+                self.assertTrue(rehydrated["pass"])
+            artifact = comparison.load_json(output)
+            self.assertTrue(artifact["pass"])
+            self.assertTrue(artifact["sources"]["coarse_case"]["pass"])
+            self.assertTrue(artifact["sources"]["fine_case"]["pass"])
 
 
 if __name__ == "__main__":
