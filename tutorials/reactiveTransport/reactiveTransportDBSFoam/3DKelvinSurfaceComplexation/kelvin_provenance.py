@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -24,15 +25,19 @@ REQUIRED_POLYMESH_FILES = ("boundary", "faces", "neighbour", "owner", "points")
 REQUIRED_REALIZED_DICTIONARIES = (
     Path("constant/transportProperties"),
     Path("constant/thermoPhysicalProperties"),
+    Path("constant/dynamicMeshDict"),
+    Path("constant/turbulenceProperties"),
     Path("system/postProcessDict"),
     Path("system/controlDict"),
     Path("system/fvSolution"),
+    Path("system/fvSchemes"),
 )
 IDENTITY_ENV = (
     "FOAM_API", "WM_ARCH", "WM_COMPILER", "WM_COMPILER_TYPE",
     "WM_COMPILE_OPTION", "WM_LABEL_OPTION", "WM_MPLIB", "WM_OPTIONS",
     "WM_PRECISION_OPTION", "WM_PROJECT", "WM_PROJECT_VERSION",
 )
+SCHEMA_VERSION = 4
 
 
 def sha256(path: Path) -> str:
@@ -179,15 +184,27 @@ def executable_identity(name: str) -> dict[str, str]:
     return {**file_record(resolved), "version": version, "version_sha256": sha256_text(version)}
 
 
-def runtime_artifacts(root: Path, solver: Path) -> dict[str, object]:
-    ldd = command("ldd", str(solver))
+def solver_artifact(root: Path, name: str) -> dict[str, object]:
+    selected = shutil.which(name)
+    expected = (root / "bin" / name).resolve()
+    if selected is None or Path(selected).resolve() != expected:
+        raise SystemExit(f"Wrong {name} executable: {selected or 'not found'} != {expected}")
+    return {
+        "executable": file_record(expected),
+        "resolved_dependencies": parse_ldd(command("ldd", str(expected))),
+    }
+
+
+def runtime_artifacts(root: Path) -> dict[str, object]:
     environment = {key: os.environ.get(key, "") for key in IDENTITY_ENV}
     missing = [key for key, value in environment.items() if not value]
     if missing:
         raise SystemExit(f"Missing compiler/OpenFOAM identity variables: {missing}")
     payload = {
-        "solver": file_record(solver),
-        "resolved_dependencies": parse_ldd(ldd),
+        "solvers": {
+            name: solver_artifact(root, name)
+            for name in ("simpleDBSFoam", "reactiveTransportDBSFoam")
+        },
         "environment": environment,
         "compiler": executable_identity("c++"),
         "mpi": executable_identity("mpirun"),
@@ -253,6 +270,15 @@ def require_realized_dictionaries(paths: list[Path]) -> None:
         raise SystemExit(f"Missing required realised dictionaries: {missing}")
 
 
+def immutable_dictionary_digest(paths: list[Path]) -> str:
+    records = [
+        {"path": str(path), "sha256": sha256(path)}
+        for path in sorted(paths)
+        if path != Path("system/controlDict")
+    ]
+    return records_digest(records)
+
+
 def runtime_from_args(args: argparse.Namespace) -> dict[str, object]:
     return runtime_git_identity(
         args.runtime, args.expected_runtime_commit, args.expected_runtime_tree,
@@ -263,19 +289,12 @@ def runtime_from_args(args: argparse.Namespace) -> dict[str, object]:
 
 def record(args: argparse.Namespace) -> None:
     runtime = args.runtime.resolve()
-    solver_name = shutil.which("reactiveTransportDBSFoam")
-    if solver_name is None:
-        raise SystemExit("reactiveTransportDBSFoam is not on PATH")
-    solver = Path(solver_name).resolve()
-    expected_solver = (runtime / "bin" / "reactiveTransportDBSFoam").resolve()
-    if solver != expected_solver:
-        raise SystemExit(f"Wrong solver: {solver} != {expected_solver}")
     runtime_identity = runtime_from_args(args)
-    artifacts = runtime_artifacts(runtime, solver)
+    artifacts = runtime_artifacts(runtime)
     require_realized_dictionaries(args.dictionary)
     snapshots = snapshot_dictionaries(args.snapshot_root, args.dictionary)
     payload = {
-        "schema_version": 3,
+        "schema_version": SCHEMA_VERSION,
         "case_id": "3d_kelvin",
         "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "paper": paper_identity(args.paper.resolve()),
@@ -311,21 +330,178 @@ def scalar_file(path: Path) -> int:
 def control_values(path: Path) -> dict[str, object]:
     text = path.read_text()
     values: dict[str, object] = {}
+    start_from = re.findall(r"^\s*startFrom\s+(\S+)\s*;", text, re.M)
+    if len(start_from) != 1 or start_from[0] != "startTime":
+        raise SystemExit(f"{path} must use startFrom startTime")
+    values["startFrom"] = "startTime"
     for key in ("startTime", "endTime", "deltaT", "writeInterval"):
-        match = re.search(rf"^\s*{key}\s+([0-9.eE+\-]+)\s*;", text, re.M)
-        if not match:
-            raise SystemExit(f"Missing numeric {key} in {path}")
-        values[key] = float(match.group(1))
+        matches = re.findall(rf"^\s*{key}\s+([0-9.eE+\-]+)\s*;", text, re.M)
+        if len(matches) != 1:
+            raise SystemExit(f"Expected exactly one numeric {key} in {path}")
+        values[key] = float(matches[0])
     for key in ("phreeqcRestartCheckpoints", "phreeqcRestoreCheckpoint"):
-        match = re.search(rf"^\s*{key}\s+(true|false)\s*;", text, re.M)
-        if not match:
-            raise SystemExit(f"Missing boolean {key} in {path}")
-        values[key] = match.group(1) == "true"
+        matches = re.findall(rf"^\s*{key}\s+(true|false)\s*;", text, re.M)
+        if len(matches) != 1:
+            raise SystemExit(f"Expected exactly one boolean {key} in {path}")
+        values[key] = matches[0] == "true"
     if values["endTime"] <= values["startTime"]:
         raise SystemExit("endTime must be greater than startTime")
     if values["deltaT"] <= 0 or values["writeInterval"] <= 0:
         raise SystemExit("deltaT and writeInterval must be positive")
     return values
+
+
+def immutable_control_digest(path: Path) -> str:
+    text = path.read_text()
+    for key in ("startTime", "endTime", "writeInterval", "phreeqcRestoreCheckpoint"):
+        pattern = rf"(^\s*{key}\s+)[^;]+(;)"
+        text, count = re.subn(pattern, rf"\1<stage-value>\2", text, flags=re.M)
+        if count != 1:
+            raise SystemExit(f"Expected exactly one {key} in {path}, found {count}")
+    return sha256_text(text)
+
+
+def verify_file_records(records: object) -> None:
+    if not isinstance(records, list) or not records:
+        raise SystemExit("Manifest has no immutable input records")
+    for record in records:
+        if not isinstance(record, dict):
+            raise SystemExit("Malformed immutable input record")
+        path = Path(str(record.get("path", "")))
+        if not path.is_file() or sha256(path) != record.get("sha256"):
+            raise SystemExit(f"Immutable case input changed or disappeared: {path}")
+
+
+def verify_dictionary_snapshots(records: object) -> None:
+    if not isinstance(records, list) or not records:
+        raise SystemExit("Manifest has no realised dictionary snapshots")
+    for record in records:
+        if not isinstance(record, dict) or not isinstance(record.get("snapshot"), dict):
+            raise SystemExit("Malformed realised dictionary snapshot")
+        snapshot = record["snapshot"]
+        path = Path(str(snapshot.get("path", "")))
+        if not path.is_file() or sha256(path) != snapshot.get("sha256"):
+            raise SystemExit(f"Realised dictionary snapshot changed or disappeared: {path}")
+
+
+def numeric_time_directory(rank: Path, value: float) -> Path:
+    matches = []
+    for path in rank.iterdir():
+        if not path.is_dir():
+            continue
+        try:
+            candidate = float(path.name)
+        except ValueError:
+            continue
+        if math.isclose(candidate, value, rel_tol=0.0, abs_tol=1.0e-12):
+            matches.append(path)
+    if len(matches) != 1:
+        raise SystemExit(f"Expected one time directory for {value:g} in {rank}, found {matches}")
+    return matches[0]
+
+
+def checkpoint_record(time_dir: Path, expected_time: float) -> dict[str, object]:
+    dump = time_dir / "phreeqc.dmp"
+    marker = time_dir / "phreeqc.complete"
+    pending = time_dir / "phreeqc.complete.tmp"
+    if pending.exists():
+        raise SystemExit(f"Pending PHREEQCRM checkpoint marker exists: {pending}")
+    if not dump.is_file() or not marker.is_file():
+        raise SystemExit(f"Incomplete PHREEQCRM checkpoint pair in {time_dir}")
+    lines = marker.read_text().splitlines()
+    if len(lines) != 4 or lines[0] != "GeoChemFoam-PHREEQCRM-checkpoint 1":
+        raise SystemExit(f"Malformed PHREEQCRM checkpoint marker: {marker}")
+    parsed: dict[str, str] = {}
+    for line in lines[1:]:
+        parts = line.split(maxsplit=1)
+        if len(parts) != 2 or parts[0] in parsed:
+            raise SystemExit(f"Malformed PHREEQCRM checkpoint marker: {marker}")
+        parsed[parts[0]] = parts[1]
+    if set(parsed) != {"time", "dumpSize", "dumpSHA256"}:
+        raise SystemExit(f"Incomplete PHREEQCRM checkpoint marker: {marker}")
+    try:
+        marker_time = float(parsed["time"])
+        marker_size = int(parsed["dumpSize"])
+    except ValueError as error:
+        raise SystemExit(f"Invalid PHREEQCRM checkpoint marker values: {marker}") from error
+    if not math.isclose(marker_time, expected_time, rel_tol=0.0, abs_tol=1.0e-12):
+        raise SystemExit(f"PHREEQCRM checkpoint time mismatch in {marker}")
+    if dump.stat().st_size != marker_size:
+        raise SystemExit(f"PHREEQCRM checkpoint size mismatch in {marker}")
+    dump_sha = sha256(dump)
+    if dump_sha != parsed["dumpSHA256"]:
+        raise SystemExit(f"PHREEQCRM checkpoint hash mismatch in {marker}")
+    return {
+        "time": marker_time,
+        "dump": {"path": str(dump.resolve()), "sha256": dump_sha},
+        "marker": file_record(marker),
+    }
+
+
+def tree_records(root: Path, case: Path, excluded: set[str] | None = None) -> list[dict[str, str]]:
+    excluded = excluded or set()
+    records = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        if path.name in excluded:
+            continue
+        records.append({"path": str(path.relative_to(case)), "sha256": sha256(path)})
+    return records
+
+
+def records_digest(records: list[dict[str, str]]) -> str:
+    return sha256_text(json.dumps(records, sort_keys=True, separators=(",", ":")))
+
+
+def validate_stage_invariants(
+    payload: dict[str, object],
+    controls: dict[str, object],
+    rank_count: int,
+    decomposition: dict[str, int],
+    initial_identity: str,
+    dictionary_identity: str,
+    control_identity: str,
+) -> None:
+    stages = payload.get("transport_stages")
+    if not isinstance(stages, list):
+        raise SystemExit("Manifest has no transport stage list")
+    start = float(controls["startTime"])
+    restore = bool(controls["phreeqcRestoreCheckpoint"])
+    if not controls["phreeqcRestartCheckpoints"]:
+        raise SystemExit("Kelvin production stages require restart checkpoints")
+    if math.isclose(start, 0.0, rel_tol=0.0, abs_tol=1.0e-12):
+        if restore:
+            raise SystemExit("The initial Kelvin stage must not restore a checkpoint")
+    elif not restore:
+        raise SystemExit("A nonzero Kelvin stage must restore its start checkpoint")
+    if not stages:
+        if not math.isclose(start, 0.0, rel_tol=0.0, abs_tol=1.0e-12):
+            raise SystemExit("The first recorded Kelvin stage must start at zero")
+        return
+    first = stages[0]
+    if not isinstance(first, dict):
+        raise SystemExit("Malformed first Kelvin stage record")
+    invariant_pairs = (
+        (float(controls["deltaT"]), float(first["deltaT"]), "deltaT"),
+        (rank_count, int(first["rank_count"]), "rank count"),
+        (decomposition, first["decomposition"], "decomposition"),
+        (initial_identity, first["initial_case_identity_sha256"], "initial case identity"),
+        (dictionary_identity, first["immutable_dictionary_sha256"], "immutable dictionaries"),
+        (control_identity, first["immutable_control_sha256"], "immutable control settings"),
+    )
+    for actual, expected, label in invariant_pairs:
+        if actual != expected:
+            raise SystemExit(f"Kelvin stage {label} changed: {actual} != {expected}")
+    previous = stages[-1]
+    if not isinstance(previous, dict):
+        raise SystemExit("Malformed previous Kelvin stage record")
+    same_attempt = (
+        float(previous["startTime"]) == start
+        and float(previous["endTime"]) == float(controls["endTime"])
+    )
+    if not same_attempt and not math.isclose(
+        start, float(previous["endTime"]), rel_tol=0.0, abs_tol=1.0e-12
+    ):
+        raise SystemExit("Kelvin stage does not continue from the previous endpoint")
 
 
 def validate_recorded_runtime(payload: dict[str, object]) -> None:
@@ -342,39 +518,52 @@ def validate_recorded_runtime(payload: dict[str, object]) -> None:
     )
     if current != runtime:
         raise SystemExit("Runtime identity changed after initialization")
-    solver_record = artifacts.get("solver")
-    if not isinstance(solver_record, dict):
-        raise SystemExit("Manifest lacks solver identity")
-    solver = Path(str(solver_record.get("path", "")))
-    if not solver.is_file() or sha256(solver) != solver_record.get("sha256"):
-        raise SystemExit("Solver changed after initialization")
-    if runtime_artifacts(Path(str(runtime["root"])), solver) != artifacts:
+    if runtime_artifacts(Path(str(runtime["root"]))) != artifacts:
         raise SystemExit("Runtime binary, library, compiler, or OpenFOAM identity changed")
 
 
 def run_config(args: argparse.Namespace) -> None:
     payload = json.loads(args.manifest.read_text())
-    if payload.get("case_id") != "3d_kelvin" or payload.get("schema_version") != 3:
+    if (
+        payload.get("case_id") != "3d_kelvin"
+        or payload.get("schema_version") != SCHEMA_VERSION
+    ):
         raise SystemExit("Manifest is not the current Kelvin provenance schema")
     validate_recorded_runtime(payload)
     controls = control_values(args.control)
+    control_identity = immutable_control_digest(args.control)
     chemistry = payload.get("chemistry")
     if not isinstance(chemistry, dict) or densities(args.thermo) != chemistry.get(
         "surface_master_densities_kmol_m2"
     ):
         raise SystemExit("Surface chemistry changed after initialization")
+    verify_file_records(chemistry.get("files"))
+    verify_dictionary_snapshots(payload.get("realized_initialization_dictionaries"))
+    stages = payload.get("transport_stages")
+    if not isinstance(stages, list):
+        raise SystemExit("Manifest has no transport stage list")
+    for stage in stages:
+        if not isinstance(stage, dict):
+            raise SystemExit("Malformed Kelvin stage record")
+        verify_dictionary_snapshots(stage.get("dictionaries"))
     require_realized_dictionaries(args.dictionary)
+    dictionary_identity = immutable_dictionary_digest(args.dictionary)
+    case = args.case.resolve()
     expected_ranks = 1
     decomposition = {}
     for key in ("NPX", "NPY", "NPZ"):
-        value = scalar_file(args.case / "system" / key)
+        value = scalar_file(case / "system" / key)
         decomposition[key] = value
         expected_ranks *= value
-    ranks = sorted(path for path in args.case.glob("processor*") if path.is_dir())
+    ranks = sorted(path for path in case.glob("processor*") if path.is_dir())
     if len(ranks) != expected_ranks:
         raise SystemExit(f"Expected {expected_ranks} ranks from decomposition, found {len(ranks)}")
+    start_time = float(controls["startTime"])
     masters = []
-    initial = []
+    initial_records = []
+    start_records = []
+    start_directories = []
+    checkpoints = []
     for rank in ranks:
         missing_fields = [name for name in REQUIRED_INITIAL_FIELDS if not (rank / "0" / name).is_file()]
         missing_mesh = [
@@ -385,13 +574,49 @@ def run_config(args: argparse.Namespace) -> None:
             raise SystemExit(
                 f"Incomplete initial rank inputs in {rank}: fields={missing_fields}, polyMesh={missing_mesh}"
             )
+        initial_records.extend(tree_records(rank / "0", case))
+        initial_records.extend(tree_records(rank / "constant" / "polyMesh", case))
+        start_dir = numeric_time_directory(rank, start_time)
+        start_directories.append(
+            {"rank": rank.name, "path": str(start_dir.resolve()), "time_name": start_dir.name}
+        )
+        missing_start = [name for name in REQUIRED_INITIAL_FIELDS if not (start_dir / name).is_file()]
+        if missing_start:
+            raise SystemExit(f"Incomplete restart fields in {start_dir}: {missing_start}")
         for name, expected in (("Surf_s", 2e-7), ("Surf_w", 6e-6)):
-            path = rank / "0" / name
+            path = start_dir / name
             if uniform(path) != expected:
                 raise SystemExit(f"Wrong master field: {path}")
             masters.append({**file_record(path), "value_kmol_m2": expected})
-        for root in (rank / "0", rank / "constant" / "polyMesh"):
-            initial.extend(file_record(path) for path in sorted(root.rglob("*")) if path.is_file())
+        start_records.extend(
+            tree_records(
+                start_dir,
+                case,
+                {"phreeqc.dmp", "phreeqc.complete", "phreeqc.complete.tmp"},
+            )
+        )
+        if math.isclose(start_time, 0.0, rel_tol=0.0, abs_tol=1.0e-12):
+            stale = [
+                start_dir / name
+                for name in ("phreeqc.dmp", "phreeqc.complete", "phreeqc.complete.tmp")
+                if (start_dir / name).exists()
+            ]
+            if stale:
+                raise SystemExit(f"Stale checkpoint files in fresh-start directory: {stale}")
+        else:
+            checkpoints.append(
+                {"rank": rank.name, **checkpoint_record(start_dir, start_time)}
+            )
+    initial_identity = records_digest(initial_records)
+    validate_stage_invariants(
+        payload,
+        controls,
+        expected_ranks,
+        decomposition,
+        initial_identity,
+        dictionary_identity,
+        control_identity,
+    )
     stage_base = f"{controls['startTime']:g}_to_{controls['endTime']:g}"
     attempt = 1
     while (args.snapshot_root / f"{stage_base}_attempt_{attempt:03d}").exists():
@@ -404,10 +629,20 @@ def run_config(args: argparse.Namespace) -> None:
         "attempt": attempt,
         "rank_count": expected_ranks,
         "decomposition": decomposition,
+        "initial_case_identity_sha256": initial_identity,
+        "immutable_dictionary_sha256": dictionary_identity,
+        "immutable_control_sha256": control_identity,
         "dictionaries": snapshots,
         "surface_master_fields": masters,
-        "initial_rank_inputs": initial,
+        "selected_start_time_directories": start_directories,
+        "start_rank_inputs": start_records,
+        "restart_checkpoints": checkpoints,
     }
+    if not payload["transport_stages"]:
+        payload["initial_case"] = {
+            "sha256": initial_identity,
+            "records": initial_records,
+        }
     payload.setdefault("transport_stages", []).append(stage)
     args.manifest.write_text(json.dumps(payload, indent=2) + "\n")
     print(f"Updated {args.manifest} for stage {stage_name}")

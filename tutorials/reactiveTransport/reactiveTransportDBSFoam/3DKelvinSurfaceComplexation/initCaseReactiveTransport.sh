@@ -116,9 +116,12 @@ python kelvin_provenance.py record \
     --snapshot-root provenance/initialization \
     --dictionary constant/transportProperties \
     --dictionary constant/thermoPhysicalProperties \
+    --dictionary constant/dynamicMeshDict \
+    --dictionary constant/turbulenceProperties \
     --dictionary system/postProcessDict \
     --dictionary system/controlDict \
     --dictionary system/fvSolution \
+    --dictionary system/fvSchemes \
     --output run_provenance.json
 
 if [ -d "processor0" ]
