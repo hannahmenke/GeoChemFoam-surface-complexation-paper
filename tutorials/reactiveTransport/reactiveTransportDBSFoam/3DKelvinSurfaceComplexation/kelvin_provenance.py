@@ -22,6 +22,10 @@ REQUIRED_INITIAL_FIELDS = (
     "phi",
 )
 REQUIRED_POLYMESH_FILES = ("boundary", "faces", "neighbour", "owner", "points")
+TRACKED_CONTROL_TEMPLATE = Path(
+    "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
+    "3DKelvinSurfaceComplexation/system/controlDict1"
+)
 REALIZED_TRACKED_CASE_PATHS = (
     "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
     "3DKelvinSurfaceComplexation/constant/thermoPhysicalProperties",
@@ -49,7 +53,7 @@ IDENTITY_ENV = (
     "WM_COMPILE_OPTION", "WM_LABEL_OPTION", "WM_MPLIB", "WM_OPTIONS",
     "WM_PRECISION_OPTION", "WM_PROJECT", "WM_PROJECT_VERSION",
 )
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 
 def sha256(path: Path) -> str:
@@ -265,21 +269,41 @@ def densities(path: Path) -> dict[str, float]:
 def snapshot_dictionaries(root: Path, paths: list[Path]) -> list[dict[str, object]]:
     if not paths:
         raise SystemExit("No realised dictionaries were supplied for snapshotting")
+    case = Path.cwd().resolve()
+    root = root if root.is_absolute() else case / root
+    validate_case_path(root, case)
     if root.exists():
         raise SystemExit(f"Refusing to overwrite provenance snapshot: {root}")
     prepared: list[tuple[Path, Path]] = []
     for source in paths:
         if source.is_absolute() or ".." in source.parts:
             raise SystemExit(f"Realised dictionary path must be case-relative: {source}")
-        if not source.is_file():
-            raise SystemExit(f"Missing realised dictionary: {source}")
-        prepared.append((source, root / source))
+        source_path = case / source
+        validate_case_artifact(source_path, case, expect_directory=False)
+        destination = root / source
+        validate_case_path(destination, case)
+        prepared.append((source_path, destination))
     records = []
-    for source, destination in prepared:
+    for source_path, destination in prepared:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, destination)
-        records.append({"source": str(source), "snapshot": file_record(destination)})
+        validate_case_artifact(destination.parent, case, expect_directory=True)
+        shutil.copyfile(source_path, destination)
+        validate_case_artifact(destination, case, expect_directory=False)
+        records.append(
+            {
+                "source": str(source_path.relative_to(case)),
+                "snapshot": file_record(destination),
+            }
+        )
     return records
+
+
+def require_snapshot_root(root: Path, case: Path, expected: Path) -> Path:
+    candidate = root if root.is_absolute() else case / root
+    validate_case_path(candidate, case)
+    if candidate.resolve(strict=False) != expected.resolve(strict=False):
+        raise SystemExit(f"Kelvin provenance snapshot root must be {expected}")
+    return candidate
 
 
 def require_realized_dictionaries(paths: list[Path]) -> None:
@@ -311,18 +335,30 @@ def runtime_from_args(args: argparse.Namespace) -> dict[str, object]:
 
 def record(args: argparse.Namespace) -> None:
     runtime = args.runtime.resolve()
+    case = Path.cwd().resolve()
+    paper_root = args.paper.resolve()
     runtime_identity = runtime_from_args(args)
     artifacts = runtime_artifacts(runtime)
     require_realized_dictionaries(args.dictionary)
-    snapshots = snapshot_dictionaries(args.snapshot_root, args.dictionary)
+    snapshot_root = require_snapshot_root(
+        args.snapshot_root, case, case / "provenance" / "initialization"
+    )
     control_template = Path("system/controlDict1")
-    validate_case_artifact(Path.cwd() / control_template, Path.cwd(), expect_directory=False)
+    local_template = case / control_template
+    tracked_template = paper_root / TRACKED_CONTROL_TEMPLATE
+    validate_case_artifact(local_template, case, expect_directory=False)
+    validate_case_artifact(tracked_template, paper_root, expect_directory=False)
+    if local_template.read_bytes() != tracked_template.read_bytes():
+        raise SystemExit("Case-local controlDict1 differs from the tracked Kelvin template")
+    paper = paper_identity(paper_root)
+    snapshots = snapshot_dictionaries(snapshot_root, args.dictionary)
     payload = {
         "schema_version": SCHEMA_VERSION,
         "case_id": "3d_kelvin",
         "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "paper": paper_identity(args.paper.resolve()),
+        "paper": paper,
         "transport_control_template": file_record(control_template),
+        "tracked_transport_control_template": file_record(tracked_template),
         "runtime": runtime_identity,
         "runtime_artifacts": artifacts,
         "surface": surface_record(args.surface_log, args.mode, args.sigma),
@@ -487,16 +523,34 @@ def verify_file_records(records: object) -> None:
             raise SystemExit(f"Immutable case input changed or disappeared: {path}")
 
 
-def verify_dictionary_snapshots(records: object) -> None:
-    if not isinstance(records, list) or not records:
+def verify_dictionary_snapshots(
+    records: object, case: Path, expected_root: Path
+) -> None:
+    if not isinstance(records, list) or len(records) != len(REQUIRED_REALIZED_DICTIONARIES):
         raise SystemExit("Manifest has no realised dictionary snapshots")
+    case = case.resolve()
+    expected_root = expected_root if expected_root.is_absolute() else case / expected_root
+    validate_case_artifact(expected_root, case, expect_directory=True)
+    seen = set()
     for record in records:
         if not isinstance(record, dict) or not isinstance(record.get("snapshot"), dict):
             raise SystemExit("Malformed realised dictionary snapshot")
+        source = Path(str(record.get("source", "")))
+        if source in seen or source not in REQUIRED_REALIZED_DICTIONARIES:
+            raise SystemExit(f"Unexpected or duplicate realised dictionary source: {source}")
+        seen.add(source)
+        validate_case_artifact(case / source, case, expect_directory=False)
         snapshot = record["snapshot"]
         path = Path(str(snapshot.get("path", "")))
-        if not path.is_file() or sha256(path) != snapshot.get("sha256"):
+        expected_path = expected_root / source
+        validate_case_artifact(expected_path, case, expect_directory=False)
+        if (
+            path != expected_path.resolve()
+            or sha256(expected_path) != snapshot.get("sha256")
+        ):
             raise SystemExit(f"Realised dictionary snapshot changed or disappeared: {path}")
+    if seen != set(REQUIRED_REALIZED_DICTIONARIES):
+        raise SystemExit("Realised dictionary snapshot source set is incomplete")
 
 
 def verify_initial_dictionary_anchors(records: object, current: list[Path]) -> None:
@@ -642,9 +696,7 @@ def tree_records(
     return records
 
 
-def validate_case_artifact(
-    path: Path, case: Path, *, expect_directory: bool
-) -> None:
+def validate_case_path(path: Path, case: Path) -> None:
     case = case.resolve()
     try:
         relative = path.relative_to(case)
@@ -656,9 +708,15 @@ def validate_case_artifact(
         if cursor.is_symlink():
             raise SystemExit(f"Kelvin artifact path contains a symlink: {cursor}")
     try:
-        path.resolve().relative_to(case)
+        path.resolve(strict=False).relative_to(case)
     except ValueError as error:
         raise SystemExit(f"Kelvin artifact resolves outside the case: {path}") from error
+
+
+def validate_case_artifact(
+    path: Path, case: Path, *, expect_directory: bool
+) -> None:
+    validate_case_path(path, case)
     valid_type = path.is_dir() if expect_directory else path.is_file()
     if not valid_type:
         expected = "directory" if expect_directory else "regular file"
@@ -835,15 +893,25 @@ def validate_recorded_paper(payload: dict[str, object]) -> None:
 
 def validate_control_template_record(payload: dict[str, object], template: Path) -> None:
     record = payload.get("transport_control_template")
-    if not isinstance(record, dict):
-        raise SystemExit("Manifest lacks the Kelvin transport-control template")
-    validate_case_artifact(template, template.parents[1], expect_directory=False)
+    source_record = payload.get("tracked_transport_control_template")
+    paper = payload.get("paper")
+    if not isinstance(record, dict) or not isinstance(source_record, dict):
+        raise SystemExit("Manifest lacks the Kelvin transport-control template records")
+    if not isinstance(paper, dict):
+        raise SystemExit("Manifest lacks Kelvin paper/case identity")
+    case = template.parents[1]
+    paper_root = Path(str(paper.get("root", "")))
+    source = paper_root / TRACKED_CONTROL_TEMPLATE
+    validate_case_artifact(template, case, expect_directory=False)
+    validate_case_artifact(source, paper_root, expect_directory=False)
     if (
         Path(str(record.get("path", ""))) != template.resolve()
-        or not template.is_file()
         or sha256(template) != record.get("sha256")
+        or Path(str(source_record.get("path", ""))) != source.resolve()
+        or sha256(source) != source_record.get("sha256")
+        or template.read_bytes() != source.read_bytes()
     ):
-        raise SystemExit("Kelvin transport-control template changed after initialization")
+        raise SystemExit("Kelvin transport-control templates changed after initialization")
 
 
 def run_config(args: argparse.Namespace) -> None:
@@ -866,19 +934,27 @@ def run_config(args: argparse.Namespace) -> None:
     ):
         raise SystemExit("Surface chemistry changed after initialization")
     verify_file_records(chemistry.get("files"))
+    case = args.case.resolve()
+    snapshot_root = require_snapshot_root(
+        args.snapshot_root, case, case / "provenance" / "stages"
+    )
     initialization_dictionaries = payload.get("realized_initialization_dictionaries")
-    verify_dictionary_snapshots(initialization_dictionaries)
+    verify_dictionary_snapshots(
+        initialization_dictionaries, case, case / "provenance" / "initialization"
+    )
     stages = payload.get("transport_stages")
     if not isinstance(stages, list):
         raise SystemExit("Manifest has no transport stage list")
     for stage in stages:
         if not isinstance(stage, dict):
             raise SystemExit("Malformed Kelvin stage record")
-        verify_dictionary_snapshots(stage.get("dictionaries"))
+        verify_dictionary_snapshots(
+            stage.get("dictionaries"), case,
+            case / "provenance" / "stages" / str(stage.get("stage_id", "")),
+        )
     require_realized_dictionaries(args.dictionary)
     verify_initial_dictionary_anchors(initialization_dictionaries, args.dictionary)
     dictionary_identity = immutable_dictionary_digest(args.dictionary)
-    case = args.case.resolve()
     expected_ranks = 1
     decomposition = {}
     for key in ("NPX", "NPY", "NPZ"):
@@ -955,10 +1031,10 @@ def run_config(args: argparse.Namespace) -> None:
     )
     stage_base = f"{controls['startTime']:g}_to_{controls['endTime']:g}"
     attempt = 1
-    while (args.snapshot_root / f"{stage_base}_attempt_{attempt:03d}").exists():
+    while (snapshot_root / f"{stage_base}_attempt_{attempt:03d}").exists():
         attempt += 1
     stage_name = f"{stage_base}_attempt_{attempt:03d}"
-    snapshots = snapshot_dictionaries(args.snapshot_root / stage_name, args.dictionary)
+    snapshots = snapshot_dictionaries(snapshot_root / stage_name, args.dictionary)
     stage = {
         **controls,
         "stage_id": stage_name,
@@ -1027,9 +1103,15 @@ def finalise_run(args: argparse.Namespace) -> None:
     if not isinstance(chemistry, dict):
         raise SystemExit("Manifest has no immutable Kelvin inputs")
     verify_file_records(chemistry.get("files"))
+    case = args.case.resolve()
     initialization_dictionaries = payload.get("realized_initialization_dictionaries")
-    verify_dictionary_snapshots(initialization_dictionaries)
-    verify_dictionary_snapshots(stage.get("dictionaries"))
+    verify_dictionary_snapshots(
+        initialization_dictionaries, case, case / "provenance" / "initialization"
+    )
+    verify_dictionary_snapshots(
+        stage.get("dictionaries"), case,
+        case / "provenance" / "stages" / str(stage.get("stage_id", "")),
+    )
     dictionaries = list(REQUIRED_REALIZED_DICTIONARIES)
     verify_initial_dictionary_anchors(initialization_dictionaries, dictionaries)
     if immutable_dictionary_digest(dictionaries) != stage.get("immutable_dictionary_sha256"):
@@ -1044,7 +1126,6 @@ def finalise_run(args: argparse.Namespace) -> None:
             raise SystemExit(f"Kelvin controls changed before finalisation: {key}")
     endpoint = float(controls["endTime"])
     log_record = clean_solver_log(args.solver_log, endpoint)
-    case = args.case.resolve()
     decomposition = {
         key: scalar_file(case / "system" / key) for key in ("NPX", "NPY", "NPZ")
     }

@@ -242,12 +242,36 @@ class DictionarySnapshotTests(unittest.TestCase):
                 self.assertEqual(records[0]["snapshot"]["sha256"], PROVENANCE.sha256(dictionary))
                 with self.assertRaisesRegex(SystemExit, "Refusing to overwrite"):
                     PROVENANCE.snapshot_dictionaries(snapshot, [Path("system/controlDict")])
-                with self.assertRaisesRegex(SystemExit, "Missing realised dictionary"):
+                with self.assertRaisesRegex(SystemExit, "not a regular file"):
                     PROVENANCE.snapshot_dictionaries(
                         case / "provenance" / "missing", [Path("system/fvSolution")]
                     )
             finally:
                 os.chdir(old_cwd)
+
+    def test_symlinked_provenance_root_is_rejected_before_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            case = root / "case"
+            outside = root / "outside-provenance"
+            case.mkdir()
+            outside.mkdir()
+            for relative in PROVENANCE.REQUIRED_REALIZED_DICTIONARIES:
+                path = case / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(f"{relative}\n")
+            (case / "provenance").symlink_to(outside, target_is_directory=True)
+            old_cwd = Path.cwd()
+            try:
+                os.chdir(case)
+                with self.assertRaisesRegex(SystemExit, "path contains a symlink"):
+                    PROVENANCE.snapshot_dictionaries(
+                        Path("provenance/initialization"),
+                        list(PROVENANCE.REQUIRED_REALIZED_DICTIONARIES),
+                    )
+            finally:
+                os.chdir(old_cwd)
+            self.assertEqual(list(outside.iterdir()), [])
 
 
 class PreparedRunnerTests(unittest.TestCase):
@@ -342,7 +366,7 @@ class StagedRestartTests(unittest.TestCase):
         )
         initialization_records = []
         for relative in PROVENANCE.REQUIRED_REALIZED_DICTIONARIES:
-            snapshot = self.case / "initialization" / relative
+            snapshot = self.case / "provenance" / "initialization" / relative
             snapshot.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(self.case / relative, snapshot)
             initialization_records.append(
@@ -351,13 +375,18 @@ class StagedRestartTests(unittest.TestCase):
         self._write_control(0.0, 1.0, 0.1, False)
         control_template = self.case / "system" / "controlDict1"
         shutil.copyfile(self.case / "system" / "controlDict", control_template)
+        paper_root = self.case / "paper"
+        tracked_template = paper_root / PROVENANCE.TRACKED_CONTROL_TEMPLATE
+        tracked_template.parent.mkdir(parents=True)
+        shutil.copyfile(control_template, tracked_template)
         manifest = {
             "schema_version": PROVENANCE.SCHEMA_VERSION,
             "case_id": "3d_kelvin",
             "runtime": {},
             "runtime_artifacts": {},
-            "paper": {},
+            "paper": {"root": str(paper_root)},
             "transport_control_template": PROVENANCE.file_record(control_template),
+            "tracked_transport_control_template": PROVENANCE.file_record(tracked_template),
             "chemistry": {
                 "surface_master_densities_kmol_m2": {"Surf_s": 2e-7, "Surf_w": 6e-6},
                 "files": [PROVENANCE.file_record(chemistry)],
@@ -397,13 +426,13 @@ class StagedRestartTests(unittest.TestCase):
             f"phreeqcRestoreCheckpoint {'true' if restore else 'false'};\n"
         )
 
-    def _record_stage(self) -> None:
+    def _record_stage(self, snapshot_root: Path = Path("provenance/stages")) -> None:
         args = SimpleNamespace(
             manifest=Path("manifest.json"),
             case=Path("."),
             control=Path("system/controlDict"),
             thermo=Path("constant/thermoPhysicalProperties"),
-            snapshot_root=Path("provenance/stages"),
+            snapshot_root=snapshot_root,
             dictionary=self.dictionary_paths,
         )
         old_cwd = Path.cwd()
@@ -670,7 +699,67 @@ class StagedRestartTests(unittest.TestCase):
     def test_changed_transport_template_fails_closed(self) -> None:
         template = self.case / "system" / "controlDict1"
         template.write_text(template.read_text().replace("purgeWrite 0;", "purgeWrite 1;"))
-        with self.assertRaisesRegex(SystemExit, "template changed after initialization"):
+        with self.assertRaisesRegex(SystemExit, "templates changed after initialization"):
+            self._record_stage()
+
+    def test_drifted_tracked_template_cannot_authorize_local_control(self) -> None:
+        manifest = self.case / "manifest.json"
+        payload = json.loads(manifest.read_text())
+        source = Path(payload["tracked_transport_control_template"]["path"])
+        source.write_text(source.read_text().replace("purgeWrite 0;", "purgeWrite 1;"))
+        payload["tracked_transport_control_template"] = PROVENANCE.file_record(source)
+        manifest.write_text(json.dumps(payload) + "\n")
+        with self.assertRaisesRegex(SystemExit, "templates changed after initialization"):
+            self._record_stage()
+
+    def test_symlinked_realized_dictionary_leaf_and_ancestor_fail_closed(self) -> None:
+        transport = self.case / "constant" / "transportProperties"
+        outside = Path(self.temp.name) / "outside-transportProperties"
+        shutil.copyfile(transport, outside)
+        transport.unlink()
+        transport.symlink_to(outside)
+        with self.assertRaisesRegex(SystemExit, "path contains a symlink"):
+            self._record_stage()
+
+        transport.unlink()
+        shutil.copyfile(outside, transport)
+        constant = self.case / "constant"
+        outside_constant = Path(self.temp.name) / "outside-constant"
+        constant.rename(outside_constant)
+        constant.symlink_to(outside_constant, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, "path contains a symlink"):
+            self._record_stage()
+
+    def test_symlinked_stage_snapshot_root_fails_before_copy(self) -> None:
+        stages = self.case / "provenance" / "stages"
+        outside = Path(self.temp.name) / "outside-stages"
+        outside.mkdir()
+        stages.symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, "path contains a symlink"):
+            self._record_stage()
+        self.assertEqual(list(outside.iterdir()), [])
+
+    def test_noncanonical_stage_snapshot_root_fails_closed(self) -> None:
+        with self.assertRaisesRegex(SystemExit, "snapshot root must be"):
+            self._record_stage(Path("other-provenance/stages"))
+
+    def test_stage_snapshot_source_and_path_sets_fail_closed(self) -> None:
+        self._record_stage()
+        manifest = self.case / "manifest.json"
+        original = json.loads(manifest.read_text())
+
+        payload = json.loads(json.dumps(original))
+        dictionaries = payload["transport_stages"][0]["dictionaries"]
+        dictionaries[-1]["source"] = dictionaries[0]["source"]
+        manifest.write_text(json.dumps(payload) + "\n")
+        with self.assertRaisesRegex(SystemExit, "Unexpected or duplicate"):
+            self._record_stage()
+
+        payload = json.loads(json.dumps(original))
+        dictionaries = payload["transport_stages"][0]["dictionaries"]
+        dictionaries[0]["snapshot"] = dictionaries[1]["snapshot"]
+        manifest.write_text(json.dumps(payload) + "\n")
+        with self.assertRaisesRegex(SystemExit, "snapshot changed or disappeared"):
             self._record_stage()
 
     def test_checkpoint_handoff_rejects_fabricated_historical_paths(self) -> None:
