@@ -108,6 +108,56 @@ class RuntimeIdentityTests(unittest.TestCase):
             self.identity()
 
 
+class PaperIdentityTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name) / "paper"
+        self.root.mkdir()
+        git(self.root, "init")
+        (self.root / "paper.md").write_text("reviewed\n")
+        git(self.root, "add", "paper.md")
+        commit(self.root, "paper source")
+
+    def tearDown(self) -> None:
+        self.temp.cleanup()
+
+    def test_clean_source_with_untracked_outputs_passes(self) -> None:
+        expected = PROVENANCE.paper_identity(self.root)
+        (self.root / "untracked-output.dat").write_text("output\n")
+        self.assertEqual(PROVENANCE.paper_identity(self.root), expected)
+
+    def test_only_realized_case_dictionary_dirt_is_excluded(self) -> None:
+        realized = self.root / PROVENANCE.REALIZED_TRACKED_CASE_PATHS[0]
+        realized.parent.mkdir(parents=True)
+        realized.write_text("template output\n")
+        git(self.root, "add", str(realized.relative_to(self.root)))
+        commit(self.root, "tracked realised dictionary")
+        expected = PROVENANCE.paper_identity(self.root)
+        realized.write_text("realized run output\n")
+        self.assertEqual(PROVENANCE.paper_identity(self.root), expected)
+
+    def test_tracked_source_dirt_fails(self) -> None:
+        (self.root / "paper.md").write_text("modified\n")
+        with self.assertRaisesRegex(SystemExit, "source has tracked changes"):
+            PROVENANCE.paper_identity(self.root)
+
+    def test_dirty_control_template_and_recorded_paper_drift_fail(self) -> None:
+        template = (
+            self.root / "tutorials" / "reactiveTransport" / "reactiveTransportDBSFoam"
+            / "3DKelvinSurfaceComplexation" / "system" / "controlDict1"
+        )
+        template.parent.mkdir(parents=True)
+        template.write_text("reviewed template\n")
+        git(self.root, "add", str(template.relative_to(self.root)))
+        commit(self.root, "control template")
+        recorded = PROVENANCE.paper_identity(self.root)
+        template.write_text("dirty template\n")
+        with self.assertRaisesRegex(SystemExit, "source has tracked changes"):
+            PROVENANCE.paper_identity(self.root)
+        with self.assertRaisesRegex(SystemExit, "source has tracked changes"):
+            PROVENANCE.validate_recorded_paper({"paper": recorded})
+
+
 class DependencyTests(unittest.TestCase):
     def test_all_absolute_dependencies_are_hashed_without_addresses(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
@@ -298,11 +348,16 @@ class StagedRestartTests(unittest.TestCase):
             initialization_records.append(
                 {"source": str(relative), "snapshot": PROVENANCE.file_record(snapshot)}
             )
+        self._write_control(0.0, 1.0, 0.1, False)
+        control_template = self.case / "system" / "controlDict1"
+        shutil.copyfile(self.case / "system" / "controlDict", control_template)
         manifest = {
             "schema_version": PROVENANCE.SCHEMA_VERSION,
             "case_id": "3d_kelvin",
             "runtime": {},
             "runtime_artifacts": {},
+            "paper": {},
+            "transport_control_template": PROVENANCE.file_record(control_template),
             "chemistry": {
                 "surface_master_densities_kmol_m2": {"Surf_s": 2e-7, "Surf_w": 6e-6},
                 "files": [PROVENANCE.file_record(chemistry)],
@@ -311,7 +366,6 @@ class StagedRestartTests(unittest.TestCase):
             "transport_stages": [],
         }
         (self.case / "manifest.json").write_text(json.dumps(manifest) + "\n")
-        self._write_control(0.0, 1.0, 0.1, False)
         self.dictionary_paths = list(PROVENANCE.REQUIRED_REALIZED_DICTIONARIES)
 
     def tearDown(self) -> None:
@@ -355,7 +409,9 @@ class StagedRestartTests(unittest.TestCase):
         old_cwd = Path.cwd()
         try:
             os.chdir(self.case)
-            with mock.patch.object(PROVENANCE, "validate_recorded_runtime"):
+            with mock.patch.object(PROVENANCE, "validate_recorded_runtime"), mock.patch.object(
+                PROVENANCE, "validate_recorded_paper"
+            ):
                 PROVENANCE.run_config(args)
         finally:
             os.chdir(old_cwd)
@@ -387,7 +443,9 @@ class StagedRestartTests(unittest.TestCase):
         old_cwd = Path.cwd()
         try:
             os.chdir(self.case)
-            with mock.patch.object(PROVENANCE, "validate_recorded_runtime"):
+            with mock.patch.object(PROVENANCE, "validate_recorded_runtime"), mock.patch.object(
+                PROVENANCE, "validate_recorded_paper"
+            ):
                 PROVENANCE.finalise_run(args)
         finally:
             os.chdir(old_cwd)
@@ -426,7 +484,7 @@ class StagedRestartTests(unittest.TestCase):
         self._complete_initial_stage()
         self._write_control(1.0, 2.0, 0.1, True)
         self._write_control(1.0, 2.0, 0.1, True, "latestTime")
-        with self.assertRaisesRegex(SystemExit, "startFrom startTime"):
+        with self.assertRaisesRegex(SystemExit, "differs from the tracked Kelvin transport template"):
             self._record_stage()
 
         self._write_control(1.0, 2.0, 0.2, True)
@@ -435,7 +493,7 @@ class StagedRestartTests(unittest.TestCase):
 
         self._write_control(1.0, 2.0, 0.1, True)
         self._write_control(1.0, 2.0, 0.1, True, application="wrongSolver")
-        with self.assertRaisesRegex(SystemExit, "application reactiveTransportDBSFoam"):
+        with self.assertRaisesRegex(SystemExit, "differs from the tracked Kelvin transport template"):
             self._record_stage()
 
         self._write_control(1.0, 2.0, 0.1, True)
@@ -576,6 +634,21 @@ class StagedRestartTests(unittest.TestCase):
             "adjust time step": original + "adjustTimeStep true;\n",
             "max Co": original + "maxCo 99;\n",
             "duplicate application": original + "application reactiveTransportDBSFoam;\n",
+            "duplicate nonfinite timestep": original + "deltaT nan;\n",
+            "duplicate disabled checkpoint": (
+                original + "phreeqcRestartCheckpoints off;\n"
+            ),
+            "lexical restore": original.replace(
+                "phreeqcRestoreCheckpoint false;", "phreeqcRestoreCheckpoint off;"
+            ),
+            "lexical purge": original.replace("purgeWrite 0;", "purgeWrite $alternate;"),
+            "preprocessing include": original + '#include "override"\n',
+            "extra libraries": original + 'libs ("liboverride.so");\n',
+            "extra functions": original + "functions { override yes; }\n",
+            "required only in comment": original.replace(
+                "application reactiveTransportDBSFoam;",
+                "/* application reactiveTransportDBSFoam; */",
+            ),
             "nonfinite timestep": original.replace("deltaT 0.1;", "deltaT 1e999;"),
         }
         for label, text in mutations.items():
@@ -584,6 +657,21 @@ class StagedRestartTests(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     self._record_stage()
         control.write_text(original)
+
+    def test_comments_cannot_supply_or_override_controls(self) -> None:
+        control = self.case / "system" / "controlDict"
+        control.write_text(
+            control.read_text()
+            + "// application wrongSolver; adjustTimeStep true;\n"
+            + "/* maxCo 99; purgeWrite 5; deltaT nan; */\n"
+        )
+        self._record_stage()
+
+    def test_changed_transport_template_fails_closed(self) -> None:
+        template = self.case / "system" / "controlDict1"
+        template.write_text(template.read_text().replace("purgeWrite 0;", "purgeWrite 1;"))
+        with self.assertRaisesRegex(SystemExit, "template changed after initialization"):
+            self._record_stage()
 
     def test_checkpoint_handoff_rejects_fabricated_historical_paths(self) -> None:
         self._complete_initial_stage()
@@ -630,7 +718,15 @@ class StagedRestartTests(unittest.TestCase):
         marker_backing = rank / "2" / "marker-backing"
         marker.rename(marker_backing)
         marker.symlink_to(marker_backing.name)
-        with self.assertRaisesRegex(SystemExit, "checkpoint artifact must not be a symlink"):
+        with self.assertRaisesRegex(SystemExit, "artifact path contains a symlink"):
+            self._record_stage()
+
+    def test_symlinked_mesh_root_outside_case_fails_closed(self) -> None:
+        mesh = self.case / "processor0" / "constant" / "polyMesh"
+        outside = Path(self.temp.name) / "outside-mesh"
+        mesh.rename(outside)
+        mesh.symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, "artifact path contains a symlink"):
             self._record_stage()
 
     def test_completed_stage_rejects_backtrack(self) -> None:

@@ -73,5 +73,6 @@ production settings.
 Regenerate both figures after a completed run with:
 
 ```bash
-../../figures/scripts/render_kelvin_mnmg_figures.sh
+KELVIN_REPO_ROOT="$(git rev-parse --show-toplevel)"
+"$KELVIN_REPO_ROOT/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_kelvin_mnmg_figures.sh"
 ```

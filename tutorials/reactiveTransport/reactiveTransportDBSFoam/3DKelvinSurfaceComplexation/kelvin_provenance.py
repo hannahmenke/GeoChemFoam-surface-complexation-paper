@@ -22,6 +22,18 @@ REQUIRED_INITIAL_FIELDS = (
     "phi",
 )
 REQUIRED_POLYMESH_FILES = ("boundary", "faces", "neighbour", "owner", "points")
+REALIZED_TRACKED_CASE_PATHS = (
+    "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
+    "3DKelvinSurfaceComplexation/constant/thermoPhysicalProperties",
+    "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
+    "3DKelvinSurfaceComplexation/constant/transportProperties",
+    "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
+    "3DKelvinSurfaceComplexation/system/controlDict",
+    "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
+    "3DKelvinSurfaceComplexation/system/fvSolution",
+    "tutorials/reactiveTransport/reactiveTransportDBSFoam/"
+    "3DKelvinSurfaceComplexation/system/postProcessDict",
+)
 REQUIRED_REALIZED_DICTIONARIES = (
     Path("constant/transportProperties"),
     Path("constant/thermoPhysicalProperties"),
@@ -37,7 +49,7 @@ IDENTITY_ENV = (
     "WM_COMPILE_OPTION", "WM_LABEL_OPTION", "WM_MPLIB", "WM_OPTIONS",
     "WM_PRECISION_OPTION", "WM_PROJECT", "WM_PROJECT_VERSION",
 )
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 
 def sha256(path: Path) -> str:
@@ -138,7 +150,13 @@ def runtime_git_identity(
 
 def paper_identity(root: Path) -> dict[str, object]:
     commit, tree = commit_tree(root)
-    diff = tracked_diff(root, ignore_submodules=True)
+    diff = git_value(
+        root,
+        "diff", "--binary", "HEAD", "--ignore-submodules=all", "--", ".",
+        *(f":(exclude){path}" for path in REALIZED_TRACKED_CASE_PATHS),
+    )
+    if diff:
+        raise SystemExit("Kelvin paper/case source has tracked changes")
     return {
         "root": str(root.resolve()),
         "commit": commit,
@@ -297,11 +315,14 @@ def record(args: argparse.Namespace) -> None:
     artifacts = runtime_artifacts(runtime)
     require_realized_dictionaries(args.dictionary)
     snapshots = snapshot_dictionaries(args.snapshot_root, args.dictionary)
+    control_template = Path("system/controlDict1")
+    validate_case_artifact(Path.cwd() / control_template, Path.cwd(), expect_directory=False)
     payload = {
         "schema_version": SCHEMA_VERSION,
         "case_id": "3d_kelvin",
         "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "paper": paper_identity(args.paper.resolve()),
+        "transport_control_template": file_record(control_template),
         "runtime": runtime_identity,
         "runtime_artifacts": artifacts,
         "surface": surface_record(args.surface_log, args.mode, args.sigma),
@@ -332,7 +353,7 @@ def scalar_file(path: Path) -> int:
 
 
 def control_values(path: Path) -> dict[str, object]:
-    text = path.read_text()
+    text = strip_foam_comments(path.read_text(), path)
     values: dict[str, object] = {}
     required_words = {
         "application": "reactiveTransportDBSFoam",
@@ -385,6 +406,64 @@ def control_values(path: Path) -> dict[str, object]:
     ):
         raise SystemExit("writeInterval must equal endTime - startTime")
     return values
+
+
+def strip_foam_comments(text: str, path: Path) -> str:
+    result = []
+    index = 0
+    block = False
+    while index < len(text):
+        pair = text[index:index + 2]
+        if block:
+            if pair == "*/":
+                block = False
+                index += 2
+            else:
+                result.append("\n" if text[index] == "\n" else " ")
+                index += 1
+        elif pair == "/*":
+            block = True
+            result.extend("  ")
+            index += 2
+        elif pair == "//":
+            while index < len(text) and text[index] != "\n":
+                result.append(" ")
+                index += 1
+        else:
+            result.append(text[index])
+            index += 1
+    if block:
+        raise SystemExit(f"Unterminated block comment in {path}")
+    return "".join(result)
+
+
+def canonical_control_contract(path: Path) -> str:
+    text = strip_foam_comments(path.read_text(), path)
+    if "#" in text:
+        raise SystemExit(f"OpenFOAM preprocessing directives are forbidden in {path}")
+    protected = (
+        "application", "startFrom", "startTime", "stopAt", "endTime", "deltaT",
+        "writeControl", "writeInterval", "purgeWrite", "writeFormat",
+        "writePrecision", "writeCompression", "timeFormat", "timePrecision",
+        "runTimeModifiable", "phreeqcRestartCheckpoints", "phreeqcRestoreCheckpoint",
+    )
+    for key in protected:
+        count = len(re.findall(rf"(?<![A-Za-z0-9_]){key}\s+[^;]*;", text))
+        if count != 1:
+            raise SystemExit(f"Expected exactly one active {key} in {path}, found {count}")
+    for key in (
+        "startTime", "endTime", "deltaT", "writeInterval", "phreeqcRestoreCheckpoint",
+    ):
+        pattern = rf"(^\s*{key}\s+)[^;]+(;)"
+        text, count = re.subn(pattern, rf"\1<stage-value>\2", text, flags=re.M)
+        if count != 1:
+            raise SystemExit(f"Cannot mask the singleton {key} in {path}")
+    return " ".join(text.split())
+
+
+def validate_control_template(control: Path, template: Path) -> None:
+    if canonical_control_contract(control) != canonical_control_contract(template):
+        raise SystemExit(f"{control} differs from the tracked Kelvin transport template")
 
 
 def immutable_control_digest(path: Path) -> str:
@@ -544,13 +623,15 @@ def checkpoint_record(
 def tree_records(
     root: Path, case: Path, excluded: set[str] | None = None
 ) -> list[dict[str, object]]:
+    validate_case_artifact(root, case, expect_directory=True)
     excluded = excluded or set()
     records = []
-    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+    for path in sorted(root.rglob("*")):
+        validate_case_artifact(path, case, expect_directory=path.is_dir())
+        if path.is_dir():
+            continue
         if path.name in excluded:
             continue
-        if path.is_symlink():
-            raise SystemExit(f"Kelvin field or mesh artifact must not be a symlink: {path}")
         records.append(
             {
                 "path": str(path.relative_to(case)),
@@ -559,6 +640,29 @@ def tree_records(
             }
         )
     return records
+
+
+def validate_case_artifact(
+    path: Path, case: Path, *, expect_directory: bool
+) -> None:
+    case = case.resolve()
+    try:
+        relative = path.relative_to(case)
+    except ValueError as error:
+        raise SystemExit(f"Kelvin artifact is outside the case: {path}") from error
+    cursor = case
+    for part in relative.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise SystemExit(f"Kelvin artifact path contains a symlink: {cursor}")
+    try:
+        path.resolve().relative_to(case)
+    except ValueError as error:
+        raise SystemExit(f"Kelvin artifact resolves outside the case: {path}") from error
+    valid_type = path.is_dir() if expect_directory else path.is_file()
+    if not valid_type:
+        expected = "directory" if expect_directory else "regular file"
+        raise SystemExit(f"Kelvin artifact is not a {expected}: {path}")
 
 
 def records_digest(records: list[dict[str, object]]) -> str:
@@ -721,6 +825,27 @@ def validate_recorded_runtime(payload: dict[str, object]) -> None:
         raise SystemExit("Runtime binary, library, compiler, or OpenFOAM identity changed")
 
 
+def validate_recorded_paper(payload: dict[str, object]) -> None:
+    recorded = payload.get("paper")
+    if not isinstance(recorded, dict):
+        raise SystemExit("Manifest lacks Kelvin paper/case identity")
+    if paper_identity(Path(str(recorded.get("root", "")))) != recorded:
+        raise SystemExit("Kelvin paper/case identity changed after initialization")
+
+
+def validate_control_template_record(payload: dict[str, object], template: Path) -> None:
+    record = payload.get("transport_control_template")
+    if not isinstance(record, dict):
+        raise SystemExit("Manifest lacks the Kelvin transport-control template")
+    validate_case_artifact(template, template.parents[1], expect_directory=False)
+    if (
+        Path(str(record.get("path", ""))) != template.resolve()
+        or not template.is_file()
+        or sha256(template) != record.get("sha256")
+    ):
+        raise SystemExit("Kelvin transport-control template changed after initialization")
+
+
 def run_config(args: argparse.Namespace) -> None:
     payload = json.loads(args.manifest.read_text())
     if (
@@ -729,6 +854,10 @@ def run_config(args: argparse.Namespace) -> None:
     ):
         raise SystemExit("Manifest is not the current Kelvin provenance schema")
     validate_recorded_runtime(payload)
+    validate_recorded_paper(payload)
+    control_template = args.case.resolve() / "system" / "controlDict1"
+    validate_control_template_record(payload, control_template)
+    validate_control_template(args.control, control_template)
     controls = control_values(args.control)
     control_identity = immutable_control_digest(args.control)
     chemistry = payload.get("chemistry")
@@ -883,6 +1012,10 @@ def finalise_run(args: argparse.Namespace) -> None:
     ):
         raise SystemExit("Manifest is not the current Kelvin provenance schema")
     validate_recorded_runtime(payload)
+    validate_recorded_paper(payload)
+    control_template = args.case.resolve() / "system" / "controlDict1"
+    validate_control_template_record(payload, control_template)
+    validate_control_template(args.control, control_template)
     controls = control_values(args.control)
     stages = payload.get("transport_stages")
     if not isinstance(stages, list) or not stages or not isinstance(stages[-1], dict):

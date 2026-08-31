@@ -431,8 +431,8 @@ signs/units is not a mass-balance pass.
 - Verify the manifest from a clean checkout and an archive without relying on
   absolute pilot paths.  Preserve checkpoint and field hashes before any
   reconstruction or curation.
-- After the `Surf_*` wrapper mismatch is fixed, regenerate the spatial and
-  temporal Kelvin figures from times 0/120 and 0/12/.../120.  They must show
+- Using the integrated `Surf_*` wrapper, regenerate the spatial and temporal
+  Kelvin figures from times 0/120 and 0/12/.../120.  They must show
   the Mn/Mg competition in both aqueous and surface fields.  Open and inspect
   them for complete fields, geometry, scales, labels, legends, and visible
   scientific comparison before adding Kelvin result claims to the manuscript.
