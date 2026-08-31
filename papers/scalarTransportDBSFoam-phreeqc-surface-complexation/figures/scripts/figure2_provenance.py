@@ -298,10 +298,11 @@ def record_figure(args: argparse.Namespace) -> None:
     manifest = args.manifest.resolve()
     paper_root = args.paper_root.resolve()
     case_dir = args.case_dir.resolve()
-    run = json.loads(manifest.read_text())
+    run = check_run(args)
     realized_transport = run.get("realized_transport", {})
     end_time = float(realized_transport.get("endTime", math.nan))
     write_interval = float(realized_transport.get("writeInterval", math.nan))
+    exact_float(args.time, end_time, "figure output time")
     verify_checkpoints(
         case_dir,
         checkpoint_time_names(end_time, write_interval),
@@ -406,6 +407,21 @@ def parser() -> argparse.ArgumentParser:
     record.add_argument("--paper-root", type=Path, required=True)
     record.add_argument("--figure", type=Path, required=True)
     record.add_argument("--time", type=float, required=True)
+    record.add_argument("--paper-commit", required=True)
+    record.add_argument("--runtime-commit", required=True)
+    record.add_argument("--solver-sha256", required=True)
+    record.add_argument("--library-sha256", action="append", required=True)
+    record.add_argument("--phreeqcrm-commit", required=True)
+    record.add_argument("--surface-mode", required=True)
+    record.add_argument("--surface-sigma", type=float, required=True)
+    record.add_argument("--surface-area", type=float, required=True)
+    record.add_argument("--intrinsic-area", type=float, required=True)
+    record.add_argument("--strong-density", type=float, required=True)
+    record.add_argument("--weak-density", type=float, required=True)
+    record.add_argument("--delta-t", type=float, required=True)
+    record.add_argument("--write-interval", type=float, required=True)
+    record.add_argument("--chemistry-input-count", type=int, required=True)
+    record.add_argument("--initial-input-count", type=int, required=True)
     record.add_argument(
         "--checkpoint-contract", choices=sorted(CHECKPOINT_CONTRACTS), required=True
     )

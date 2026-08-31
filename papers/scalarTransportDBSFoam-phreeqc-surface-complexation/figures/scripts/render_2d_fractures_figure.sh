@@ -102,7 +102,24 @@ python "$provenance_tool" record-figure \
   --paper-root "$repo_root" \
   --figure "$png_dir/fig02_2d_fractures.png" \
   --time 20000 \
+  --paper-commit fdd31c399d6fd6317027474ce9667d9850a7bb18 \
+  --runtime-commit 3c4a34326b5573d76d48664093a1933a5a65b316 \
+  --solver-sha256 3b41fd0914b4407fa591ea403cc66c4fde1daa7d1608481edaac19533e11b124 \
+  --library-sha256 libfiniteVolumeGCFOAM.so=e13af080edca54982d9950378ab27d1c0df5cc1b26d384eb6bb64845348502ad \
+  --library-sha256 libreactionThermophysicalModelsGCFOAM.so=447d857aa9679a1962f72d5df71f09c3faf0b84f4c5b74e279e092af1cdd425a \
+  --library-sha256 libPhreeqcRM.so=90ffa2f6c554941c40535739fc9359af19528425e6dc61b2876d00b016affe29 \
+  --phreeqcrm-commit a43de2c1d1dd5c0f93489d560fa3cd3e94646471 \
+  --surface-mode occupancyGaussian \
+  --surface-sigma 0.75 \
+  --surface-area 0.021990199701030694 \
+  --intrinsic-area 0.021960000000000004 \
+  --strong-density 2e-7 \
+  --weak-density 6e-6 \
+  --delta-t 0.25 \
+  --write-interval 2000 \
   --checkpoint-contract legacy-v1 \
+  --chemistry-input-count 30 \
+  --initial-input-count 224 \
   --figure-input "$scripts_dir/render_2d_fractures_figure.sh" \
   --figure-input "$scripts_dir/generate_2d_raw_geometry.py" \
   --figure-input "$provenance_tool" \

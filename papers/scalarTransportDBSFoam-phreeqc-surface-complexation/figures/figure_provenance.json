@@ -133,7 +133,7 @@
       "figure_inputs": [
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
-          "sha256": "5f33bf9a60f8abe66f93a2ded7f6bc4a8b847b96fcffee3472594136fad61c96"
+          "sha256": "8879a416291d72b893176af8572f481ce88bb4ae007289d6f674b86cc972f60b"
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
@@ -141,7 +141,7 @@
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
-          "sha256": "295170e4fe40297eac7fc1d1c637a84945c57ad9ef479dab92d1dc2fe7b9bb94"
+          "sha256": "6f1577140073105a7fefa1960c2b7217ff7a3b9d40b9502598043aca45c2ed43"
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
@@ -350,7 +350,7 @@
         "source_files": [
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
-            "sha256": "5f33bf9a60f8abe66f93a2ded7f6bc4a8b847b96fcffee3472594136fad61c96"
+            "sha256": "8879a416291d72b893176af8572f481ce88bb4ae007289d6f674b86cc972f60b"
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
@@ -358,7 +358,7 @@
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
-            "sha256": "295170e4fe40297eac7fc1d1c637a84945c57ad9ef479dab92d1dc2fe7b9bb94"
+            "sha256": "6f1577140073105a7fefa1960c2b7217ff7a3b9d40b9502598043aca45c2ed43"
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
@@ -366,7 +366,7 @@
           }
         ],
         "source_files_authoritative": true,
-        "source_files_sha256": "b13614be46c2ad6be217384242ac9ab363a3b8a87ede2236b2ecf94723e4b844",
+        "source_files_sha256": "bb06ead06d0ddcd060dbc5c8cd0d202ec8a8702823146cd93e424c10f6d614a3",
         "source_state": "curated_dirty_at_base"
       },
       "run_manifest_path": "${RUN_CASE_DIR}/run_provenance.json",

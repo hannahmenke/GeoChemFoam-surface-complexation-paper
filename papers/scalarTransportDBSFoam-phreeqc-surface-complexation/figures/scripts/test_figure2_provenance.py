@@ -8,6 +8,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 HERE = Path(__file__).resolve().parent
@@ -257,7 +258,9 @@ class Figure2Tests(unittest.TestCase):
                 renderer_repository="https://example.test/paper.git",
                 renderer_base_commit="a" * 40,
             )
-            provenance.record_figure(args)
+            with mock.patch.object(provenance, "check_run", return_value=run) as authenticate:
+                provenance.record_figure(args)
+            authenticate.assert_called_once_with(args)
             recorded = json.loads(output.read_text())
             self.assertEqual(recorded["schema_scope"], "bounded_figure2")
             self.assertTrue(recorded["figures"]["existing.png"]["keep"])
@@ -278,8 +281,56 @@ class Figure2Tests(unittest.TestCase):
             self.write_checkpoint(
                 case / "processor0/2000", "2000", "no-edl-v2"
             )
-            with self.assertRaisesRegex(SystemExit, "required legacy-v1 contract"):
+            with (
+                mock.patch.object(provenance, "check_run", return_value=run),
+                self.assertRaisesRegex(SystemExit, "required legacy-v1 contract"),
+            ):
                 provenance.record_figure(args)
+
+    def test_record_figure_rejects_failed_fresh_authentication_without_writing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            output = root / "figures.json"
+            args = argparse.Namespace(
+                figure=root / "figure.png", manifest=root / "stale.json",
+                time=20000, output=output, checkpoint_contract="legacy-v1",
+                case_dir=root / "case", paper_root=root, figure_input=[],
+                renderer_source=[], renderer_repository="repository",
+                renderer_base_commit="a" * 40,
+            )
+            for message in (
+                "malformed run manifest",
+                "final field changed after preflight",
+                "runtime library changed after preflight",
+            ):
+                with (
+                    self.subTest(message=message),
+                    mock.patch.object(
+                        provenance, "check_run", side_effect=SystemExit(message)
+                    ) as authenticate,
+                    self.assertRaisesRegex(SystemExit, message),
+                ):
+                    provenance.record_figure(args)
+                authenticate.assert_called_once_with(args)
+                self.assertFalse(output.exists())
+
+    def test_record_figure_rejects_output_time_different_from_authenticated_endpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            args = argparse.Namespace(
+                figure=root / "figure.png", manifest=root / "run.json",
+                time=18000, output=root / "figures.json",
+                checkpoint_contract="legacy-v1", case_dir=root / "case",
+                paper_root=root, figure_input=[], renderer_source=[],
+                renderer_repository="repository", renderer_base_commit="a" * 40,
+            )
+            run = {"realized_transport": {"endTime": 20000, "writeInterval": 2000}}
+            with (
+                mock.patch.object(provenance, "check_run", return_value=run),
+                self.assertRaisesRegex(SystemExit, "Wrong figure output time"),
+            ):
+                provenance.record_figure(args)
+            self.assertFalse(args.output.exists())
 
 
 if __name__ == "__main__":
