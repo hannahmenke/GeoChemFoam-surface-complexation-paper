@@ -16,7 +16,8 @@ EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 FINAL_FIELDS = ("Pb+2", "Cl-", "H+", "OH-", "Surf_sOPb+", "Surf_wOPb+")
 SUPPORT_FIELDS = ("eps", "aSurf", "Surf_s", "Surf_w")
 PATH_KEYS = {"path", "root", "figure_path", "run_manifest_path", "solver_executable"}
-CHECKPOINT_MARKER = re.compile(
+CHECKPOINT_CONTRACTS = ("legacy-v1", "no-edl-v2")
+LEGACY_CHECKPOINT_MARKER = re.compile(
     r"GeoChemFoam-PHREEQCRM-checkpoint 1\n"
     r"time ([^\s]+)\n"
     r"dumpSize ([0-9]+)\n"
@@ -68,7 +69,13 @@ def checkpoint_time_names(end_time: float, write_interval: float) -> tuple[str, 
     return tuple(f"{index * write_interval:g}" for index in range(1, rounded_count + 1))
 
 
-def verify_checkpoint(directory: Path, expected_time: str) -> None:
+def verify_checkpoint(
+    directory: Path, expected_time: str, checkpoint_contract: str
+) -> None:
+    require(
+        checkpoint_contract in CHECKPOINT_CONTRACTS,
+        f"Unknown checkpoint contract: {checkpoint_contract}",
+    )
     dump = directory / "phreeqc.dmp"
     marker = directory / "phreeqc.complete"
     pending_marker = directory / "phreeqc.complete.tmp"
@@ -82,17 +89,40 @@ def verify_checkpoint(directory: Path, expected_time: str) -> None:
         marker_text = marker.read_bytes().decode("ascii")
     except (OSError, UnicodeDecodeError) as error:
         raise SystemExit(f"Unreadable checkpoint marker: {marker}") from error
-    match = CHECKPOINT_MARKER.fullmatch(marker_text)
-    require(match is not None, f"Malformed checkpoint marker: {marker}")
+    if checkpoint_contract == "no-edl-v2":
+        expected_marker = (
+            "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
+            "surfaceModel NO_EDL\n"
+            f"time {expected_time}\n"
+            f"dumpSize {dump.stat().st_size}\n"
+            f"dumpSHA256 {sha256(dump)}\n"
+        )
+        require(
+            marker_text == expected_marker,
+            f"Checkpoint marker does not match required no-edl-v2 contract: {marker}",
+        )
+        return
+    match = LEGACY_CHECKPOINT_MARKER.fullmatch(marker_text)
+    require(
+        match is not None,
+        f"Checkpoint marker does not match required {checkpoint_contract} contract: {marker}",
+    )
     require(match.group(1) == expected_time, f"Wrong checkpoint time in marker: {marker}")
     require(int(match.group(2)) == dump.stat().st_size, f"Checkpoint size mismatch: {dump}")
     require(match.group(3) == sha256(dump), f"Checkpoint SHA256 mismatch: {dump}")
 
 
-def verify_checkpoints(case_dir: Path, time_names: tuple[str, ...], ranks: int = 8) -> None:
+def verify_checkpoints(
+    case_dir: Path, time_names: tuple[str, ...], checkpoint_contract: str,
+    ranks: int = 8,
+) -> None:
     for rank in range(ranks):
         for time_name in time_names:
-            verify_checkpoint(case_dir / f"processor{rank}" / time_name, time_name)
+            verify_checkpoint(
+                case_dir / f"processor{rank}" / time_name,
+                time_name,
+                checkpoint_contract,
+            )
 
 
 def portable_path(path: Path, roots: dict[str, Path]) -> str:
@@ -257,6 +287,7 @@ def check_run(args: argparse.Namespace) -> dict[str, object]:
     verify_checkpoints(
         case_dir,
         checkpoint_time_names(args.time, args.write_interval),
+        args.checkpoint_contract,
     )
 
     return payload
@@ -268,6 +299,14 @@ def record_figure(args: argparse.Namespace) -> None:
     paper_root = args.paper_root.resolve()
     case_dir = args.case_dir.resolve()
     run = json.loads(manifest.read_text())
+    realized_transport = run.get("realized_transport", {})
+    end_time = float(realized_transport.get("endTime", math.nan))
+    write_interval = float(realized_transport.get("writeInterval", math.nan))
+    verify_checkpoints(
+        case_dir,
+        checkpoint_time_names(end_time, write_interval),
+        args.checkpoint_contract,
+    )
     roots = {
         "RUN_CASE_DIR": case_dir,
         "RUNTIME_REPO": Path(run["runtime"]["root"]),
@@ -300,6 +339,7 @@ def record_figure(args: argparse.Namespace) -> None:
         "figure_sha256": sha256(figure),
         "recorded_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
         "output_time_s": args.time,
+        "checkpoint_contract": args.checkpoint_contract,
         "figure_inputs": figure_inputs,
         "renderer": {
             "repository": args.renderer_repository,
@@ -356,6 +396,9 @@ def parser() -> argparse.ArgumentParser:
     check.add_argument("--write-interval", type=float, required=True)
     check.add_argument("--chemistry-input-count", type=int, required=True)
     check.add_argument("--initial-input-count", type=int, required=True)
+    check.add_argument(
+        "--checkpoint-contract", choices=sorted(CHECKPOINT_CONTRACTS), required=True
+    )
     check.set_defaults(func=lambda args: check_run(args))
     record = commands.add_parser("record-figure")
     record.add_argument("--manifest", type=Path, required=True)
@@ -363,6 +406,9 @@ def parser() -> argparse.ArgumentParser:
     record.add_argument("--paper-root", type=Path, required=True)
     record.add_argument("--figure", type=Path, required=True)
     record.add_argument("--time", type=float, required=True)
+    record.add_argument(
+        "--checkpoint-contract", choices=sorted(CHECKPOINT_CONTRACTS), required=True
+    )
     record.add_argument("--figure-input", action="append", type=Path, default=[])
     record.add_argument("--renderer-source", action="append", type=Path, default=[])
     record.add_argument("--renderer-repository", required=True)

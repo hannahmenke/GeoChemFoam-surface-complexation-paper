@@ -189,8 +189,8 @@
       "media_type": "application/json",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/figure_provenance.json",
       "role": "provenance_record",
-      "sha256": "eb86e3b381d19a65f8b5806e006091ecb15a36dfc0356170ca335d67d36840d0",
-      "size_bytes": 38133
+      "sha256": "243866751288958f3c5db6b995d513aa8e0535edbed82633a1bffeea19e8f245",
+      "size_bytes": 38175
     },
     {
       "id": "provenance-2d-launch",
@@ -253,8 +253,8 @@
       "media_type": "text/x-python",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
       "role": "renderer_source",
-      "sha256": "295170e4fe40297eac7fc1d1c637a84945c57ad9ef479dab92d1dc2fe7b9bb94",
-      "size_bytes": 17581
+      "sha256": "647520ce6ef573f3045fc98d949c3a1a2baff6d8a0f56bbac9115b63b93d2096",
+      "size_bytes": 19135
     },
     {
       "id": "renderer-2d-validator",
@@ -269,8 +269,8 @@
       "media_type": "text/x-shellscript",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
       "role": "renderer_source",
-      "sha256": "5f33bf9a60f8abe66f93a2ded7f6bc4a8b847b96fcffee3472594136fad61c96",
-      "size_bytes": 4713
+      "sha256": "cd67499d5ba3f63a82c1d18beb6a1d085c49057bc10808f9a1d823a033bcf564",
+      "size_bytes": 4785
     },
     {
       "id": "renderer-estaillades-3d-generator",

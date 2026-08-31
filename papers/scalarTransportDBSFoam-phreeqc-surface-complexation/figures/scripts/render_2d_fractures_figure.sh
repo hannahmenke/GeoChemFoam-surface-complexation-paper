@@ -62,6 +62,7 @@ python "$provenance_tool" check-run \
   --time 20000 \
   --delta-t 0.25 \
   --write-interval 2000 \
+  --checkpoint-contract legacy-v1 \
   --chemistry-input-count 30 \
   --initial-input-count 224
 
@@ -101,6 +102,7 @@ python "$provenance_tool" record-figure \
   --paper-root "$repo_root" \
   --figure "$png_dir/fig02_2d_fractures.png" \
   --time 20000 \
+  --checkpoint-contract legacy-v1 \
   --figure-input "$scripts_dir/render_2d_fractures_figure.sh" \
   --figure-input "$scripts_dir/generate_2d_raw_geometry.py" \
   --figure-input "$provenance_tool" \

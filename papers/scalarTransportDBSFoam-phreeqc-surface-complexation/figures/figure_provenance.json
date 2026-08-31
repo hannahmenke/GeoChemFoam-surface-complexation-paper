@@ -1,6 +1,7 @@
 {
   "figures": {
     "fig02_2d_fractures.png": {
+      "checkpoint_contract": "legacy-v1",
       "chemistry": {
         "files": [
           {

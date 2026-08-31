@@ -31,13 +31,22 @@ validator = load(
 
 class Figure2Tests(unittest.TestCase):
     @staticmethod
-    def write_checkpoint(directory: Path, time_name: str, dump: bytes = b"state\n") -> None:
+    def write_checkpoint(
+        directory: Path, time_name: str, checkpoint_contract: str,
+        dump: bytes = b"state\n",
+    ) -> None:
         directory.mkdir(parents=True, exist_ok=True)
         dump_path = directory / "phreeqc.dmp"
         dump_path.write_bytes(dump)
+        prefix = {
+            "legacy-v1": "GeoChemFoam-PHREEQCRM-checkpoint 1\n",
+            "no-edl-v2": (
+                "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
+                "surfaceModel NO_EDL\n"
+            ),
+        }[checkpoint_contract]
         (directory / "phreeqc.complete").write_text(
-            "GeoChemFoam-PHREEQCRM-checkpoint 1\n"
-            f"time {time_name}\n"
+            prefix + f"time {time_name}\n"
             f"dumpSize {len(dump)}\n"
             f"dumpSHA256 {provenance.sha256(dump_path)}\n"
         )
@@ -90,42 +99,97 @@ class Figure2Tests(unittest.TestCase):
             self.assertEqual(times, ("2000", "4000", "6000"))
             for rank in range(8):
                 for time_name in times:
-                    self.write_checkpoint(case / f"processor{rank}" / time_name, time_name)
-            provenance.verify_checkpoints(case, times)
+                    self.write_checkpoint(
+                        case / f"processor{rank}" / time_name,
+                        time_name,
+                        "legacy-v1",
+                    )
+            provenance.verify_checkpoints(case, times, "legacy-v1")
             (case / "processor3" / "4000" / "phreeqc.dmp").write_bytes(b"other\n")
             with self.assertRaisesRegex(SystemExit, "Checkpoint SHA256 mismatch"):
-                provenance.verify_checkpoints(case, times)
+                provenance.verify_checkpoints(case, times, "legacy-v1")
 
     def test_checkpoint_validation_rejects_wrong_recorded_size(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / "2000"
-            self.write_checkpoint(directory, "2000")
+            self.write_checkpoint(directory, "2000", "legacy-v1")
             (directory / "phreeqc.dmp").write_bytes(b"longer state\n")
             with self.assertRaisesRegex(SystemExit, "Checkpoint size mismatch"):
-                provenance.verify_checkpoint(directory, "2000")
+                provenance.verify_checkpoint(directory, "2000", "legacy-v1")
 
     def test_checkpoint_validation_rejects_malformed_marker(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / "2000"
-            self.write_checkpoint(directory, "2000")
+            self.write_checkpoint(directory, "2000", "legacy-v1")
             (directory / "phreeqc.complete").write_text("complete\n")
-            with self.assertRaisesRegex(SystemExit, "Malformed checkpoint marker"):
-                provenance.verify_checkpoint(directory, "2000")
+            with self.assertRaisesRegex(SystemExit, "required legacy-v1 contract"):
+                provenance.verify_checkpoint(directory, "2000", "legacy-v1")
 
     def test_checkpoint_validation_rejects_wrong_recorded_time(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / "2000"
-            self.write_checkpoint(directory, "4000")
+            self.write_checkpoint(directory, "4000", "legacy-v1")
             with self.assertRaisesRegex(SystemExit, "Wrong checkpoint time"):
-                provenance.verify_checkpoint(directory, "2000")
+                provenance.verify_checkpoint(directory, "2000", "legacy-v1")
 
     def test_checkpoint_validation_rejects_pending_marker(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / "2000"
-            self.write_checkpoint(directory, "2000")
+            self.write_checkpoint(directory, "2000", "legacy-v1")
             (directory / "phreeqc.complete.tmp").write_text("pending\n")
             with self.assertRaisesRegex(SystemExit, "Incomplete checkpoint marker remains"):
-                provenance.verify_checkpoint(directory, "2000")
+                provenance.verify_checkpoint(directory, "2000", "legacy-v1")
+
+    def test_checkpoint_contract_selection_is_explicit_and_strict(self):
+        command_action = next(
+            action for action in provenance.parser()._actions
+            if isinstance(action, argparse._SubParsersAction)
+        )
+        for command in ("check-run", "record-figure"):
+            contract_action = next(
+                action for action in command_action.choices[command]._actions
+                if action.dest == "checkpoint_contract"
+            )
+            self.assertTrue(contract_action.required)
+            self.assertEqual(
+                set(contract_action.choices), {"legacy-v1", "no-edl-v2"}
+            )
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "2000"
+            for selected, rejected in (
+                ("legacy-v1", "no-edl-v2"),
+                ("no-edl-v2", "legacy-v1"),
+            ):
+                with self.subTest(selected=selected):
+                    self.write_checkpoint(directory, "2000", selected)
+                    provenance.verify_checkpoint(directory, "2000", selected)
+                    with self.assertRaisesRegex(SystemExit, f"required {rejected} contract"):
+                        provenance.verify_checkpoint(directory, "2000", rejected)
+
+    def test_no_edl_v2_checkpoint_rejects_surface_contract_mutations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "2000"
+            self.write_checkpoint(directory, "2000", "no-edl-v2")
+            marker = directory / "phreeqc.complete"
+            valid = marker.read_text()
+            invalid = (
+                valid.replace("NO_EDL", "Donnan"),
+                valid.replace("surfaceModel NO_EDL\n", ""),
+                valid.replace(
+                    "surfaceModel NO_EDL\n",
+                    "surfaceModel NO_EDL\nsurfaceModel NO_EDL\n",
+                ),
+                valid.replace(
+                    "surfaceModel NO_EDL\ntime 2000\n",
+                    "time 2000\nsurfaceModel NO_EDL\n",
+                ),
+                valid + "unexpected\n",
+                valid.rstrip("\n"),
+            )
+            for content in invalid:
+                marker.write_text(content)
+                with self.assertRaisesRegex(SystemExit, "required no-edl-v2 contract"):
+                    provenance.verify_checkpoint(directory, "2000", "no-edl-v2")
 
     def test_portable_paths_fail_closed_outside_declared_roots(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -176,21 +240,31 @@ class Figure2Tests(unittest.TestCase):
             }
             manifest = root / "run.json"
             manifest.write_text(json.dumps(run))
+            for rank in range(8):
+                for time_name in provenance.checkpoint_time_names(20000, 2000):
+                    self.write_checkpoint(
+                        case / f"processor{rank}" / time_name,
+                        time_name,
+                        "legacy-v1",
+                    )
             output = root / "figures.json"
             output.write_text(json.dumps({"figures": {"existing.png": {"keep": True}}}))
-            provenance.record_figure(argparse.Namespace(
+            args = argparse.Namespace(
                 figure=figure, manifest=manifest, time=20000, output=output,
+                checkpoint_contract="legacy-v1",
                 case_dir=case, paper_root=root, figure_input=[manifest],
                 renderer_source=[manifest, manifest, manifest],
                 renderer_repository="https://example.test/paper.git",
                 renderer_base_commit="a" * 40,
-            ))
+            )
+            provenance.record_figure(args)
             recorded = json.loads(output.read_text())
             self.assertEqual(recorded["schema_scope"], "bounded_figure2")
             self.assertTrue(recorded["figures"]["existing.png"]["keep"])
             entry = recorded["figures"]["fig02.png"]
             self.assertEqual(entry["figure_sha256"], provenance.sha256(figure))
             self.assertEqual(entry["output_time_s"], 20000)
+            self.assertEqual(entry["checkpoint_contract"], "legacy-v1")
             self.assertEqual(entry["runtime"]["commit"], "runtime")
             self.assertEqual(entry["chemistry"]["files"][0]["sha256"], "chemistry")
             self.assertEqual(entry["figure_inputs"][0]["sha256"], provenance.sha256(manifest))
@@ -201,6 +275,11 @@ class Figure2Tests(unittest.TestCase):
             self.assertTrue(entry["renderer"]["source_files_authoritative"])
             self.assertIn("source_files are authoritative", entry["renderer"]["source_authority"])
             self.assertNotIn("commit", entry["renderer"])
+            self.write_checkpoint(
+                case / "processor0/2000", "2000", "no-edl-v2"
+            )
+            with self.assertRaisesRegex(SystemExit, "required legacy-v1 contract"):
+                provenance.record_figure(args)
 
 
 if __name__ == "__main__":

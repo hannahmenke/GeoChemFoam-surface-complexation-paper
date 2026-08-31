@@ -1031,7 +1031,8 @@ class Schema9EndToEndTests(unittest.TestCase):
         dump.write_bytes(b"schema-9-fixture-checkpoint")
         marker = rank / "0.5/phreeqc.complete"
         marker.write_text(
-            "GeoChemFoam-PHREEQCRM-checkpoint 1\n"
+            "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
+            "surfaceModel NO_EDL\n"
             "time 0.5\n"
             f"dumpSize {dump.stat().st_size}\n"
             f"dumpSHA256 {comparison.sha256(dump)}\n"

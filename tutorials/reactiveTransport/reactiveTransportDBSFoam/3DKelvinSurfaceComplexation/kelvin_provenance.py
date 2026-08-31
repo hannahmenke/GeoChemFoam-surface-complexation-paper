@@ -626,29 +626,28 @@ def checkpoint_record(
         raise SystemExit(f"Pending PHREEQCRM checkpoint marker exists: {pending}")
     if not dump.is_file() or not marker.is_file():
         raise SystemExit(f"Incomplete PHREEQCRM checkpoint pair in {time_dir}")
-    lines = marker.read_text().splitlines()
-    if len(lines) != 4 or lines[0] != "GeoChemFoam-PHREEQCRM-checkpoint 1":
-        raise SystemExit(f"Malformed PHREEQCRM checkpoint marker: {marker}")
-    parsed: dict[str, str] = {}
-    for line in lines[1:]:
-        parts = line.split(maxsplit=1)
-        if len(parts) != 2 or parts[0] in parsed:
-            raise SystemExit(f"Malformed PHREEQCRM checkpoint marker: {marker}")
-        parsed[parts[0]] = parts[1]
-    if set(parsed) != {"time", "dumpSize", "dumpSHA256"}:
-        raise SystemExit(f"Incomplete PHREEQCRM checkpoint marker: {marker}")
     try:
-        marker_time = float(parsed["time"])
-        marker_size = int(parsed["dumpSize"])
+        marker_time = float(time_dir.name)
     except ValueError as error:
-        raise SystemExit(f"Invalid PHREEQCRM checkpoint marker values: {marker}") from error
+        raise SystemExit(f"Invalid PHREEQCRM checkpoint time directory: {time_dir}") from error
     if not math.isclose(marker_time, expected_time, rel_tol=0.0, abs_tol=1.0e-12):
-        raise SystemExit(f"PHREEQCRM checkpoint time mismatch in {marker}")
-    if dump.stat().st_size != marker_size:
-        raise SystemExit(f"PHREEQCRM checkpoint size mismatch in {marker}")
+        raise SystemExit(f"PHREEQCRM checkpoint time-directory mismatch in {marker}")
     dump_sha = sha256(dump)
-    if dump_sha != parsed["dumpSHA256"]:
-        raise SystemExit(f"PHREEQCRM checkpoint hash mismatch in {marker}")
+    expected_marker = (
+        "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
+        "surfaceModel NO_EDL\n"
+        f"time {time_dir.name}\n"
+        f"dumpSize {dump.stat().st_size}\n"
+        f"dumpSHA256 {dump_sha}\n"
+    ).encode("ascii")
+    try:
+        actual_marker = marker.read_bytes()
+    except OSError as error:
+        raise SystemExit(f"Unreadable PHREEQCRM checkpoint marker: {marker}") from error
+    if actual_marker != expected_marker:
+        raise SystemExit(
+            f"PHREEQCRM checkpoint marker does not match the exact NO_EDL v2 contract: {marker}"
+        )
     expected_parent = case / rank / time_dir.name
     if time_dir != expected_parent:
         raise SystemExit(f"Kelvin checkpoint directory is not canonical: {time_dir}")
@@ -661,6 +660,7 @@ def checkpoint_record(
         raise SystemExit(f"Kelvin checkpoint path escapes the case: {time_dir}") from error
     return {
         "time": marker_time,
+        "surface_model": "NO_EDL",
         "dump": {
             "path": str(dump_relative),
             "size": dump.stat().st_size,
@@ -817,6 +817,8 @@ def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
             raise SystemExit("Kelvin checkpoint record has invalid identity values") from error
         if not math.isclose(named_time, recorded_time, rel_tol=0.0, abs_tol=1.0e-12):
             raise SystemExit("Kelvin checkpoint record time and path disagree")
+        if record.get("surface_model") != "NO_EDL":
+            raise SystemExit("Kelvin checkpoint record is not explicitly NO_EDL")
         if dump_size < 0 or marker_size <= 0:
             raise SystemExit("Kelvin checkpoint record has invalid artifact sizes")
         for artifact in (dump, marker):
@@ -830,6 +832,7 @@ def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
             {
                 "rank": rank,
                 "time": record.get("time"),
+                "surface_model": record.get("surface_model"),
                 "dump_path": dump_path,
                 "dump_size": dump.get("size"),
                 "dump_sha256": dump.get("sha256"),
