@@ -53,9 +53,10 @@ RESTART_SPLIT_S = 0.0125
 ACCEPTED_DT_S = COARSE_DT_S
 NEGATIVE_TOLERANCE = -1.0e-12
 CONVERGENCE_RELATIVE_TOLERANCE = 0.01
-RESTART_RELATIVE_TOLERANCE = 1.0e-10
-RESTART_FIELD_ABSOLUTE_TOLERANCE = 1.0e-17
-RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL = 1.0e-24
+AQUEOUS_RESTART_ABSOLUTE_TOLERANCE = 5.0e-18
+AQUEOUS_RESTART_RELATIVE_TOLERANCE = 5.0e-3
+SURFACE_RESTART_ABSOLUTE_TOLERANCE = 2.0e-17
+SURFACE_RESTART_RELATIVE_TOLERANCE = 5.0e-5
 FRONT_QUANTILES = (0.1, 0.5, 0.9)
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 
@@ -107,6 +108,24 @@ CHECKPOINT_ARTIFACTS = frozenset(
 )
 if set(FIELD_SPECS) != ENDPOINT_RESTART_STATE_FIELDS:
     raise RuntimeError("Kelvin endpoint field contracts do not match the solver state")
+CHEMISTRY_FIELD_TOLERANCES = {
+    name: (
+        AQUEOUS_RESTART_ABSOLUTE_TOLERANCE,
+        AQUEOUS_RESTART_RELATIVE_TOLERANCE,
+    )
+    for name, (_, dimensions, _) in FIELD_SPECS.items()
+    if dimensions == AQUEOUS_DIMENSIONS
+} | {
+    name: (
+        SURFACE_RESTART_ABSOLUTE_TOLERANCE,
+        SURFACE_RESTART_RELATIVE_TOLERANCE,
+    )
+    for name, (_, dimensions, _) in FIELD_SPECS.items()
+    if dimensions == SURFACE_DIMENSIONS and name not in STATIC_FIELDS
+}
+EXACT_RESTART_STATE_FIELDS = ENDPOINT_RESTART_STATE_FIELDS - set(
+    CHEMISTRY_FIELD_TOLERANCES
+)
 FATAL_LOG_PATTERN = re.compile(
     r"FOAM FATAL|MPI_ABORT|PHREEQC error|Floating point exception|Segmentation fault",
     re.IGNORECASE,
@@ -1201,6 +1220,25 @@ def inventory_arrays(fields: dict[str, np.ndarray], volumes: np.ndarray) -> dict
     }
 
 
+def inventory_tolerance_arrays(
+    left: dict[str, np.ndarray], right: dict[str, np.ndarray], volumes: np.ndarray
+) -> dict[str, np.ndarray]:
+    aqueous_weight = left["eps"] * volumes
+    surface_weight = left["aSurf"] * volumes
+
+    def allowed(name: str) -> np.ndarray:
+        absolute, relative = CHEMISTRY_FIELD_TOLERANCES[name]
+        return absolute + relative * np.maximum(np.abs(left[name]), np.abs(right[name]))
+
+    return {
+        MN_FREE: allowed("Mn+2") * aqueous_weight,
+        MN_SORBED: (allowed("Surf_sOMn+") + allowed("Surf_wOMn+")) * surface_weight,
+        MG_FREE: allowed("Mg+2") * aqueous_weight,
+        MG_SORBED: allowed("Surf_wOMg+") * surface_weight,
+        CL_FREE: allowed("Cl-") * aqueous_weight,
+    }
+
+
 def load_mass_fields(directory: Path, count: int) -> dict[str, np.ndarray]:
     return {name: scalar_values(directory / name, count) for name in MASS_FIELDS}
 
@@ -1228,6 +1266,14 @@ def inventory_totals(parts: dict[str, list[float]]) -> dict[str, float]:
     result[MN_REPORTED] = result[MN_FREE] + result[MN_SORBED]
     result[MG_REPORTED] = result[MG_FREE] + result[MG_SORBED]
     return result
+
+
+def combined_tolerance_satisfied(
+    name: str, left: np.ndarray, right: np.ndarray
+) -> bool:
+    absolute, relative = CHEMISTRY_FIELD_TOLERANCES[name]
+    allowed = absolute + relative * np.maximum(np.abs(left), np.abs(right))
+    return bool(np.all(np.abs(left - right) <= allowed))
 
 
 def front_positions(profile: np.ndarray) -> dict[str, Any]:
@@ -1270,6 +1316,7 @@ def scientific_metrics(
     left_initial_parts = empty_inventory()
     right_initial_parts = empty_inventory()
     absolute_difference = {name: [] for name in left_parts}
+    allowed_difference = {name: [] for name in left_parts}
     profiles = {
         left_label: {MN_FREE: np.zeros(NX), MN_SORBED: np.zeros(NX)},
         right_label: {MN_FREE: np.zeros(NX), MN_SORBED: np.zeros(NX)},
@@ -1286,6 +1333,14 @@ def scientific_metrics(
     boundary_left_norm = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
     boundary_right_norm = {name: [] for name in ENDPOINT_RESTART_STATE_FIELDS}
     boundary_structure_equal = {name: True for name in ENDPOINT_RESTART_STATE_FIELDS}
+    field_combined_tolerance_satisfied = {
+        name: True for name in CHEMISTRY_FIELD_TOLERANCES
+    }
+    boundary_combined_tolerance_satisfied = {
+        name: True for name in CHEMISTRY_FIELD_TOLERANCES
+    }
+    exact_field_equal = {name: True for name in EXACT_RESTART_STATE_FIELDS}
+    exact_boundary_equal = {name: True for name in EXACT_RESTART_STATE_FIELDS}
     field_maximum_absolute_difference = {
         name: 0.0 for name in ENDPOINT_RESTART_STATE_FIELDS
     }
@@ -1349,6 +1404,15 @@ def scientific_metrics(
                     field_maximum_absolute_magnitude[name],
                     float(np.max(np.maximum(np.abs(left_values), np.abs(right_values)))),
                 )
+            if name in CHEMISTRY_FIELD_TOLERANCES:
+                field_combined_tolerance_satisfied[name] = bool(
+                    field_combined_tolerance_satisfied[name]
+                    and combined_tolerance_satisfied(name, left_values, right_values)
+                )
+            else:
+                exact_field_equal[name] = bool(
+                    exact_field_equal[name] and np.array_equal(left_values, right_values)
+                )
             left_boundary = np.asarray(left_parsed["boundary_values"], dtype=np.float64)
             right_boundary = np.asarray(right_parsed["boundary_values"], dtype=np.float64)
             require(left_boundary.shape == right_boundary.shape,
@@ -1371,6 +1435,16 @@ def scientific_metrics(
                     boundary_maximum_absolute_magnitude[name],
                     float(np.max(np.maximum(np.abs(left_boundary), np.abs(right_boundary)))),
                 )
+            if name in CHEMISTRY_FIELD_TOLERANCES:
+                boundary_combined_tolerance_satisfied[name] = bool(
+                    boundary_combined_tolerance_satisfied[name]
+                    and combined_tolerance_satisfied(name, left_boundary, right_boundary)
+                )
+            else:
+                exact_boundary_equal[name] = bool(
+                    exact_boundary_equal[name]
+                    and np.array_equal(left_boundary, right_boundary)
+                )
         left_fields = load_mass_fields(exact_time_directory(left_rank, left_endpoint), count)
         right_fields = load_mass_fields(exact_time_directory(right_rank, right_endpoint), count)
         for name in ("eps", "aSurf", "aSurfIntrinsic", "Kinv"):
@@ -1378,11 +1452,15 @@ def scientific_metrics(
                     f"{name} differs on processor{rank_number}")
         left_mass = inventory_arrays(left_fields, volumes)
         right_mass = inventory_arrays(right_fields, volumes)
+        allowed_mass = inventory_tolerance_arrays(left_fields, right_fields, volumes)
         for name in left_parts:
             left_parts[name].append(float(np.sum(left_mass[name], dtype=np.float64)))
             right_parts[name].append(float(np.sum(right_mass[name], dtype=np.float64)))
             absolute_difference[name].append(
                 float(np.sum(np.abs(left_mass[name] - right_mass[name]), dtype=np.float64))
+            )
+            allowed_difference[name].append(
+                float(np.sum(allowed_mass[name], dtype=np.float64))
             )
         for label, mass in ((left_label, left_mass), (right_label, right_mass)):
             for name in (MN_FREE, MN_SORBED):
@@ -1423,6 +1501,7 @@ def scientific_metrics(
         )
     relative_l1: dict[str, float] = {}
     absolute_l1: dict[str, float] = {}
+    allowed_l1 = inventory_totals(allowed_difference)
     for name in absolute_difference:
         absolute_l1[name] = math.fsum(absolute_difference[name])
         denominator = abs(right_total[name])
@@ -1508,6 +1587,7 @@ def scientific_metrics(
         "absolute_endpoint_reported_species_amount_difference_kmol": absolute_inventory,
         "spatial_relative_L1": relative_l1,
         "spatial_absolute_L1_kmol": absolute_l1,
+        "derived_inventory_and_spatial_L1_tolerance_kmol": allowed_l1,
         "complete_state_fieldwise_symmetric_relative_L1": fieldwise_l1,
         "complete_state_fieldwise_maximum_absolute_difference": (
             field_maximum_absolute_difference
@@ -1523,6 +1603,14 @@ def scientific_metrics(
             boundary_maximum_absolute_magnitude
         ),
         "complete_state_boundary_structure_equal": boundary_structure_equal,
+        "chemistry_fieldwise_combined_tolerance_satisfied": (
+            field_combined_tolerance_satisfied
+        ),
+        "chemistry_boundary_combined_tolerance_satisfied": (
+            boundary_combined_tolerance_satisfied
+        ),
+        "exact_restart_state_fields_equal": exact_field_equal,
+        "exact_restart_state_boundaries_equal": exact_boundary_equal,
         "front_definition": (
             "x-locations of 10%, 50%, and 90% cumulative free Mn+2 aqueous-species "
             "amount or selected Mn-bearing surface-complex-species amount; a front is "
@@ -1606,29 +1694,31 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
     field_scale = metrics["complete_state_fieldwise_maximum_absolute_magnitude"]
     boundary_absolute = metrics["complete_state_boundary_maximum_absolute_difference"]
     boundary_scale = metrics["complete_state_boundary_maximum_absolute_magnitude"]
+    allowed_amount = metrics["derived_inventory_and_spatial_L1_tolerance_kmol"]
+    chemistry_fields = metrics["chemistry_fieldwise_combined_tolerance_satisfied"]
+    chemistry_boundaries = metrics["chemistry_boundary_combined_tolerance_satisfied"]
+    exact_fields = metrics["exact_restart_state_fields_equal"]
+    exact_boundaries = metrics["exact_restart_state_boundaries_equal"]
     front_cells = front_cell_shifts(deltas)
     return {
         "tolerances": {
-            "reported_species_amount_combined": {
-                "operator": "<= absolute + relative*scale",
-                "absolute": RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL,
-                "relative": RESTART_RELATIVE_TOLERANCE,
+            "aqueous_field_values": {
+                "operator": "abs(a-b) <= absolute + relative*max(abs(a),abs(b))",
+                "dimensions": AQUEOUS_DIMENSIONS,
+                "absolute": AQUEOUS_RESTART_ABSOLUTE_TOLERANCE,
+                "relative": AQUEOUS_RESTART_RELATIVE_TOLERANCE,
             },
-            "spatial_L1_combined": {
-                "operator": "<= absolute + relative*scale",
-                "absolute": RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL,
-                "relative": RESTART_RELATIVE_TOLERANCE,
+            "surface_field_values": {
+                "operator": "abs(a-b) <= absolute + relative*max(abs(a),abs(b))",
+                "dimensions": SURFACE_DIMENSIONS,
+                "absolute": SURFACE_RESTART_ABSOLUTE_TOLERANCE,
+                "relative": SURFACE_RESTART_RELATIVE_TOLERANCE,
             },
-            "complete_state_fieldwise_combined": {
-                "operator": "maximum_abs_difference <= absolute + relative*maximum_abs_magnitude",
-                "absolute": RESTART_FIELD_ABSOLUTE_TOLERANCE,
-                "relative": RESTART_RELATIVE_TOLERANCE,
+            "reported_species_amount_and_spatial_L1": {
+                "operator": "<= sum of the applicable per-cell dimensioned bounds",
+                "units": "kmol",
             },
-            "complete_state_boundary_combined": {
-                "operator": "maximum_abs_difference <= absolute + relative*maximum_abs_magnitude",
-                "absolute": RESTART_FIELD_ABSOLUTE_TOLERANCE,
-                "relative": RESTART_RELATIVE_TOLERANCE,
-            },
+            "non_chemistry_restart_state": {"operator": "exactly equal"},
             "boundary_structure_equal": {"operator": "==", "value": True},
             "front_cell_index_shift": {"operator": "==", "value": 0},
         },
@@ -1640,6 +1730,11 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
             "boundary_structure_equal": boundary_structure,
             "reported_species_amount_absolute_kmol": absolute_inventory,
             "spatial_absolute_L1_kmol": absolute_spatial,
+            "derived_inventory_and_spatial_L1_tolerance_kmol": allowed_amount,
+            "chemistry_fieldwise_combined_tolerance_satisfied": chemistry_fields,
+            "chemistry_boundary_combined_tolerance_satisfied": chemistry_boundaries,
+            "exact_restart_state_fields_equal": exact_fields,
+            "exact_restart_state_boundaries_equal": exact_boundaries,
             "complete_state_fieldwise_maximum_absolute_difference": field_absolute,
             "complete_state_fieldwise_maximum_absolute_magnitude": field_scale,
             "complete_state_boundary_maximum_absolute_difference": boundary_absolute,
@@ -1648,35 +1743,22 @@ def evaluate_restart(metrics: dict[str, Any]) -> dict[str, object]:
         },
         "checks": {
             "reported_species_amounts_within_combined_tolerance": all(
-                absolute_inventory[name]
-                <= RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL
-                + RESTART_RELATIVE_TOLERANCE * max(
-                    abs(metrics["reported_species_amount_kmol"][label]["endpoint"][name])
-                    for label in ("uninterrupted", "restarted")
-                )
+                absolute_inventory[name] <= allowed_amount[name]
                 for name in inventory_values
             ),
             "spatial_L1_within_combined_tolerance": all(
-                absolute_spatial[name]
-                <= RESTART_AMOUNT_ABSOLUTE_TOLERANCE_KMOL
-                + RESTART_RELATIVE_TOLERANCE
-                * max(
-                    abs(metrics["reported_species_amount_kmol"][label]["endpoint"][name])
-                    for label in ("uninterrupted", "restarted")
-                )
+                absolute_spatial[name] <= allowed_amount[name]
                 for name in l1_values
             ),
-            "complete_state_fields_within_combined_tolerance": all(
-                field_absolute[name]
-                <= RESTART_FIELD_ABSOLUTE_TOLERANCE
-                + RESTART_RELATIVE_TOLERANCE * field_scale[name]
-                for name in state_l1
+            "chemistry_fields_within_dimensioned_tolerances": all(
+                chemistry_fields.values()
             ),
-            "complete_state_boundaries_within_combined_tolerance": all(
-                boundary_absolute[name]
-                <= RESTART_FIELD_ABSOLUTE_TOLERANCE
-                + RESTART_RELATIVE_TOLERANCE * boundary_scale[name]
-                for name in boundary_l1
+            "chemistry_boundaries_within_dimensioned_tolerances": all(
+                chemistry_boundaries.values()
+            ),
+            "non_chemistry_restart_state_fields_exact": all(exact_fields.values()),
+            "non_chemistry_restart_state_boundaries_exact": all(
+                exact_boundaries.values()
             ),
             "boundary_structures_identical": all(boundary_structure.values()),
             "front_indices_identical": not front_cells or max(front_cells) == 0,

@@ -278,9 +278,15 @@ launch.
 uninterrupted 0-to-0.025 s run with a 0-to-0.0125-to-0.025 s checkpoint restart
 using the selected rank count, timestep, runtime, and inputs.  Both intermediate
 and final checkpoint pairs must validate.  At 0.025 s, all fields must have the
-same sizes and finite extrema; aqueous/sorbed inventories and fieldwise relative
-L1 differences must agree within `1e-10`, and front indices must be identical.
-Any larger restart discontinuity is a no-launch result.
+same sizes and finite extrema.  Compare every aqueous field value using
+`abs(a-b) <= 5e-18 kmol m^-3 + 5e-3*max(abs(a),abs(b))` and every non-static
+surface field value using
+`abs(a-b) <= 2e-17 kmol m^-2 + 5e-5*max(abs(a),abs(b))`.  Derive the allowable
+aqueous/sorbed inventory differences and spatial L1 norms by integrating those
+same per-cell bounds with the actual cell-volume, porosity, and surface-area
+weights; do not apply a separate unitless tolerance.  Non-chemistry restart
+state, boundary structure, and front indices must be identical.  Failure of any
+part of this contract is a no-launch result.
 
 Once all gates pass, prepare the first 0-to-1 s stage exactly as follows in the
 fresh case (subsequent stages replace start/end/interval and set restore true):

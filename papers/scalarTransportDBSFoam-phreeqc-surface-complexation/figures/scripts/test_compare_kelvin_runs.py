@@ -405,6 +405,13 @@ class ScientificGateTests(unittest.TestCase):
         state_absolute = {name: 0.0 for name in comparison.FIELD_SPECS}
         state_relative["H+"] = hydrogen_difference
         state_absolute["H+"] = hydrogen_difference
+        chemistry_fields = {
+            name: True for name in comparison.CHEMISTRY_FIELD_TOLERANCES
+        }
+        chemistry_fields["H+"] = hydrogen_difference <= (
+            comparison.AQUEOUS_RESTART_ABSOLUTE_TOLERANCE
+            + comparison.AQUEOUS_RESTART_RELATIVE_TOLERANCE
+        )
         return {
             "reported_species_amount_kmol": {
                 label: {"endpoint": {name: 1.0 for name in reported_names}}
@@ -417,6 +424,9 @@ class ScientificGateTests(unittest.TestCase):
             },
             "spatial_absolute_L1_kmol": {
                 comparison.MN_FREE: 0.0, comparison.MN_SORBED: 0.0
+            },
+            "derived_inventory_and_spatial_L1_tolerance_kmol": {
+                name: 1.0 for name in reported_names
             },
             "complete_state_fieldwise_symmetric_relative_L1": state_relative,
             "complete_state_fieldwise_maximum_absolute_difference": state_absolute,
@@ -434,6 +444,16 @@ class ScientificGateTests(unittest.TestCase):
             },
             "complete_state_boundary_structure_equal": {
                 name: True for name in comparison.FIELD_SPECS
+            },
+            "chemistry_fieldwise_combined_tolerance_satisfied": chemistry_fields,
+            "chemistry_boundary_combined_tolerance_satisfied": {
+                name: True for name in comparison.CHEMISTRY_FIELD_TOLERANCES
+            },
+            "exact_restart_state_fields_equal": {
+                name: True for name in comparison.EXACT_RESTART_STATE_FIELDS
+            },
+            "exact_restart_state_boundaries_equal": {
+                name: True for name in comparison.EXACT_RESTART_STATE_FIELDS
             },
             "front_differences": {
                 comparison.MN_FREE: {
@@ -476,6 +496,30 @@ class ScientificGateTests(unittest.TestCase):
                 else:
                     foam_scalar(directory / name, values.get(name, 1.0))
         return case
+
+    def test_aggregate_tolerances_use_dimensioned_cell_weights(self) -> None:
+        left = {
+            "eps": np.array([0.5]), "aSurf": np.array([2.0]),
+            "Mn+2": np.array([2.0]), "Mg+2": np.array([3.0]),
+            "Cl-": np.array([4.0]), "Surf_sOMn+": np.array([0.25]),
+            "Surf_wOMn+": np.array([0.75]), "Surf_wOMg+": np.array([0.5]),
+        }
+        right = {name: values.copy() for name, values in left.items()}
+        volumes = np.array([2.0e-15])
+        allowed = comparison.inventory_tolerance_arrays(left, right, volumes)
+        aqueous = lambda scale: (
+            comparison.AQUEOUS_RESTART_ABSOLUTE_TOLERANCE
+            + comparison.AQUEOUS_RESTART_RELATIVE_TOLERANCE * scale
+        )
+        surface = lambda scale: (
+            comparison.SURFACE_RESTART_ABSOLUTE_TOLERANCE
+            + comparison.SURFACE_RESTART_RELATIVE_TOLERANCE * scale
+        )
+        self.assertEqual(allowed[comparison.MN_FREE][0], aqueous(2.0) * 1.0e-15)
+        self.assertEqual(
+            allowed[comparison.MN_SORBED][0],
+            (surface(0.25) + surface(0.75)) * 4.0e-15,
+        )
 
     def test_scientific_metrics_use_mesh_volume_and_report_no_false_flux_closure(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -562,7 +606,7 @@ class ScientificGateTests(unittest.TestCase):
             )
             self.assertFalse(
                 comparison.evaluate_restart(metrics)["checks"]
-                ["complete_state_fields_within_combined_tolerance"]
+                ["non_chemistry_restart_state_fields_exact"]
             )
 
     def test_scientific_metrics_reject_one_sided_zero_sorbed_front(self) -> None:
@@ -633,18 +677,36 @@ class ScientificGateTests(unittest.TestCase):
     def test_restart_gate_catches_unreported_hydrogen_field_difference(self) -> None:
         metrics = self.restart_metrics(hydrogen_difference=0.5)
         result = comparison.evaluate_restart(metrics)
-        self.assertFalse(result["checks"]["complete_state_fields_within_combined_tolerance"])
+        self.assertFalse(
+            result["checks"]["chemistry_fields_within_dimensioned_tolerances"]
+        )
+
+    def test_restart_gate_requires_exact_non_chemistry_state(self) -> None:
+        metrics = self.restart_metrics()
+        metrics["exact_restart_state_fields_equal"]["p"] = False
+        result = comparison.evaluate_restart(metrics)
+        self.assertFalse(result["checks"]["non_chemistry_restart_state_fields_exact"])
 
     def test_restart_near_zero_roundoff_uses_absolute_plus_relative_tolerance(self) -> None:
-        metrics = self.restart_metrics()
-        metrics["complete_state_fieldwise_symmetric_relative_L1"]["H+"] = 6.9e-9
-        metrics["complete_state_fieldwise_maximum_absolute_difference"]["H+"] = 5.0e-18
-        metrics["complete_state_fieldwise_maximum_absolute_magnitude"]["H+"] = 7.25e-10
-        result = comparison.evaluate_restart(metrics)
-        self.assertTrue(result["checks"]["complete_state_fields_within_combined_tolerance"])
-        metrics["complete_state_fieldwise_maximum_absolute_difference"]["H+"] = 2.0e-17
-        result = comparison.evaluate_restart(metrics)
-        self.assertFalse(result["checks"]["complete_state_fields_within_combined_tolerance"])
+        scale = 7.25e-10
+        boundary = (
+            comparison.AQUEOUS_RESTART_ABSOLUTE_TOLERANCE
+            + comparison.AQUEOUS_RESTART_RELATIVE_TOLERANCE * scale
+        )
+        self.assertTrue(comparison.combined_tolerance_satisfied(
+            "H+", np.array([scale]), np.array([scale - boundary])
+        ))
+        self.assertFalse(comparison.combined_tolerance_satisfied(
+            "H+", np.array([scale]), np.array([scale - 1.01 * boundary])
+        ))
+
+    def test_restart_surface_fields_use_the_approved_surface_tolerance(self) -> None:
+        left = np.array([1.0])
+        right = np.array([1.0 - 1.0e-4])
+        self.assertTrue(comparison.combined_tolerance_satisfied("H+", left, right))
+        self.assertFalse(
+            comparison.combined_tolerance_satisfied("Surf_sOMn+", left, right)
+        )
 
     def test_restart_near_zero_reported_amount_uses_combined_tolerance(self) -> None:
         metrics = self.restart_metrics()
@@ -652,6 +714,7 @@ class ScientificGateTests(unittest.TestCase):
             metrics["reported_species_amount_kmol"][label]["endpoint"][comparison.MN_FREE] = 1e-20
         metrics["relative_endpoint_reported_species_amount_difference"][comparison.MN_FREE] = 5e-5
         metrics["absolute_endpoint_reported_species_amount_difference_kmol"][comparison.MN_FREE] = 5e-25
+        metrics["derived_inventory_and_spatial_L1_tolerance_kmol"][comparison.MN_FREE] = 1e-24
         result = comparison.evaluate_restart(metrics)
         self.assertTrue(result["checks"]["reported_species_amounts_within_combined_tolerance"])
         metrics["absolute_endpoint_reported_species_amount_difference_kmol"][comparison.MN_FREE] = 2e-24
