@@ -214,7 +214,8 @@ associated chemical configurations. Every case uses its case-local
 \texttt{constant/GeoChem.dat} database. The
 2D fracture case uses eight MPI ranks with a $4\times2\times1$ decomposition;
 the reported Estaillades calculation uses 64 ranks with a
-$4\times4\times4$ decomposition.
+$4\times4\times4$ decomposition. The Kelvin column specifies only its
+three-dimensional competition chemistry and material configuration.
 
 \begin{table}[htbp]
 \centering
@@ -243,23 +244,25 @@ $\theta_{\mathrm{mask}}=10^{-3}$.}
 \label{tab:si-chemParams}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{@{}p{0.16\linewidth}p{0.21\linewidth}p{0.34\linewidth}p{0.21\linewidth}@{}}
+\begin{tabular}{@{}p{0.15\linewidth}p{0.19\linewidth}p{0.19\linewidth}p{0.20\linewidth}p{0.20\linewidth}@{}}
 \toprule
-Parameter & 1D Ca & 2D Pb/HFO & 3D Sr/Ca\\
+Parameter & 1D Ca & 2D Pb/HFO & 3D Mn/Mg & 3D Sr/Ca\\
 \midrule
-Surface model & \texttt{Surf\_a} & two-site HFO & \texttt{Surf\_a}\\
-Reactive species & Ca$^{2+}$ & Pb$^{2+}$ & Sr$^{2+}$, Ca$^{2+}$\\
-Site density & $2.4\times10^{-6}$ & Hfo$_s$: $2\times10^{-4}$;\newline Hfo$_w$: $6\times10^{-3}$ & $2.4\times10^{-6}$\\
-$\log K$ & Ca: $-5.85$ & Pb/Hfo$_s$: $+4.65$;\newline Pb/Hfo$_w$: $+0.30$ & Ca: $-5.85$; Sr: $-5.5$\\
-$\theta$ & 0.5 & 0.4 (matrix) & 0.4 (micropore)\\
-Inlet & Ca: $2\times10^{-9}$ & Pb: $10^{-3}$ & Sr: $10^{-4}$; Ca: 0\\
-Initial & Ca: 0 & Pb: approximately 0 & Sr: 0; Ca: $10^{-3}$\\
+Surface model & \texttt{Surf\_a} & two-site HFO & two-site HFO & \texttt{Surf\_a}\\
+Reactive species & Ca$^{2+}$ & Pb$^{2+}$ & Mn$^{2+}$, Mg$^{2+}$ & Sr$^{2+}$, Ca$^{2+}$\\
+Site density & $2.4\times10^{-6}$ & Hfo$_s$: $2\times10^{-4}$; Hfo$_w$: $6\times10^{-3}$ & Hfo$_s$: $2\times10^{-4}$; Hfo$_w$: $6\times10^{-3}$ & $2.4\times10^{-6}$\\
+$\log K$ & Ca: $-5.85$ & Pb/Hfo$_s$: $+4.65$; Pb/Hfo$_w$: $+0.30$ & Mn/Hfo$_s$: $-0.40$; Mn/Hfo$_w$: $-3.50$; Mg/Hfo$_w$: $-4.60$ & Ca: $-5.85$; Sr: $-5.5$\\
+$\theta$ & 0.5 & 0.4 (matrix) & 0.4 (micropore) & 0.4 (micropore)\\
+Inlet & Ca: $2\times10^{-9}$ & Pb: $10^{-3}$ & Mn: $10^{-5}$; Mg: $10^{-3}$ & Sr: $10^{-4}$; Ca: 0\\
+Initial & Ca: 0 & Pb: approximately 0 & Mn: 0; Mg: $10^{-3}$ & Sr: 0; Ca: $10^{-3}$\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The 2D case uses the Dzombak--Morel strong and weak HFO reactions for Pb
-\citep{dzombak1990surface}. The Estaillades case uses
+\citep{dzombak1990surface}. In the Kelvin configuration, Mn binds to strong and
+weak HFO sites with $\log K=-0.40$ and $-3.50$, while Mg competes on weak sites
+with $\log K=-4.60$. The Estaillades case uses
 $\mathrm{Surf_aH}+\mathrm{Ca^{2+}}\rightleftharpoons
 \mathrm{Surf_aCa^+}+\mathrm{H^+}$ and the corresponding Sr reaction, with
 $\log K=-5.85$ and $-5.5$. Initial Ca occupancy is displaced by the invading
