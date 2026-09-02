@@ -144,7 +144,7 @@ Both inputs had 32/32 valid checkpoint pairs and 1,048 validated provenance
 records each.
 
 **Required:** after the final runtime and tracked `Surf_*` case exist, run the
-matched `0.000390625`/`0.0001953125` pair again on that exact identity.  The
+matched `0.0001953125`/`0.00009765625` pair on that exact identity.  The
 comparison artifact must validate every recorded hash, all 32 checkpoint
 pairs, identical mesh/initial fields/chemistry, and all of these criteria:
 
@@ -156,11 +156,11 @@ pairs, identical mesh/initial fields/chemistry, and all of these criteria:
   least `-1e-12` in its native units; record the minimum and count of values
   below zero rather than silently clipping them in the comparator.
 
-If it passes, select `deltaT = 0.000390625 s`.  If it fails, do not launch;
-continue timestep refinement.  The measured maximum Co of 0.0503543 at the
-candidate timestep is intentionally conservative.  Timestep selection is
-controlled by the chemistry/distribution comparison, not by trying to raise
-Co.  Measure and record Co again on the final runtime.
+If it passes, select `deltaT = 0.0001953125 s`.  If it fails, do not launch;
+continue timestep refinement.  The next-coarser pilot's measured maximum Co
+was 0.0503543, so the candidate timestep is also conservative.  Timestep
+selection is controlled by the chemistry/distribution comparison, not by
+trying to raise Co.  Measure and record Co again on the final runtime.
 
 ## Mandatory 32-versus-64-rank preflight
 
