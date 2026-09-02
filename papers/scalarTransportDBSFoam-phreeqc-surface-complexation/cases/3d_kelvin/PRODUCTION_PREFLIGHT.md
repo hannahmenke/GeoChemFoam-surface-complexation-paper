@@ -307,7 +307,7 @@ cp system/fvSolution1 system/fvSolution
 foamDictionary system/controlDict -entry startFrom -set startTime
 foamDictionary system/controlDict -entry startTime -set 0
 foamDictionary system/controlDict -entry endTime -set 1
-foamDictionary system/controlDict -entry deltaT -set 0.000390625
+foamDictionary system/controlDict -entry deltaT -set 0.0001953125
 foamDictionary system/controlDict -entry writeControl -set adjustableRunTime
 foamDictionary system/controlDict -entry writeInterval -set 1
 foamDictionary system/controlDict -entry purgeWrite -set 0
