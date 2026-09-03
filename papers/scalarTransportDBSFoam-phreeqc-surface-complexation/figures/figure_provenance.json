@@ -137,7 +137,7 @@
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
-          "sha256": "2610e8fc8f8c01c17740038fe188caf8781fe0ebead4ecf893388cc134e7b598"
+          "sha256": "92940bd9b10e32f3ceb03ef706b5a2db9b8bc57bf5d66dcc1ce05144b5cbcc79"
         },
         {
           "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
@@ -161,7 +161,7 @@
         }
       ],
       "figure_path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_2d_fractures.png",
-      "figure_sha256": "72380206ac6e03d7d86f53a4c27f57fc319459d8b1b7ffb469c7b2e836ecaf38",
+      "figure_sha256": "59710d26fefc3140fe5627e6378a3b9f71c05ecd8192c8886ad46f19ce67cd86",
       "intrinsic_surface": {
         "integrated_area_m2": 0.021960000000000004,
         "mode": "occupancyGaussian",
@@ -342,9 +342,9 @@
         "writeInterval": 2000.0
       },
       "accepted_figure_recorded_utc": "2026-08-29T12:21:23.377416+00:00",
-      "recorded_utc": "2026-08-30T14:31:14.816306+00:00",
+      "recorded_utc": "2026-09-03T10:59:46.609576+00:00",
       "renderer": {
-        "base_commit": "fdd31c399d6fd6317027474ce9667d9850a7bb18",
+        "base_commit": "00c4c5aa3817659976137c60dd430424d8f2a05d",
         "repository": "https://github.com/hannahmenke/GeoChemFoam-surface-complexation-paper.git",
         "source_authority": "Exact SHA-256 records in source_files are authoritative; base_commit identifies only the underlying Git state.",
         "source_files": [
@@ -354,7 +354,7 @@
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
-            "sha256": "2610e8fc8f8c01c17740038fe188caf8781fe0ebead4ecf893388cc134e7b598"
+            "sha256": "92940bd9b10e32f3ceb03ef706b5a2db9b8bc57bf5d66dcc1ce05144b5cbcc79"
           },
           {
             "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
@@ -366,7 +366,7 @@
           }
         ],
         "source_files_authoritative": true,
-        "source_files_sha256": "bb06ead06d0ddcd060dbc5c8cd0d202ec8a8702823146cd93e424c10f6d614a3",
+        "source_files_sha256": "9e0ba75f23432d2e442fb52ae007775c0e2f4fd87653a697d8259cfe6490a327",
         "source_state": "curated_dirty_at_base"
       },
       "run_manifest_path": "${RUN_CASE_DIR}/run_provenance.json",

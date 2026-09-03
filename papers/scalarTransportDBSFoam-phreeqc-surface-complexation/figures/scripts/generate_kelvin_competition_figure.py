@@ -76,6 +76,7 @@ def add_geometry_scene(
         color="black",
     )
     plotter.camera_position = camera_position(nx, ny, nz)
+    plotter.camera.zoom(1.18)
 
 
 def add_volume_scene(
@@ -128,6 +129,7 @@ def add_volume_scene(
         color="black",
     )
     plotter.camera_position = camera_position(nx, ny, nz)
+    plotter.camera.zoom(1.18)
 
 
 def stitch_field_sum(
@@ -195,6 +197,30 @@ def fit_image(image: np.ndarray, target_width: int, target_height: int) -> Image
     y0 = (target_height - pil.height) // 2
     canvas.paste(pil, (x0, y0))
     return canvas
+
+
+def compact_composite(canvas: Image.Image) -> Image.Image:
+    """Remove unused panel margins while retaining all labels and colour bars."""
+    top = canvas.crop((400, 20, 1800, 640)).resize(
+        (2200, 974), Image.Resampling.LANCZOS
+    )
+    rows: list[tuple[Image.Image, Image.Image]] = []
+    for y0 in (640, 1400):
+        left = canvas.crop((20, y0 + 20, 1020, y0 + 700)).resize(
+            (1100, 748), Image.Resampling.LANCZOS
+        )
+        right = canvas.crop((1120, y0 + 20, 2120, y0 + 700)).resize(
+            (1100, 748), Image.Resampling.LANCZOS
+        )
+        rows.append((left, right))
+
+    compact = Image.new("RGB", (2200, 2470), "white")
+    compact.paste(top, (0, 0))
+    for index, (left, right) in enumerate(rows):
+        y0 = 974 + index * 748
+        compact.paste(left, (0, y0))
+        compact.paste(right, (1100, y0))
+    return compact
 
 
 def panel_label(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str) -> None:
@@ -384,7 +410,7 @@ def main() -> None:
     ), pad=0)
 
     canvas_w = 2200
-    gap = 12
+    gap = 0
     top_w = 1380
     top_h = 640
     cell_w = (canvas_w - 3 * gap) // 2
@@ -415,7 +441,7 @@ def main() -> None:
     draw_geometry_legend(draw, (top_x + 120, top_y + top_h - 86))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    canvas.save(args.output)
+    compact_composite(canvas.convert("RGB")).save(args.output)
 
 
 if __name__ == "__main__":

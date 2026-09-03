@@ -296,9 +296,9 @@ def main() -> None:
         surf_scale = max(float(surf_scale), 1.0e-30)
         surf_norm = np.clip(surf_metric / surf_scale, 0.0, 1.0)
 
-        # The manuscript includes this image at 0.9 of a 6.27-inch text width.
-        # A near-final-size canvas and explicit type sizes keep all text above
-        # 8 pt after inclusion instead of shrinking a wide presentation canvas.
+        # Keep the three directly comparable maps in one row, but place their
+        # colour bars horizontally.  This removes the wide vertical-label
+        # gutters that previously reduced the maps at manuscript size.
         plt.rcParams.update({
             "font.size": 9.0,
             "axes.titlesize": 9.0,
@@ -306,7 +306,7 @@ def main() -> None:
             "xtick.labelsize": 9.0,
             "ytick.labelsize": 9.0,
         })
-        fig, axes = plt.subplots(1, 3, figsize=(6.2, 2.25), sharey=True)
+        fig, axes = plt.subplots(1, 3, figsize=(6.2, 3.05), sharey=True)
 
         mesh = axes[0].imshow(
             coarse_labels,
@@ -319,8 +319,16 @@ def main() -> None:
         axes[0].set_title("(a) Geometry")
         axes[0].set_xlabel("x [mm]")
         axes[0].set_ylabel("y [mm]")
-        cbar0 = fig.colorbar(mesh, ax=axes[0], ticks=geometry_ticks, fraction=0.046, pad=0.04)
-        cbar0.ax.set_yticklabels(geometry_ticklabels)
+        cbar0 = fig.colorbar(
+            mesh,
+            ax=axes[0],
+            ticks=geometry_ticks,
+            orientation="horizontal",
+            fraction=0.055,
+            pad=0.26,
+            aspect=22,
+        )
+        cbar0.ax.set_xticklabels(geometry_ticklabels)
 
         axes[1].imshow(
             coarse_labels,
@@ -366,7 +374,14 @@ def main() -> None:
             extent=mm_extent,
         )
         axes[1].set_xlabel("x [mm]")
-        cbar1 = fig.colorbar(field1, ax=axes[1], fraction=0.046, pad=0.04)
+        cbar1 = fig.colorbar(
+            field1,
+            ax=axes[1],
+            orientation="horizontal",
+            fraction=0.055,
+            pad=0.26,
+            aspect=22,
+        )
         cbar1.set_label(cbar1_label)
 
         axes[2].imshow(
@@ -418,7 +433,14 @@ def main() -> None:
             axes[2].set_xlim(args.surface_xlim_mm)
         if args.surface_ylim_mm is not None:
             axes[2].set_ylim(args.surface_ylim_mm)
-        cbar2 = fig.colorbar(field2, ax=axes[2], fraction=0.046, pad=0.04)
+        cbar2 = fig.colorbar(
+            field2,
+            ax=axes[2],
+            orientation="horizontal",
+            fraction=0.055,
+            pad=0.26,
+            aspect=22,
+        )
         cbar2.set_label(cbar2_label)
 
     else:

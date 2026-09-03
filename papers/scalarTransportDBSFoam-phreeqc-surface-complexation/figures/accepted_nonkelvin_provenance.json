@@ -149,16 +149,16 @@
       "media_type": "image/png",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_2d_fractures.png",
       "role": "figure",
-      "sha256": "72380206ac6e03d7d86f53a4c27f57fc319459d8b1b7ffb469c7b2e836ecaf38",
-      "size_bytes": 153297
+      "sha256": "59710d26fefc3140fe5627e6378a3b9f71c05ecd8192c8886ad46f19ce67cd86",
+      "size_bytes": 159971
     },
     {
       "id": "figure-04-png",
       "media_type": "image/png",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades.png",
       "role": "figure",
-      "sha256": "e53a69063be67b3158077149e78f26d2b56884ab12ae413400a492bf78efb8b4",
-      "size_bytes": 1779050
+      "sha256": "70dc1487875129f8db452e6ff21e3308b33db82d62b824cdb92f4aed76d4d9f9",
+      "size_bytes": 1777609
     },
     {
       "id": "figure-06-png",
@@ -189,7 +189,7 @@
       "media_type": "application/json",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/figure_provenance.json",
       "role": "provenance_record",
-      "sha256": "dd7257780118fecfd3950784d2fb397358a58280ed843827b72ab9da92400cb8",
+      "sha256": "43ac00ba7c5b93902e6f3dbcb20ff206c23db4d93cfd0aab702b15fc00225cb3",
       "size_bytes": 38175
     },
     {
@@ -245,8 +245,8 @@
       "media_type": "text/x-python",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
       "role": "renderer_source",
-      "sha256": "2610e8fc8f8c01c17740038fe188caf8781fe0ebead4ecf893388cc134e7b598",
-      "size_bytes": 17941
+      "sha256": "92940bd9b10e32f3ceb03ef706b5a2db9b8bc57bf5d66dcc1ce05144b5cbcc79",
+      "size_bytes": 18298
     },
     {
       "id": "renderer-2d-provenance",
@@ -277,8 +277,8 @@
       "media_type": "text/x-python",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py",
       "role": "renderer_source",
-      "sha256": "d83757eca4e2890a85e387edc5eaaa4e675db846698f2c56aaa4b045de4c312d",
-      "size_bytes": 43742
+      "sha256": "3be55f6ba4843b6b4f1130bc64b1d4c277e6e2d7a2c496dbb2bb0f4b3e700317",
+      "size_bytes": 43795
     },
     {
       "id": "renderer-estaillades-3d-wrapper",

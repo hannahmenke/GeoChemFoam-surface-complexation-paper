@@ -1055,7 +1055,12 @@ def main() -> None:
     use_2x2 = second_aqueous is not None
     shape = (2, 2) if use_2x2 else (1, 3)
     win_size = (3200, 3200) if use_2x2 else (2400, 960)
-    plotter = pv.Plotter(shape=shape, off_screen=True, window_size=win_size)
+    plotter = pv.Plotter(
+        shape=shape,
+        off_screen=True,
+        window_size=win_size,
+        border=False,
+    )
 
     add_geometry_panel(
         plotter=plotter,
