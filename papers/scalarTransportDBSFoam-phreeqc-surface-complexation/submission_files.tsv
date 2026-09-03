@@ -18,10 +18,15 @@ sections/08_conclusions.tex	08_conclusions.tex
 sections/supplementary_information.tex	supplementary_information.tex
 figures/png/fig01_1d_retardation.png	fig01_1d_retardation.png
 figures/png/fig02_2d_fractures.png	fig02_2d_fractures.png
+figures/png/fig03_3d_kelvin.png	fig03_3d_kelvin.png
 figures/png/fig04_3d_estaillades.png	fig04_3d_estaillades.png
 figures/png/fig05_solver_workflow.png	fig05_solver_workflow.png
 figures/png/fig06_1d_breakthrough.png	fig06_1d_breakthrough.png
+figures/png/fig07_kelvin_temporal.png	fig07_kelvin_temporal.png
 figures/png/fig08_estaillades_temporal.png	fig08_estaillades_temporal.png
 figures/png/fig09_sphere_surface_area_validation.png	fig09_sphere_surface_area_validation.png
+figures/png/fig09_two_scale_error_vs_peclet.png	fig09_two_scale_error_vs_peclet.png
 figures/png/fig10_hm12_surface_area_validation.png	fig10_hm12_surface_area_validation.png
+figures/png/fig10_two_scale_pe1_fields.png	fig10_two_scale_pe1_fields.png
 figures/png/fig11_3d_external_surface_area_validation.png	fig11_3d_external_surface_area_validation.png
+figures/png/fig12_two_scale_lithium_nested_geometries.png	fig12_two_scale_lithium_nested_geometries.png
