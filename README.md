@@ -1,7 +1,7 @@
 # GeoChemFoam surface-complexation paper
 
 This private repository contains the manuscript, figures, plotting and analysis
-scripts, validation cases, and frozen input assets for the GeoChemFoam
+scripts, validation cases, and pinned input-asset references for the GeoChemFoam
 surface-complexation paper.
 
 The material was extracted from
@@ -16,7 +16,10 @@ into this repository.
   figures, paper-specific cases, and reproduction scripts
 - `tutorials/reactiveTransport`: frozen snapshots of the GeoChemFoam cases
   used by the paper
-- `images/raw`: compressed source images used by those cases and figures
+- `external_assets.json`: immutable GeoChemFoam image links, checksums, and crop
+  parameters
+- `images/raw`: small tracked image metadata; raw archives are materialised here
+  locally and are not duplicated in Git
 - `scripts`: paper benchmark utilities
 - `docs/phases`: paper-development and validation notes
 - `SOURCE_PROVENANCE.md`: extraction boundary and upstream version record
@@ -24,6 +27,24 @@ into this repository.
 
 The original GeoChemFoam-relative paths are retained so the existing run and
 figure scripts continue to resolve their inputs.
+
+## Start here
+
+The authoritative navigation and reproduction guide is
+[`papers/scalarTransportDBSFoam-phreeqc-surface-complexation/README.md`](papers/scalarTransportDBSFoam-phreeqc-surface-complexation/README.md).
+It maps every manuscript figure to its case, run command, renderer, and evidence.
+The same mapping is machine-readable in `reproducibility_manifest.json` and is
+checked by `audit_reproducibility.sh`.
+
+Prepare the GeoChemFoam-owned image archives without committing copies:
+
+```bash
+./prepare_external_assets.sh --source-root /path/to/GeoChemFoam-v-dev
+```
+
+If `--source-root` is omitted, the script downloads the immutable links recorded
+in `external_assets.json` using authenticated `gh` access (or `GITHUB_TOKEN`).
+In both modes it verifies every SHA-256 checksum.
 
 ## Two-scale validation
 
@@ -45,6 +66,14 @@ Git.
 ```bash
 cd papers/scalarTransportDBSFoam-phreeqc-surface-complexation
 ./build.sh
+```
+
+Before release, audit the complete case/figure map:
+
+```bash
+./audit_reproducibility.sh
+./validate_accepted_nonkelvin_artifacts.sh
+./test_export_submission.sh
 ```
 
 ## Relationship to GeoChemFoam

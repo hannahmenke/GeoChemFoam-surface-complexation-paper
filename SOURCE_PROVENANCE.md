@@ -14,10 +14,10 @@ The historical paper subtree was extracted from:
 papers/scalarTransportDBSFoam-phreeqc-surface-complexation
 ```
 
-The following tracked dependencies were copied at the same source commit so
-the publication package does not depend on mutable tutorial files:
+The following case and metadata dependencies were copied at the same source
+commit so the publication record does not depend on mutable tutorial files:
 
-- raw inputs for 4StraightFractures, Kelvin1, Estaillades 3-phase, and HM12
+- metadata for 4StraightFractures, Kelvin1, Estaillades 3-phase, and HM12
 - 1D linear-retardation validation case
 - 2D four-straight-fracture surface-complexation case
 - 3D Kelvin and Estaillades surface-complexation cases
@@ -26,6 +26,22 @@ the publication package does not depend on mutable tutorial files:
 - HM12 four-solver comparison cases
 - sphere surface-area benchmark utilities and their mesh dictionary templates
 - phase-10 manuscript and validation notes
+
+## External raw images
+
+Raw image archives that are already distributed in GeoChemFoam are deliberately
+not duplicated here. `external_assets.json` records immutable source commits,
+repository paths, download URLs, SHA-256 checksums, dimensions, voxel sizes,
+labels, and all crop or threshold operations. Run `./prepare_external_assets.sh`
+to link verified files from a local GeoChemFoam checkout or download them into
+the original relative paths. Those materialised files are ignored by Git.
+
+The small binary and phase crops in
+`papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_external_surface_flow_validation/shared`
+remain tracked because they
+are derived, paper-specific validation inputs. Their `metadata.json` records the
+exact `[300:428, 340:468, 40:168]` crop from the linked Estaillades volume and
+the micropore-to-solid remapping.
 
 ## Simulation provenance
 

@@ -14,6 +14,9 @@ Figure targets:
 - `fig02_2d_fractures.png`
 - `fig03_3d_kelvin.png`
 - `fig04_3d_estaillades.png`
+- `fig05_solver_workflow.png`
+- `fig06_1d_breakthrough.png`
+- `fig07_kelvin_temporal.png`
 - `fig08_estaillades_temporal.png`
 - `fig09_sphere_surface_area_validation.png`
 - `fig10_hm12_surface_area_validation.png`
@@ -85,6 +88,10 @@ Repeatable figure commands:
   - production Pe-sweep figures: `../../cases/two_scale_micromodel_sorption_validation/scripts/reproduce_paper_validation.py`
 - all core manuscript figures with completed outputs available:
   - `../scripts/render_core_manuscript_figures.sh`
+
+The authoritative Figure 1--14 mapping, including the historical filename
+numbering for manuscript Figures 13 and 14, is `../../reproducibility_manifest.json`.
+The compact human-readable table is `../README.md`.
 
 `fig13_two_scale_lithium_sorption_validation.png` is retained as an earlier
 analysis asset but is not referenced by the manuscript; the production

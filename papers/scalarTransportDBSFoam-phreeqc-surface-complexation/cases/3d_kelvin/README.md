@@ -2,7 +2,9 @@
 
 ## Source Asset
 
-- image: `images/raw/Kelvin1-200x200x200.raw.tar.gz`
+- image: `images/raw/Kelvin1-200x200x200.raw.tar.gz`, materialised from the
+  immutable GeoChemFoam link in `external_assets.json` by
+  `prepare_external_assets.sh` and not duplicated in Git
 - metadata: `images/raw/Kelvin1-200x200x200.txt`
 
 ## Paper Role

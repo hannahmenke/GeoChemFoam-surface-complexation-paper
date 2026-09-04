@@ -79,7 +79,7 @@ The manuscript uses the following case ladder.
 - tracked case:
   - `cases/two_scale_micromodel_sorption_validation`
 - source assets:
-  - compressed binary micromodel images under
+  - compressed binary micromodel images materialised under
     `cases/two_scale_micromodel_sorption_validation/shared/source`
 - role:
   - matched fully resolved and DBS-upscaled lithium sorption benchmark at
@@ -89,3 +89,57 @@ The manuscript uses the following case ladder.
   - `figures/png/fig10_two_scale_pe1_fields.png`
 - reproduction manifest:
   - `cases/two_scale_micromodel_sorption_validation/paper_validation_runs.json`
+
+## Complete inventory and current use
+
+The paths above describe the scientific case ladder. The following table
+disambiguates paper-specific cases from frozen tutorial snapshots and accounts
+for every retained case directory. “Supporting” means retained but not used to
+produce a current manuscript figure.
+
+| ID | Repository-relative path | Classification | Figures |
+|---|---|---|---:|
+| `paper-1d-linear` | `papers/.../cases/1d_linear_retardation` | paper figure case and tracked results | 1, 6 |
+| `paper-2d-fractures` | `papers/.../cases/2d_4StraightFractures` | paper figure case | 2 |
+| `paper-circular-post` | `papers/.../cases/2d_circular_post_surface_area_benchmark` | paper figure metrics | 9 |
+| `paper-estaillades` | `papers/.../cases/3d_estaillades` | paper figure case | 4, 8 |
+| `paper-external-3d` | `papers/.../cases/3d_external_surface_flow_validation` | paired paper figure case | 11 |
+| `paper-kelvin-pointer` | `papers/.../cases/3d_kelvin` | documentation pointer | 3, 7 |
+| `paper-sphere` | `papers/.../cases/3d_sphere_surface_area_benchmark` | paper figure case | 9 |
+| `paper-two-scale` | `papers/.../cases/two_scale_micromodel_sorption_validation` | paper figure case | 12--14 |
+| `tutorial-kelvin` | `tutorials/.../3DKelvinSurfaceComplexation` | paper figure case | 3, 7 |
+| `hm12-comparison` | `tutorials/reactiveTransport/HM12SurfaceComplexationSolverComparison` | paired paper driver | 10 |
+| `hm12-resolved` | `tutorials/.../HM12SurfaceComplexationSolverComparison/resolved-snappy` | paper subcase | 10 |
+| `tutorial-hm12-solid-dbs` | `tutorials/.../2DHM12SolidGrainsSurfaceComplexation` | paper subcase | 10 |
+| `tutorial-1d` | `tutorials/.../1DLinearRetardation` | retained upstream snapshot | -- |
+| `tutorial-4straight` | `tutorials/.../4StraightFracturesSurfaceComplexation` | retained upstream snapshot | -- |
+| `tutorial-estaillades` | `tutorials/.../3DEstailladesSurfaceComplexation` | retained upstream snapshot | -- |
+| `tutorial-hm12-microporous` | `tutorials/.../2DHM12MicroporousGrainsSurfaceComplexation` | retained supporting comparator | -- |
+| `tutorial-estaillades-micropore-solid` | `tutorials/.../3DEstailladesMicroporeAsSolidSurfaceComplexation` | retained supporting comparator | -- |
+
+Here, `papers/...` abbreviates
+`papers/scalarTransportDBSFoam-phreeqc-surface-complexation`, and
+`tutorials/...` abbreviates
+`tutorials/reactiveTransport/reactiveTransportDBSFoam` unless the longer HM12
+path is shown. Exact paths, run commands, and renderer relationships are checked
+in `../reproducibility_manifest.json`. No supporting case has been removed.
+
+## Image links and crops
+
+Run `./prepare_external_assets.sh` from the repository root before an
+image-based simulation. `external_assets.json` records the immutable links,
+SHA-256 checksums, full dimensions, voxel sizes, labels, and these operations:
+
+- 4StraightFractures: full `500 x 500 x 1` image; no crop.
+- Kelvin: full `200 x 200 x 200` image; no crop.
+- Estaillades main case: full `500 x 500 x 500` image. External-surface case:
+  `x=300:428, y=340:468, z=40:168`, with micropore remapped to solid.
+- HM12: source `2000 x 2000 x 10`; `x=700:1300, y=700:1300, z=1:2`,
+  threshold `>120`, then retain the inlet-connected pore component.
+- two-scale: full resolved `6000 x 6000` and DBS `1200 x 1200` inputs; matrix
+  REV `x=0:300, y=2200:2500`; threshold `>127`; `base, mirror-x, base`
+  extension; four-voxel resolved and one-voxel DBS inlet pore pads.
+
+Large solver outputs are not stored in Git. The accepted two-scale run paths,
+checkpoints, and checksums are recorded in `paper_validation_runs.json` and the
+repository-level `RUN_ARCHIVE_MANIFEST.md`; the published PNGs remain tracked.

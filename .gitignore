@@ -16,6 +16,10 @@ __pycache__/
 # Detached local validation runs
 .codex-runs/
 
+# GeoChemFoam-owned raw images materialised by prepare_external_assets.sh
+/images/raw/*.raw.tar.gz
+/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation/shared/source/*.raw.tar.gz
+
 # Local editor and OS files
 .DS_Store
 *~

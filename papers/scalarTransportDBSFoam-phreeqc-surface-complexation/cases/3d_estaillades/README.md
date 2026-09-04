@@ -4,6 +4,8 @@
 
 - image:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
+  - materialised from the immutable GeoChemFoam link in `external_assets.json`
+    by `prepare_external_assets.sh`; not duplicated in Git
 - metadata:
   - `images/raw/Est_3phase500cubed4micron.txt`
 

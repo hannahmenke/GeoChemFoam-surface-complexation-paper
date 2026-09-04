@@ -35,6 +35,8 @@
   - fracture vs. micropore transport contrast visible
 - source asset:
   - `images/raw/4StraightFractures.raw.tar.gz`
+  - immutable source link, checksum, and full-image crop are recorded in
+    `external_assets.json`; run `prepare_external_assets.sh` before regeneration
 - source case:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures`
 - reproducible entry point:
@@ -98,6 +100,8 @@
   - surface sites pre-loaded with Ca²⁺; Sr displaces Ca in chromatographic exchange
 - source asset:
   - `images/raw/Est_3phase500cubed4micron.raw.tar.gz`
+  - immutable source link, checksum, and full-image crop are recorded in
+    `external_assets.json`; run `prepare_external_assets.sh` before regeneration
 - source case:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades`
 - reproducible entry point:
@@ -268,6 +272,9 @@
 - source assets:
   - `longTSmicromodelDBS.raw.tar.gz`
   - `TSmicromodel6000.raw.tar.gz`
+  - the current renderer uses the resolved and DBS source images identified in
+    `external_assets.json`; the long DBS archive is retained there as an unused
+    historical link rather than duplicated in Git
 - source case:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/two_scale_micromodel_sorption_validation`
 - reproducible entry point:

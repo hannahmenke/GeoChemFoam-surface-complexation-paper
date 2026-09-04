@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "paper": "main.tex",
+  "supporting_information": "supplementary.tex",
+  "external_assets": "../../external_assets.json",
+  "figures": [
+    {
+      "number": 1,
+      "output": "figures/png/fig01_1d_retardation.png",
+      "case_ids": ["paper-1d-linear"],
+      "run": "cases/1d_linear_retardation/runPhase8AnalyticalBenchmark.sh",
+      "render": "figures/scripts/render_1d_validation_figures.sh",
+      "evidence": ["cases/1d_linear_retardation/run_provenance.json"],
+      "status": "reproducible_from_tracked_case_and_results"
+    },
+    {
+      "number": 2,
+      "output": "figures/png/fig02_2d_fractures.png",
+      "case_ids": ["paper-2d-fractures"],
+      "external_asset_ids": ["4straight-fractures"],
+      "run": "cases/2d_4StraightFractures/runAll.sh",
+      "render": "figures/scripts/render_2d_fractures_figure.sh",
+      "evidence": ["cases/2d_4StraightFractures/run_provenance.json", "figures/png/fig02_item2_validation_metrics.json"],
+      "status": "reproducible_from_tracked_case_and_results"
+    },
+    {
+      "number": 3,
+      "output": "figures/png/fig03_3d_kelvin.png",
+      "case_ids": ["tutorial-kelvin"],
+      "external_asset_ids": ["kelvin"],
+      "run": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation/runAll.sh",
+      "render": "figures/scripts/render_kelvin_mnmg_figures.sh",
+      "evidence": ["cases/3d_kelvin/README.md"],
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
+    },
+    {
+      "number": 4,
+      "output": "figures/png/fig04_3d_estaillades.png",
+      "case_ids": ["paper-estaillades"],
+      "external_asset_ids": ["estaillades-three-phase"],
+      "run": "cases/3d_estaillades/runAll.sh",
+      "render": "figures/scripts/render_estaillades_figures.sh",
+      "evidence": ["cases/3d_estaillades/run_provenance.json", "cases/3d_estaillades/validation/surface_area.json"],
+      "status": "reproducible_from_tracked_case_and_results"
+    },
+    {
+      "number": 5,
+      "output": "figures/png/fig05_solver_workflow.png",
+      "case_ids": [],
+      "render": "figures/scripts/generate_solver_workflow.py",
+      "evidence": ["figures/png/manifest.md"],
+      "status": "source_derived"
+    },
+    {
+      "number": 6,
+      "output": "figures/png/fig06_1d_breakthrough.png",
+      "case_ids": ["paper-1d-linear"],
+      "run": "cases/1d_linear_retardation/runPhase8AnalyticalBenchmark.sh",
+      "render": "figures/scripts/render_1d_validation_figures.sh",
+      "evidence": ["cases/1d_linear_retardation/run_provenance.json"],
+      "status": "reproducible_from_tracked_case_and_results"
+    },
+    {
+      "number": 7,
+      "output": "figures/png/fig07_kelvin_temporal.png",
+      "case_ids": ["tutorial-kelvin"],
+      "external_asset_ids": ["kelvin"],
+      "run": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation/runAll.sh",
+      "render": "figures/scripts/render_kelvin_mnmg_figures.sh",
+      "evidence": ["cases/3d_kelvin/README.md"],
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
+    },
+    {
+      "number": 8,
+      "output": "figures/png/fig08_estaillades_temporal.png",
+      "case_ids": ["paper-estaillades"],
+      "external_asset_ids": ["estaillades-three-phase"],
+      "run": "cases/3d_estaillades/runAll.sh",
+      "render": "figures/scripts/render_estaillades_figures.sh",
+      "evidence": ["figures/png/fig08_estaillades_temporal.json", "figures/png/fig08_estaillades_concentration_bounds.json"],
+      "status": "reproducible_from_tracked_case_and_results"
+    },
+    {
+      "number": 9,
+      "output": "figures/png/fig09_sphere_surface_area_validation.png",
+      "case_ids": ["paper-circular-post", "paper-sphere"],
+      "runs": ["cases/2d_circular_post_surface_area_benchmark/runAll.sh", "cases/3d_sphere_surface_area_benchmark/runAll.sh"],
+      "render": "figures/scripts/render_surface_area_validation_figures.sh",
+      "evidence": ["cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv", "cases/3d_sphere_surface_area_benchmark/README.md"],
+      "status": "cases_and_circular_post_metrics_tracked; sphere metrics_are_regenerated_by_the_case"
+    },
+    {
+      "number": 10,
+      "output": "figures/png/fig10_hm12_surface_area_validation.png",
+      "case_ids": ["hm12-resolved", "tutorial-hm12-solid-dbs"],
+      "external_asset_ids": ["hm12"],
+      "run": "../../tutorials/reactiveTransport/HM12SurfaceComplexationSolverComparison/runAll.sh",
+      "render": "figures/scripts/render_surface_area_validation_figures.sh",
+      "evidence": ["figures/png/manifest.md"],
+      "status": "cases_and_renderer_tracked; solver_outputs_must_be_generated"
+    },
+    {
+      "number": 11,
+      "output": "figures/png/fig11_3d_external_surface_area_validation.png",
+      "case_ids": ["paper-external-3d"],
+      "external_asset_ids": ["estaillades-three-phase"],
+      "run": "cases/3d_external_surface_flow_validation/runAllParallel.sh",
+      "render": "figures/scripts/render_3d_external_surface_area_validation.sh",
+      "evidence": ["cases/3d_external_surface_flow_validation/shared/metadata.json"],
+      "status": "case_and_derived_crop_tracked; solver_outputs_must_be_generated"
+    },
+    {
+      "number": 12,
+      "output": "figures/png/fig12_two_scale_lithium_nested_geometries.png",
+      "case_ids": ["paper-two-scale"],
+      "external_asset_ids": ["two-scale-resolved", "two-scale-dbs"],
+      "run": "cases/two_scale_micromodel_sorption_validation/runPeSweep.sh",
+      "render": "figures/scripts/render_two_scale_lithium_sorption_validation.sh",
+      "evidence": ["cases/two_scale_micromodel_sorption_validation/README.md", "../../external_assets.json"],
+      "status": "reproducible_after_external_asset_preparation"
+    },
+    {
+      "number": 13,
+      "output": "figures/png/fig09_two_scale_error_vs_peclet.png",
+      "case_ids": ["paper-two-scale"],
+      "external_asset_ids": ["two-scale-resolved", "two-scale-dbs"],
+      "run": "cases/two_scale_micromodel_sorption_validation/runPeSweep.sh",
+      "render": "cases/two_scale_micromodel_sorption_validation/scripts/reproduce_paper_validation.py",
+      "evidence": ["cases/two_scale_micromodel_sorption_validation/paper_validation_runs.json"],
+      "status": "reproducible_from_checksum-bound_external_run_archives"
+    },
+    {
+      "number": 14,
+      "output": "figures/png/fig10_two_scale_pe1_fields.png",
+      "case_ids": ["paper-two-scale"],
+      "external_asset_ids": ["two-scale-resolved", "two-scale-dbs"],
+      "run": "cases/two_scale_micromodel_sorption_validation/runPeSweep.sh",
+      "render": "cases/two_scale_micromodel_sorption_validation/scripts/reproduce_paper_validation.py",
+      "evidence": ["cases/two_scale_micromodel_sorption_validation/paper_validation_runs.json"],
+      "status": "reproducible_from_checksum-bound_external_run_archives"
+    }
+  ],
+  "retained_figure_assets": [
+    {"output": "figures/png/fig04_3d_estaillades_geometry_exterior.png", "render": "figures/scripts/render_estaillades_geometry_exterior.sh", "status": "supporting_view_not_referenced_by_current_manuscript"},
+    {"output": "figures/png/fig04_3d_estaillades_micropore_as_solid_streamlines_t100.png", "render": "figures/scripts/render_estaillades_micropore_as_solid_streamlines_t100.sh", "status": "supporting_view_not_referenced_by_current_manuscript"},
+    {"output": "figures/png/fig04_3d_estaillades_micropore_as_solid_t10.png", "render": "figures/scripts/render_estaillades_micropore_as_solid_t10.sh", "status": "supporting_view_not_referenced_by_current_manuscript"},
+    {"output": "figures/png/fig04_3d_estaillades_micropore_as_solid_t20.png", "render": "figures/scripts/render_estaillades_micropore_as_solid_t20.sh", "status": "supporting_view_not_referenced_by_current_manuscript"},
+    {"output": "figures/png/fig04_3d_estaillades_micropore_as_solid_t100.png", "render": "figures/scripts/render_estaillades_micropore_as_solid_t100.sh", "status": "supporting_view_not_referenced_by_current_manuscript"},
+    {"output": "figures/png/fig13_two_scale_lithium_sorption_validation.png", "render": "figures/scripts/render_two_scale_lithium_sorption_validation.sh", "status": "superseded_analysis_figure_retained_for_provenance"}
+  ],
+  "cases": [
+    {"id": "paper-1d-linear", "path": "cases/1d_linear_retardation", "classification": "paper_figure_case", "figures": [1, 6]},
+    {"id": "paper-2d-fractures", "path": "cases/2d_4StraightFractures", "classification": "paper_figure_case", "figures": [2]},
+    {"id": "paper-circular-post", "path": "cases/2d_circular_post_surface_area_benchmark", "classification": "paper_figure_case", "figures": [9]},
+    {"id": "paper-estaillades", "path": "cases/3d_estaillades", "classification": "paper_figure_case", "figures": [4, 8]},
+    {"id": "paper-external-3d", "path": "cases/3d_external_surface_flow_validation", "classification": "paper_figure_case", "figures": [11]},
+    {"id": "paper-kelvin-pointer", "path": "cases/3d_kelvin", "classification": "documentation_pointer", "figures": [3, 7]},
+    {"id": "paper-sphere", "path": "cases/3d_sphere_surface_area_benchmark", "classification": "paper_figure_case", "figures": [9]},
+    {"id": "paper-two-scale", "path": "cases/two_scale_micromodel_sorption_validation", "classification": "paper_figure_case", "figures": [12, 13, 14]},
+    {"id": "tutorial-1d", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/1DLinearRetardation", "classification": "retained_upstream_snapshot", "figures": []},
+    {"id": "tutorial-hm12-microporous", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/2DHM12MicroporousGrainsSurfaceComplexation", "classification": "retained_supporting_comparator", "figures": []},
+    {"id": "tutorial-hm12-solid-dbs", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/2DHM12SolidGrainsSurfaceComplexation", "classification": "paper_figure_case", "figures": [10]},
+    {"id": "tutorial-estaillades-micropore-solid", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/3DEstailladesMicroporeAsSolidSurfaceComplexation", "classification": "retained_supporting_comparator", "figures": []},
+    {"id": "tutorial-estaillades", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/3DEstailladesSurfaceComplexation", "classification": "retained_upstream_snapshot", "figures": []},
+    {"id": "tutorial-kelvin", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/3DKelvinSurfaceComplexation", "classification": "paper_figure_case", "figures": [3, 7]},
+    {"id": "tutorial-4straight", "path": "../../tutorials/reactiveTransport/reactiveTransportDBSFoam/4StraightFracturesSurfaceComplexation", "classification": "retained_upstream_snapshot", "figures": []},
+    {"id": "hm12-comparison", "path": "../../tutorials/reactiveTransport/HM12SurfaceComplexationSolverComparison", "classification": "paper_figure_case", "figures": [10]},
+    {"id": "hm12-resolved", "path": "../../tutorials/reactiveTransport/HM12SurfaceComplexationSolverComparison/resolved-snappy", "classification": "paper_figure_case_subcase", "figures": [10]}
+  ]
+}

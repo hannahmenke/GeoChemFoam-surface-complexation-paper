@@ -4,6 +4,8 @@
 
 - image:
   - `images/raw/4StraightFractures.raw.tar.gz`
+  - materialised from the immutable GeoChemFoam link in `external_assets.json`
+    by `prepare_external_assets.sh`; not duplicated in Git
 - metadata:
   - `images/raw/4StraightFractures.txt`
 
@@ -26,7 +28,8 @@
     only labels `1` and `2`
   - the manuscript draft currently treats label `1` as the reactive
     micropore phase for `aSurf`
-  - the source metadata does not currently report a resolved voxel size
+  - the case uses a `100 mum` voxel size, recorded with the crop parameters in
+    `external_assets.json`
 
 ## Runtime Case
 

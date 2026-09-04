@@ -65,14 +65,6 @@
       "size_bytes": 72
     },
     {
-      "id": "data-2d-fracture-raw",
-      "media_type": "application/gzip",
-      "path": "images/raw/4StraightFractures.raw.tar.gz",
-      "role": "material_data",
-      "sha256": "042de7f02d0e8316977787cd72bb6db3c5154eb8ee6745cd59376759ec6759c1",
-      "size_bytes": 1144
-    },
-    {
       "id": "data-2d-intrinsic-surface-log",
       "media_type": "text/plain",
       "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createASurfIntrinsicReactive.out",
@@ -97,12 +89,12 @@
       "size_bytes": 76
     },
     {
-      "id": "data-estaillades-raw",
-      "media_type": "application/gzip",
-      "path": "images/raw/Est_3phase500cubed4micron.raw.tar.gz",
+      "id": "data-external-raw-assets",
+      "media_type": "application/json",
+      "path": "external_assets.json",
       "role": "material_data",
-      "sha256": "aa258b5a0d21ae36e23b0cb5f931b1f5c2f2455f0fa766adacb379fcb7f3189b",
-      "size_bytes": 5594894
+      "sha256": "5f5f1c7dc5b008b905367475da06a6ada5c030ff421989e2715b1ce5c0226024",
+      "size_bytes": 7533
     },
     {
       "id": "evidence-2d-validation",
@@ -415,7 +407,7 @@
       "manuscript_number": 2,
       "material_binding_ids": [
         "data-2d-fracture-metadata",
-        "data-2d-fracture-raw",
+        "data-external-raw-assets",
         "data-2d-intrinsic-surface-log",
         "data-2d-reactive-surface-log",
         "evidence-2d-validation"
@@ -486,7 +478,7 @@
       "manuscript_number": 4,
       "material_binding_ids": [
         "data-estaillades-metadata",
-        "data-estaillades-raw",
+        "data-external-raw-assets",
         "evidence-estaillades-surface-area"
       ],
       "provenance": [
@@ -615,7 +607,7 @@
       "manuscript_number": 8,
       "material_binding_ids": [
         "data-estaillades-metadata",
-        "data-estaillades-raw",
+        "data-external-raw-assets",
         "evidence-estaillades-bounds",
         "evidence-estaillades-surface-area",
         "evidence-estaillades-temporal"
