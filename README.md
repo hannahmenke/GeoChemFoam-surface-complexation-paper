@@ -22,6 +22,8 @@ into this repository.
   locally and are not duplicated in Git
 - `scripts`: paper benchmark utilities
 - `docs/phases`: paper-development and validation notes
+- `.scratch/tpm-submission`: resolved journal-submission research records,
+  including highlights, author identifiers, and reviewer-screening notes
 - `SOURCE_PROVENANCE.md`: extraction boundary and upstream version record
 - `RUN_ARCHIVE_MANIFEST.md`: verified production-output archive checksums
 

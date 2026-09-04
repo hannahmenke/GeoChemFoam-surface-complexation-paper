@@ -74,11 +74,15 @@ def discovered_cases() -> set[str]:
     paths = {
         repo_relative(path)
         for path in (PAPER_ROOT / "cases").iterdir()
-        if path.is_dir()
+        if path.is_dir() and not path.name.startswith((".", "__"))
     }
     tutorial_root = REPO_ROOT / "tutorials/reactiveTransport"
     dbs_root = tutorial_root / "reactiveTransportDBSFoam"
-    paths.update(repo_relative(path) for path in dbs_root.iterdir() if path.is_dir())
+    paths.update(
+        repo_relative(path)
+        for path in dbs_root.iterdir()
+        if path.is_dir() and not path.name.startswith((".", "__"))
+    )
     comparison = tutorial_root / "HM12SurfaceComplexationSolverComparison"
     paths.add(repo_relative(comparison))
     resolved = comparison / "resolved-snappy"
@@ -87,17 +91,40 @@ def discovered_cases() -> set[str]:
     return paths
 
 
+def check_tutorial_scope(failures: list[str]) -> None:
+    tutorial_root = REPO_ROOT / "tutorials"
+    unexpected = sorted(
+        path.name
+        for path in tutorial_root.iterdir()
+        if path.is_dir() and path.name != "reactiveTransport"
+    )
+    if unexpected:
+        fail(
+            "tutorial trees outside the paper's reactive-transport scope: "
+            f"{unexpected}",
+            failures,
+        )
+
+
 def main() -> int:
     failures: list[str] = []
     data = json.loads(MANIFEST.read_text())
     external_path = local_path(data["external_assets"])
     external = json.loads(external_path.read_text())
     tracked = tracked_paths()
+    check_tutorial_scope(failures)
 
     if repo_relative(MANIFEST) not in tracked:
         fail("reproducibility_manifest.json is not Git-tracked", failures)
     if repo_relative(external_path) not in tracked:
         fail("external_assets.json is not Git-tracked", failures)
+    for name in ("fvSchemes", "fvSolution"):
+        require_local(
+            f"../../scripts/snappyHexMeshSystem/{name}",
+            f"snappyHexMesh benchmark template {name}",
+            tracked,
+            failures,
+        )
 
     asset_ids: set[str] = set()
     for asset in external.get("assets", []):

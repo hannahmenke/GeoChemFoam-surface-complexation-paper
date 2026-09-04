@@ -194,6 +194,9 @@ def prepare_case(case_dir: Path, radius: int, thickness: float) -> None:
     write_cylinder_stl(case_dir / "constant" / "triSurface" / "post.stl", radius, -2.0 * thickness, 2.0 * thickness)
     write_block_mesh_dict(case_dir / "system" / "blockMeshDict", nxy, radius, pad, thickness)
     write_snappy_dict(case_dir / "system" / "snappyHexMeshDict", radius, pad)
+    template_system = REPO_ROOT / "scripts" / "snappyHexMeshSystem"
+    for name in ("fvSchemes", "fvSolution"):
+        shutil.copy(template_system / name, case_dir / "system" / name)
     (case_dir / "system" / "controlDict").write_text(
         """FoamFile
 {
@@ -219,11 +222,6 @@ timePrecision   6;
 runTimeModifiable true;
 """
     )
-    template_system = REPO_ROOT / "tutorials" / "stressAnalysis" / "solidDisplacementElasticVOSFoam" / "spheresVOS" / "system"
-    for name in ("fvSchemes", "fvSolution"):
-        shutil.copy(template_system / name, case_dir / "system" / name)
-
-
 def run_case(case_dir: Path) -> None:
     with (case_dir / "blockMesh.out").open("w") as handle:
         subprocess.run(["blockMesh"], cwd=case_dir, stdout=handle, stderr=subprocess.STDOUT, check=True)

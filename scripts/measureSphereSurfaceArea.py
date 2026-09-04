@@ -12,9 +12,6 @@ from pathlib import Path
 
 import numpy as np
 
-from createASurfMarchingCubes import marching_cubes_for_pair
-
-
 def _foam_list(path: Path) -> tuple[int, str]:
     text = path.read_text()
     match = re.search(r"\n\s*(\d+)\s*\((.*?)\)\s*(?:;|\n// \*)", text, re.S)
@@ -93,6 +90,8 @@ def patch_area(poly_mesh: Path, patch_name: str) -> float:
 
 
 def smooth_area(raw_path: Path, metadata: dict, sigma: float) -> tuple[float, int]:
+    from createASurfMarchingCubes import marching_cubes_for_pair
+
     shape = (int(metadata["nz"]), int(metadata["ny"]), int(metadata["nx"]))
     volume = np.fromfile(raw_path, dtype=np.uint8).reshape(shape)
     owner = volume == int(metadata["pore_value"])

@@ -31,6 +31,9 @@ for level in "${levels[@]}"; do
     rm -rf "$case_dir"
     mkdir -p "$case_dir/constant/triSurface" "$case_dir/system"
     cp "$asset_dir/${name}_analytic.stl" "$case_dir/constant/triSurface/"
+    cp "$repo_root/scripts/snappyHexMeshSystem/fvSchemes" \
+       "$repo_root/scripts/snappyHexMeshSystem/fvSolution" \
+       "$case_dir/system/"
 
     python - "$case_dir" "$metadata" "$name" <<'PY'
 import json
