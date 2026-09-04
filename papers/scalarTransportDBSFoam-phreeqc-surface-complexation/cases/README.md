@@ -58,8 +58,8 @@ The manuscript uses the following case ladder.
 
 ## Controlled Surface-Area Validation
 
-- tracked 2D circular-post metrics:
-  - `cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
+- generated 2D circular-post metrics:
+  - run `cases/2d_circular_post_surface_area_benchmark/runAll.sh`
 - tracked 3D sphere case:
   - `cases/3d_sphere_surface_area_benchmark`
 - role:
@@ -99,9 +99,9 @@ produce a current manuscript figure.
 
 | ID | Repository-relative path | Classification | Figures |
 |---|---|---|---:|
-| `paper-1d-linear` | `papers/.../cases/1d_linear_retardation` | paper figure case and tracked results | 1, 6 |
+| `paper-1d-linear` | `papers/.../cases/1d_linear_retardation` | paper figure case; results generated locally | 1, 6 |
 | `paper-2d-fractures` | `papers/.../cases/2d_4StraightFractures` | paper figure case | 2 |
-| `paper-circular-post` | `papers/.../cases/2d_circular_post_surface_area_benchmark` | paper figure metrics | 9 |
+| `paper-circular-post` | `papers/.../cases/2d_circular_post_surface_area_benchmark` | paper figure case; metrics generated locally | 9 |
 | `paper-estaillades` | `papers/.../cases/3d_estaillades` | paper figure case | 4, 8 |
 | `paper-external-3d` | `papers/.../cases/3d_external_surface_flow_validation` | paired paper figure case | 11 |
 | `paper-kelvin-pointer` | `papers/.../cases/3d_kelvin` | documentation pointer | 3, 7 |

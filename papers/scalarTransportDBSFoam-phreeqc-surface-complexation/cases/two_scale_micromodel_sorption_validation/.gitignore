@@ -5,8 +5,6 @@ archer_work/
 
 # Flow/reactive-transport outputs.
 results/*
-!results/SHORT_SURFACE_RECONSTRUCTION_COMPARISON.md
-!results/short_surface_reconstruction_comparison.json
 */0/
 */[0-9]*/
 */processor*/

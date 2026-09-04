@@ -238,7 +238,11 @@ def verify_schema(payload: object) -> dict[str, dict[str, Any]]:
         require_binding_role(bindings, artifact_id, "figure", f"{label}.artifact_binding_id")
         referenced_ids.add(artifact_id)
 
-        material_ids = identifier_list(figure["material_binding_ids"], f"{label}.material_binding_ids")
+        material_ids = identifier_list(
+            figure["material_binding_ids"],
+            f"{label}.material_binding_ids",
+            nonempty=False,
+        )
         for binding_id in material_ids:
             require_binding_role(
                 bindings,

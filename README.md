@@ -4,6 +4,9 @@ This private repository contains the manuscript, figures, plotting and analysis
 scripts, validation cases, and pinned input-asset references for the GeoChemFoam
 surface-complexation paper.
 
+Generated case results are not tracked. They must be produced locally from the
+case entry points or recovered from the checksum-bound external run archives.
+
 The material was extracted from
 [`hannahmenke/GeoChemFoam-v-dev`](https://github.com/hannahmenke/GeoChemFoam-v-dev)
 at commit `0d750971f84070be2cd669b713cc09d0adf48296`. The simulations require a
@@ -77,6 +80,9 @@ Before release, audit the complete case/figure map:
 ./validate_accepted_nonkelvin_artifacts.sh
 ./test_export_submission.sh
 ```
+
+The audit fails if numerical case outputs, result directories, processor
+directories, solver logs, or generated validation summaries are Git-tracked.
 
 ## Relationship to GeoChemFoam
 

@@ -206,13 +206,14 @@
   - relative error in integrated surface area versus the analytic 2D circular post
   - comparison of `snappyHexMesh` and smooth-interface DBS where applicable
 - source assets:
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_sphere_surface_area_benchmark/results`
-  - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
+  - generated `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_sphere_surface_area_benchmark/results`
+  - generated `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
   - DBS circular-post metrics generated analytically by the renderer
 - renderer:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_sphere_surface_area_validation.py`
 - repeatable command:
   - `papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_surface_area_validation_figures.sh`
+  - run both benchmark case entry points first; generated metrics are not tracked
 
 ## Figure 10
 

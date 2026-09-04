@@ -11,7 +11,7 @@
       "run": "cases/1d_linear_retardation/runPhase8AnalyticalBenchmark.sh",
       "render": "figures/scripts/render_1d_validation_figures.sh",
       "evidence": ["cases/1d_linear_retardation/run_provenance.json"],
-      "status": "reproducible_from_tracked_case_and_results"
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
     },
     {
       "number": 2,
@@ -21,7 +21,7 @@
       "run": "cases/2d_4StraightFractures/runAll.sh",
       "render": "figures/scripts/render_2d_fractures_figure.sh",
       "evidence": ["cases/2d_4StraightFractures/run_provenance.json", "figures/png/fig02_item2_validation_metrics.json"],
-      "status": "reproducible_from_tracked_case_and_results"
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
     },
     {
       "number": 3,
@@ -40,8 +40,8 @@
       "external_asset_ids": ["estaillades-three-phase"],
       "run": "cases/3d_estaillades/runAll.sh",
       "render": "figures/scripts/render_estaillades_figures.sh",
-      "evidence": ["cases/3d_estaillades/run_provenance.json", "cases/3d_estaillades/validation/surface_area.json"],
-      "status": "reproducible_from_tracked_case_and_results"
+      "evidence": ["cases/3d_estaillades/run_provenance.json"],
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
     },
     {
       "number": 5,
@@ -58,7 +58,7 @@
       "run": "cases/1d_linear_retardation/runPhase8AnalyticalBenchmark.sh",
       "render": "figures/scripts/render_1d_validation_figures.sh",
       "evidence": ["cases/1d_linear_retardation/run_provenance.json"],
-      "status": "reproducible_from_tracked_case_and_results"
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
     },
     {
       "number": 7,
@@ -78,7 +78,7 @@
       "run": "cases/3d_estaillades/runAll.sh",
       "render": "figures/scripts/render_estaillades_figures.sh",
       "evidence": ["figures/png/fig08_estaillades_temporal.json", "figures/png/fig08_estaillades_concentration_bounds.json"],
-      "status": "reproducible_from_tracked_case_and_results"
+      "status": "case_and_renderer_tracked; solver_outputs_must_be_generated"
     },
     {
       "number": 9,
@@ -86,8 +86,8 @@
       "case_ids": ["paper-circular-post", "paper-sphere"],
       "runs": ["cases/2d_circular_post_surface_area_benchmark/runAll.sh", "cases/3d_sphere_surface_area_benchmark/runAll.sh"],
       "render": "figures/scripts/render_surface_area_validation_figures.sh",
-      "evidence": ["cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv", "cases/3d_sphere_surface_area_benchmark/README.md"],
-      "status": "cases_and_circular_post_metrics_tracked; sphere metrics_are_regenerated_by_the_case"
+      "evidence": ["cases/2d_circular_post_surface_area_benchmark/README.md", "cases/3d_sphere_surface_area_benchmark/README.md"],
+      "status": "cases_and_renderers_tracked; metrics_must_be_generated"
     },
     {
       "number": 10,

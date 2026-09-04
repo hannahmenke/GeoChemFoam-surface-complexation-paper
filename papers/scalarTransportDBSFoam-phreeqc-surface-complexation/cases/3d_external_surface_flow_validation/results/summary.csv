@@ -1,3 +1,0 @@
-method,surface_mode,surface_area,surface_area_relative_to_snappy,surface_triangles,sorbed_sr_inventory,sorbed_sr_inventory_relative_to_snappy,porosity,permeability,permeability_relative_to_snappy,darcy_velocity,darcy_velocity_relative_to_snappy,reynolds,tau
-snappy,resolved-wall-cell-aSurf,3.6946213308014925e-06,0.0,,6.309119282727659e-17,0.0,0.263582,1.34647e-12,0.0,2.9454e-05,0.0,0.000714354,1.48235
-dbs-smoothsurface,occupancyGaussian,3.7507447328733257e-06,0.01519056949191004,714504,6.192896550508947e-17,-0.018421387678767102,0.2784015394687652,1.6478090778693196e-12,0.2237993255470375,2.9783059691768753e-05,0.01117198654745546,0.0007361398058070318,1.4457992727955202

@@ -1,84 +1,12 @@
 {
   "bindings": [
     {
-      "id": "data-1d-analytical-comparison",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/phase8_analytical_compare.out",
-      "role": "validation_evidence",
-      "sha256": "5b0436158405085bcea9a00ce49f5bf8b0e4db9cff7d4d0ec01322ffbc1d3eab",
-      "size_bytes": 825
-    },
-    {
-      "id": "data-1d-aqueous-outlet",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_aqueous/postProcessing/outletCa/0/surfaceFieldValue.dat",
-      "role": "material_data",
-      "sha256": "cf6a69fca326dfe0b80640d652eded2daae4b95039905ee821bc9f4daf55bc9b",
-      "size_bytes": 15566
-    },
-    {
-      "id": "data-1d-aqueous-profile",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_aqueous/Ca+2",
-      "role": "material_data",
-      "sha256": "877d532fbdd52af483e0759aa3bd17c78c15ee23a6d7242d9ca15e2f960e60a3",
-      "size_bytes": 3097
-    },
-    {
-      "id": "data-1d-batch-secant",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/phase8_batch_secant.out",
-      "role": "material_data",
-      "sha256": "fac333636ae4902c34ddb5fe8429bef0fdf81bdd32d8083925c5c5d1add8c039",
-      "size_bytes": 151
-    },
-    {
-      "id": "data-1d-surface-loading",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_surface/Surf_aCa+",
-      "role": "material_data",
-      "sha256": "d9d01f0824179db4463fafad14a60613147de0cc4486fe46dcad23f0a2be059a",
-      "size_bytes": 3064
-    },
-    {
-      "id": "data-1d-surface-outlet",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_surface/postProcessing/outletCa/0/surfaceFieldValue.dat",
-      "role": "material_data",
-      "sha256": "6f55d3969d4fce95e1a5fa32bb133a24845e3ca38e2abe32fe9dd58ffad9d4e4",
-      "size_bytes": 15566
-    },
-    {
-      "id": "data-1d-surface-profile",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/1d_linear_retardation/results/transport_surface/Ca+2",
-      "role": "material_data",
-      "sha256": "8be08d9e2b8c0428bb8b33b15813390708787d2362c1efc25317d849f1784631",
-      "size_bytes": 3097
-    },
-    {
       "id": "data-2d-fracture-metadata",
       "media_type": "text/plain",
       "path": "images/raw/4StraightFractures.txt",
       "role": "material_data",
       "sha256": "30a2f9e6480f5e50cb5f8ece9e740b3ff61efb489e8bf01b725a66373ced9528",
       "size_bytes": 72
-    },
-    {
-      "id": "data-2d-intrinsic-surface-log",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createASurfIntrinsicReactive.out",
-      "role": "material_data",
-      "sha256": "34d25b0d50108298293246c671c3a6d0a4960ac503be1f780d61f32bb6cdab68",
-      "size_bytes": 181
-    },
-    {
-      "id": "data-2d-reactive-surface-log",
-      "media_type": "text/plain",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/createASurfReactive.out",
-      "role": "material_data",
-      "sha256": "6d612d9ad1d47b7d6eac3b7f4e4fb5ba5b46f191dfd0244da847f18a5e3f9900",
-      "size_bytes": 197
     },
     {
       "id": "data-estaillades-metadata",
@@ -111,14 +39,6 @@
       "role": "validation_evidence",
       "sha256": "eee55e79427265778814437051f25f2d6086fcd8ced7540fd992606cf051e938",
       "size_bytes": 4454
-    },
-    {
-      "id": "evidence-estaillades-surface-area",
-      "media_type": "application/json",
-      "path": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/validation/surface_area.json",
-      "role": "validation_evidence",
-      "sha256": "9774cc144cfb9c6c5e816989816edd1e5764ade86258e2fa10965e59269def1b",
-      "size_bytes": 1636
     },
     {
       "id": "evidence-estaillades-temporal",
@@ -348,13 +268,7 @@
       },
       "figure_id": "figure-01",
       "manuscript_number": 1,
-      "material_binding_ids": [
-        "data-1d-aqueous-profile",
-        "data-1d-analytical-comparison",
-        "data-1d-batch-secant",
-        "data-1d-surface-loading",
-        "data-1d-surface-profile"
-      ],
+      "material_binding_ids": [],
       "provenance": [
         {
           "binding_id": "provenance-1d-run",
@@ -408,8 +322,6 @@
       "material_binding_ids": [
         "data-2d-fracture-metadata",
         "data-external-raw-assets",
-        "data-2d-intrinsic-surface-log",
-        "data-2d-reactive-surface-log",
         "evidence-2d-validation"
       ],
       "provenance": [
@@ -426,7 +338,7 @@
         {
           "binding_id": "provenance-2d-run",
           "record_kind": "completed-run-record",
-          "semantics": "The completed-run record preserves realized transport, runtime artifacts, surface construction, and retained output hashes."
+          "semantics": "The completed-run record preserves realized transport, runtime artifacts, surface construction, and recorded output hashes; the output files themselves are not tracked."
         }
       ],
       "renderer": {
@@ -478,8 +390,7 @@
       "manuscript_number": 4,
       "material_binding_ids": [
         "data-estaillades-metadata",
-        "data-external-raw-assets",
-        "evidence-estaillades-surface-area"
+        "data-external-raw-assets"
       ],
       "provenance": [
         {
@@ -544,12 +455,7 @@
       },
       "figure_id": "figure-06",
       "manuscript_number": 6,
-      "material_binding_ids": [
-        "data-1d-analytical-comparison",
-        "data-1d-aqueous-outlet",
-        "data-1d-batch-secant",
-        "data-1d-surface-outlet"
-      ],
+      "material_binding_ids": [],
       "provenance": [
         {
           "binding_id": "provenance-1d-run",
@@ -609,7 +515,6 @@
         "data-estaillades-metadata",
         "data-external-raw-assets",
         "evidence-estaillades-bounds",
-        "evidence-estaillades-surface-area",
         "evidence-estaillades-temporal"
       ],
       "provenance": [

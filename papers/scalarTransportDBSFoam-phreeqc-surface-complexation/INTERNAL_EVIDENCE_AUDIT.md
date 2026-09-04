@@ -37,17 +37,14 @@ record why they sit outside it.
 ## Unresolved numerical items
 
 - Closed-batch relative inventory drifts are reported as 8.9e-10 and 1.1e-10
-  in `sections/05_validation.tex` and the supplementary. Recomputing the
-  combined inventory from the committed `cases/1d_linear_retardation/
-  phase8_batch_secant.out` gives roughly 2.4e-8 and 1.1e-8. The pre-chemistry
-  baseline `Surf_aCa+` field is not committed, so the discrepancy is not
-  resolved either way. To be investigated.
+  in `sections/05_validation.tex` and the supplementary. A prior audit of the
+  generated `phase8_batch_secant.out` gave roughly 2.4e-8 and 1.1e-8. Case
+  results, including the pre-chemistry baseline `Surf_aCa+` field, are not
+  committed, so the discrepancy must be resolved by rerunning the benchmark.
 - The controlled circular-post and sphere benchmarks report smoothSurface
-  errors (0.2%, and -0.06%/+0.87% at R/dx = 8 and 16) for which no
-  smoothSurface data is committed:
-  `cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
-  contains snappy rows only, and `cases/3d_sphere_surface_area_benchmark/`
-  has no `results/` directory. To be investigated.
+  errors (0.2%, and -0.06%/+0.87% at R/dx = 8 and 16). Case results are not
+  committed; rerun both controlled benchmarks and confirm that their generated
+  smoothSurface data support these values.
 
 ## Coauthor-review TODO: final submission gate
 

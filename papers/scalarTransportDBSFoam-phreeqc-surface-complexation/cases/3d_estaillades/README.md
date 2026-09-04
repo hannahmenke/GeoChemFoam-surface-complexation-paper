@@ -95,11 +95,11 @@ export GCFOAM_RUNTIME_ROOT=/path/to/GeoChemFoam
 Generated mesh, fields, and logs remain untracked. Older
 coarse-grid outputs must not be used for the full-resolution paper result.
 
-The definitive run, exact input hashes, runtime identity, retained output
-coverage, figure hashes, and renderer hashes are recorded in
-`run_provenance.json`. Checkpoint-wise area validation is retained in
-`validation/surface_area.json`; concentration validation and weighted temporal
-metrics accompany Figure 8 in `figures/png`.
+The definitive run, exact input hashes, runtime identity, output coverage,
+figure hashes, and renderer hashes are recorded in `run_provenance.json`.
+Generated case results and validation summaries are not tracked. Concentration
+validation and weighted temporal metrics accompanying Figure 8 are retained as
+figure sidecars in `figures/png`.
 
 Launch the flow stage first, then evaluate its maximum velocity and Courant
 number before starting chemistry:

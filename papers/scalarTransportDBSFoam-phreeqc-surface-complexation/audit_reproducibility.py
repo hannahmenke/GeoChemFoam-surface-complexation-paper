@@ -106,6 +106,30 @@ def check_tutorial_scope(failures: list[str]) -> None:
         )
 
 
+def check_no_tracked_case_results(tracked: set[str], failures: list[str]) -> None:
+    case_prefixes = (
+        "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/",
+        "tutorials/reactiveTransport/",
+    )
+    forbidden: list[str] = []
+    for relative in tracked:
+        if not relative.startswith(case_prefixes):
+            continue
+        parts = Path(relative).parts
+        name = parts[-1]
+        if (
+            "results" in parts
+            or "postProcessing" in parts
+            or any(re.fullmatch(r"processor\d+", part) for part in parts)
+            or any(re.fullmatch(r"(?!0(?:\.0*)?$)\d+(?:\.\d+)?", part) for part in parts)
+            or name.endswith((".out", ".log", ".pid", ".status"))
+            or name in {"error.inp", "poroPerm.csv", "surface_area.json"}
+        ):
+            forbidden.append(relative)
+    if forbidden:
+        fail(f"tracked case results are forbidden: {sorted(forbidden)}", failures)
+
+
 def main() -> int:
     failures: list[str] = []
     data = json.loads(MANIFEST.read_text())
@@ -113,6 +137,7 @@ def main() -> int:
     external = json.loads(external_path.read_text())
     tracked = tracked_paths()
     check_tutorial_scope(failures)
+    check_no_tracked_case_results(tracked, failures)
 
     if repo_relative(MANIFEST) not in tracked:
         fail("reproducibility_manifest.json is not Git-tracked", failures)

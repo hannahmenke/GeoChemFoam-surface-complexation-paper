@@ -1,1 +1,0 @@
-Created aSurf with smooth reconstruction: mode=occupancyGaussian sigma_vox=0.75 pairs=1 intrinsic=1 used_modes=external=occupancyGaussian triangles=3040 procs=1 sum(aSurf*V)=2.1990199701030694e-02

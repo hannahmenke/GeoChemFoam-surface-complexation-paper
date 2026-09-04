@@ -204,10 +204,14 @@ class AcceptedFigureProvenanceTests(unittest.TestCase):
         payload["figures"][0]["material_binding_ids"] = ["missing"]
         with self.assertRaisesRegex(verifier.VerificationError, "Missing binding referenced"):
             self.schema(payload)
+
+    def test_empty_material_bindings_are_allowed_when_outputs_are_external(self) -> None:
         payload = copy.deepcopy(self.payload)
         payload["figures"][0]["material_binding_ids"] = []
-        with self.assertRaisesRegex(verifier.VerificationError, "must not be empty"):
-            self.schema(payload)
+        payload["bindings"] = [
+            binding for binding in payload["bindings"] if binding["id"] != "data"
+        ]
+        verifier.verify_schema(payload)
 
     def test_hash_tampering_is_rejected(self) -> None:
         (self.repo / "figure.png").write_bytes(b"EVIL")
