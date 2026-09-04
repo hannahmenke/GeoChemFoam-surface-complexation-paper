@@ -48,3 +48,34 @@ record why they sit outside it.
   `cases/2d_circular_post_surface_area_benchmark/results/area_metrics.csv`
   contains snappy rows only, and `cases/3d_sphere_surface_area_benchmark/`
   has no `results/` directory. To be investigated.
+
+## Coauthor-review TODO: final submission gate
+
+The current PDF may be circulated as a near-final draft while the coauthors
+review it, but it is not ready for final submission until the following items
+are resolved.
+
+- [ ] Complete and accept the matched Kelvin DDL timestep-convergence pair on
+  the final reviewed runtime. Do not assume that the existing Kelvin results
+  are unchanged merely because the qualitative Mn/Mg mechanism is expected to
+  persist.
+- [ ] Run the accepted DDL Kelvin production case to `t = 120 s` and compare it
+  quantitatively with the data behind the current Figures 3 and 7. Record
+  aqueous and sorbed Mn/Mg inventories and distributions, front locations,
+  field extrema, and element-balance diagnostics. The timestep comparison alone
+  does not measure the effect of replacing `NO_EDL` with the default DDL model.
+- [ ] Regenerate and visually inspect Figures 3 and 7 from the accepted DDL
+  production output. Reconcile every affected value and interpretation in the
+  Kelvin text, captions, and case table before treating them as final.
+- [ ] Add fail-closed provenance bindings for the accepted Kelvin figures and
+  for the restored two-scale Figures 12--14, or document and approve an explicit
+  reason for excluding any of them from the accepted-artifact contract.
+- [ ] Resolve the closed-batch inventory-drift discrepancy described above and
+  change the manuscript/SI values only after the supporting calculation is
+  agreed.
+- [ ] Recover or regenerate the smoothSurface circular-post and sphere evidence
+  described above and confirm the reported errors without changing accepted
+  values merely to make a check pass.
+- [ ] After all agreed numerical updates, rerun the reproducibility audit,
+  accepted-artifact checks, figure tests, submission export, manuscript/SI
+  build, and visual inspection before declaring the submission package final.
