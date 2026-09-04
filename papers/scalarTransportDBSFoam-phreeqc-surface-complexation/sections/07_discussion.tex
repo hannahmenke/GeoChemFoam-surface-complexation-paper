@@ -2,54 +2,43 @@
 
 \subsection{Formulation Choices and Conservative Structure}
 
-The central modeling choice in this work is to use one fixed porosity field,
-$\varepsilon$, consistently in the finite-volume transport equation and in
-the PHREEQC cell volumes. In the continuous notation of Section~\ref{sec:model},
-the mobile-water fraction is therefore $\theta=\varepsilon$. This shared field
-keeps aqueous accumulation, transport, and equilibrium chemistry on the same
-volumetric basis. The reactive surface is supplied independently through the
-explicit cell field $a_{\mathrm{surf}}$, so the chemical storage volume and
-the amount of reactive surface remain separately defined material properties.
+The central modelling choice in this work is to use one fixed porosity field,
+$\theta$, in the finite-volume transport equation and in the PHREEQC cell
+volumes alike, which keeps aqueous accumulation, transport, and equilibrium
+chemistry on the same volumetric basis. The reactive surface is prescribed
+independently through the explicit cell field $a_{\mathrm{surf}}$, so the
+chemical storage volume and the amount of reactive surface remain separately
+defined material properties.
 
 This approach extends earlier micro-continuum reactive transport formulations
 to the case where the reactive surface area is an unresolved cell property
 rather than an explicitly meshed boundary. In existing pore-scale DBS solvers,
 including \nolinkurl{porousMedia4Foam} and earlier GeoChemFoam solvers,
 reactive uptake is typically imposed as a flux condition on the diffuse
-fluid-solid interface. This requires the reactive surface to coincide with the
-resolved image voxel boundary, which is a good approximation when the dominant
-reactive area is at the macropore--grain contact. In multi-scale carbonate
-images, however, the microporous phase contains large internal reactive area
-that cannot be recovered from the coarse-cell boundary alone. The present
-cell-based formulation addresses this gap by representing the unresolved
-micropore surface as an intrinsic volumetric density
+fluid-solid interface. This requires the reactive surface to coincide with the resolved image voxel
+boundary, which is a good approximation when the dominant reactive area lies at
+the contact between macropore and grain. In multi-scale carbonate images the
+microporous phase holds a large internal reactive area that lies inside the
+coarse cell rather than on its boundary. The cell-based formulation carries
+that area as an intrinsic volumetric density
 $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$, scaled by the local phase fraction
-and coupled to PHREEQC as a cell-level property.
+and passed to PHREEQC as a cell-level property.
 
-A consequence of this design is that the conservation structure is enforced at
-the cell level rather than through a face flux. The surface inventory
-$M = \varepsilon C + a_{\mathrm{surf}}\Gamma$ is
-updated locally by PHREEQC at each timestep, and the aqueous transport step is
-conservative in the standard finite-volume sense. There is no explicit
-surface-flux term on the cell face that could introduce an additional
-non-conservation error. This cell-local coupling is simpler and more
-transparent than an implicit composite source approach, and it is directly
-auditable through the 1D analytical benchmark.
+Conservation is therefore enforced at the cell level rather than through a face
+flux. The combined inventory $M = \theta C + a_{\mathrm{surf}}\Gamma$ is updated
+locally by PHREEQC at each timestep, and the aqueous transport step is
+conservative in the standard finite-volume sense, so the only mass-balance
+error is the splitting error of the coupling itself. The 1D analytical
+benchmark measures that error directly.
 
 \subsection{Geometric Scalability}
 
-The revised validation sequence deliberately separates conservative coupling,
-surface-area geometry, and microporosity. In the 1D case, the retardation
-factor can be derived analytically and matched at near-percent bulk accuracy,
-so the transport--chemistry coupling can be checked without geometric
-ambiguity. The controlled sphere and circular-post benchmarks then isolate the
-geometry question and show whether the image-derived interface-area field
-approaches the intended smooth surface in both 3D and quasi-2D. The
-solid-grain micromodel comparisons extend that geometric check to a reactive
-image benchmark, and the later porous-media cases add the intrinsic micropore
-contribution as a separate modelling layer. This ordering is important because
-it prevents uncertainty in the intrinsic micropore density from being confused
-with uncertainty in the base interface-area construction.
+Because the validation ladder separates conservative coupling, surface-area
+geometry, and microporosity, each error can be attributed to the layer that
+produced it: the coupling to within $1.2\%$ in bulk inventory against the
+analytical retardation factor, the interface-area construction to sub-percent
+accuracy against analytic spheres and posts, and the intrinsic micropore
+density only in the cases that use it.
 
 The transition from 2D to 3D introduces qualitatively different transport paths
 and surface-loading distributions. In the 2D case, open fractures provide
@@ -57,88 +46,73 @@ preferential pathways for dissolved Pb$^{2+}$, while strong-site Pb occupancy
 varies across the surrounding microporous matrix and is enhanced near the inlet
 and fracture intersections. In the 3D cases, the tortuosity of the
 pore network produces a more dispersed front and a more heterogeneous
-surface-loading pattern. This spatial heterogeneity in surface uptake is
-physically important for predicting effective retardation factors at the
-continuum scale, and it can only be captured by an image-based simulation that
-resolves the local connectivity.
+surface-loading pattern. This spatial heterogeneity in surface uptake controls the effective retardation
+factor seen at the continuum scale, and following it requires a simulation that
+resolves the local connectivity of the image.
 
 The direct resolved-to-DBS comparison shows that the coarse representation also
-preserves the bulk transport and sorption response over the tested range
-$\mathrm{Pe}=0.1$--$10$. Inventory differences remain below $0.9\%$ and
-profile errors below $5.8\%$. Profile and map errors rise modestly over the
-P\'{e}clet-number sweep. This establishes the tested range rather than a general
-asymptotic limit: higher P\'{e}clet numbers, different connectivity, or sharper
-kinetic fronts may still expose an upscaling failure.
+preserves the bulk transport and sorption response across $Pe = 0.1$ to $10$,
+with inventory differences below $0.9\%$ and profile errors below $5.8\%$, both
+growing with $Pe$ across the sweep. That growth sets the direction of the
+remaining uncertainty: higher $Pe$, different connectivity, or sharper kinetic
+fronts may expose an upscaling failure that this range does not.
 
 \subsection{Computational Cost and Scaling}
 
 PHREEQC is called once per active cell per timestep, with a full speciation
 and surface-equilibration calculation for each cell. The chemistry overhead
 therefore depends primarily on the number of active cells, the geochemical
-system, and the frequency of the chemistry call. For larger grids or more
-complex geochemical systems, cell masking (as applied here for
-$\varepsilon \le 10^{-3}$) is an important mechanism for reducing the chemistry cost
-by eliminating near-solid cells from the PhreeqcRM mapping. The present paper
-keeps that threshold fixed across all examples for consistency; its influence
-on accuracy and cost deserves a dedicated sensitivity study.
+system, and the frequency of the chemistry call. For larger grids or more complex geochemical systems, masking near-solid cells
+out of the PhreeqcRM mapping (here at
+$\theta \le \theta_{\mathrm{mask}} = 10^{-3}$) is the main lever on that cost.
+The threshold is held fixed across all examples here, and its influence on
+accuracy and cost deserves a dedicated sensitivity study.
 
 \subsection{Limitations and Future Work}
 
-Several limitations of the current implementation should be acknowledged.
+The intrinsic micropore surface density $a_{\mathrm{surf}}^{\mathrm{intrinsic}}$
+is a user input per image phase rather than a quantity inferred from the
+segmented image, so it must be estimated from complementary measurements such
+as nitrogen BET adsorption, mercury intrusion porosimetry, or secondary image
+analysis at a finer resolution \citep{noiriel2009changes}. Once the
+surface-area construction has been validated, this density is the leading
+physical uncertainty in microporous applications, because the accuracy of the
+predicted uptake follows directly from how well it represents the internal
+reactive area. Linking image-derived phase fractions to measured or computed
+internal surface-area densities, and quantifying the sensitivity to that input,
+is the next step.
 
-First, the intrinsic micropore surface density
-$a_{\mathrm{surf}}^{\mathrm{intrinsic}}$ is supplied as a user input per image
-phase rather than inferred directly from the segmented image. The method
-therefore does not prescribe an image-to-upscaled-surface workflow. In
-practice, this quantity must be estimated from complementary measurements such
-as nitrogen BET
-adsorption, mercury intrusion porosimetry, or secondary image analysis at a
-finer resolution \citep{noiriel2009changes}. The formulation accommodates any value of this parameter, but
-the physical accuracy of the results depends on how well it reflects the true
-internal reactive area of the microporous phase. After the surface-area
-validation steps described above, this intrinsic density becomes the leading
-remaining physical uncertainty in microporous applications. Future work will
-therefore investigate methods for systematically linking the image-derived
-phase fractions to measured or computed internal surface-area densities, and
-for quantifying sensitivity to this input.
+The upscaled DBS treatment assumes that unresolved matrix properties can be
+carried as local cell-averaged quantities. This holds when diffusive exchange
+between the resolved pore space and the unresolved matrix is fast compared with
+the advective residence time, so that the intrinsic surface area acts as a
+locally accessible reactive reservoir. At larger $Pe$, advective bypass and
+finite matrix-exchange times leave only part of that area accessible to a
+passing concentration front, and the sorption error then carries uncertainty in
+the temporal accessibility of the surface as well as in its amount. Local
+equilibrium upscaling of an unresolved reactive matrix shares this limitation,
+so $Pe$-resolved benchmark comparisons are needed when the method is applied to
+strongly advective systems.
 
-Second, the upscaled DBS representation assumes that unresolved matrix
-properties can be represented as local cell-averaged quantities. This is most
-appropriate when diffusive exchange between the resolved pore space and the
-unresolved matrix is fast on the advective residence time. Under those
-conditions, intrinsic surface area behaves as a locally accessible reactive
-reservoir. At larger P\'{e}clet number, however, advective bypass and finite
-matrix-exchange times can make only part of the intrinsic surface area
-accessible to a passing concentration front. Sorption errors in this regime
-therefore reflect not only uncertainty in the amount of surface area, but also
-uncertainty in its temporal accessibility. This limitation is inherent to any
-local equilibrium upscaling of unresolved reactive matrix, and motivates
-Pe-resolved benchmark comparisons when applying the method to strongly
-advective systems.
+Transport and chemistry are coupled by a first-order Lie splitting, which
+introduces a splitting error that scales with the timestep and the stiffness of
+the reaction terms. For the surface-complexation systems used here, that error
+sits within the benchmark agreement reported in Section~\ref{sec:validation},
+but it may become significant for faster reactions or stiffer geochemical
+systems. A second-order Strang splitting \citep{strang1968construction} is the
+natural extension.
 
-Third, the current implementation uses a first-order Lie splitting between
-transport and chemistry. This is known to introduce splitting error that scales
-with the timestep and the stiffness of the reaction terms. For the
-surface-complexation system used here, the splitting error is acceptable at the
-validated timesteps, but it may become significant for faster reactions or
-stiffer geochemical systems. A second-order Strang splitting
-\citep{strang1968construction} is a natural extension, but the present work
-uses Lie splitting deliberately so that the conservative transport operator and
-the local PHREEQC chemistry operator can be validated first in their simplest
-combined form.
+Restart depends on the serialised PHREEQC state written with each complete
+checkpoint, because the finite-volume \texttt{Surf\_*} fields alone cannot
+reconstruct that state. The production $Pe$ sweep restarted from these
+checkpoints across several jobs, and moving a run between machines requires the
+field data and its matching PHREEQC dump to travel together.
 
-Fourth, restart currently depends on the serialized PHREEQC state written with
-each complete checkpoint; the finite-volume \texttt{Surf\_*} fields alone are
-not sufficient to reconstruct that state. The production P\'{e}clet sweep used
-these checkpoints successfully across multiple restart jobs, but portability
-therefore requires the field data and its matching PHREEQC dump to be retained
-together.
-
-Finally, the present demonstrations use fixed surface area and equilibrium
-surface complexation. Although they include competitive multi-component
-examples and a Li-selective multi-ion brine, they do not cover evolving
-reactive area, mineral dissolution or precipitation, kinetic surface reactions,
-or the wider range of mineral surfaces and aqueous compositions encountered in
-natural systems. Extending the model to those systems will require benchmarks
-that separate transport error, surface-area evolution, and reaction-model
-uncertainty while retaining cell-level mass-balance checks.
+The cases here use a fixed surface area and equilibrium surface complexation,
+and cover competitive multi-component chemistry and a Li-selective multi-ion
+brine within that scope. Evolving reactive area, mineral dissolution and
+precipitation, kinetic surface reactions, and the wider range of mineral
+surfaces and aqueous compositions found in natural systems lie outside it.
+Extending the model to them will require benchmarks that separate transport
+error, surface-area evolution, and reaction-model uncertainty while retaining
+cell-level mass-balance checks.

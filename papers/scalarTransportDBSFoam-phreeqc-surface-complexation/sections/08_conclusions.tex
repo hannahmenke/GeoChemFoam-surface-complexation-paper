@@ -1,39 +1,33 @@
 \section{Conclusions}
 
 This work presents a conservative DBS formulation for PHREEQC-coupled reactive
-transport with cell-based surface complexation in image-based porous media. The
-formulation defines the continuous model, the discrete implementation, and the
-validation sequence used to assess the solver across a range of analytical,
-image-based, and multi-scale porous-media cases.
+transport with cell-based surface complexation in image-based porous media,
+validated across analytical, image-based, and multi-scale porous-media cases.
 
 The key contribution is a cell-based representation of unresolved reactive
-surface area that is consistent with the DBS micro-continuum framework. By
-using one fixed porosity field consistently for aqueous accumulation,
-transport, and PHREEQC cell volumes, the method preserves conservative aqueous
-transport and well-defined local mass balances. The unresolved micropore surface area is
-introduced as an additive intrinsic volumetric density, allowing the method to
-represent reactive uptake in image phases where the internal surface area
-exceeds what can be recovered from the coarse-cell boundary alone.
+surface area that sits inside the DBS micro-continuum framework. One fixed
+porosity field serves aqueous accumulation, transport, and the PHREEQC cell
+volumes alike, which keeps the aqueous transport conservative and the local
+mass balance closed cell by cell. The unresolved micropore surface enters as an
+additive intrinsic volumetric density, so reactive uptake can be represented in
+image phases whose internal surface area lies inside the coarse cell rather
+than on its boundary.
 
-The reported results demonstrate that the formulation: (i) reproduces the
-analytical retardation limit with near-percent bulk inventory error;
-(ii) produces physically interpretable dissolved and adsorbed fields in
-transparent 2D and 3D image-based geometries; (iii) uses a fixed active-cell
-mapping so near-solid regions can be excluded consistently from chemistry; and
-(iv) matches fully resolved lithium transport and sorption with inventory
-differences below $0.9\%$ and profile errors below $5.8\%$ from
-$\mathrm{Pe}=0.1$ to $10$.
+The formulation reproduces the analytical retardation limit to within $1.2\%$
+in bulk inventory, recovers the analytic interface area to sub-percent accuracy
+in both 3D and quasi-2D, and matches fully resolved lithium transport and
+sorption with inventory differences below $0.9\%$ and profile errors below
+$5.8\%$ from $Pe = 0.1$ to $10$. Across the 2D and 3D image-based cases it
+resolves the dissolved and adsorbed fields that follow from the local pore
+geometry and the competition between species for surface sites.
 
-The method closes a specific gap in existing DBS reactive transport
-capabilities: conservative, unresolved surface complexation in multi-scale
-image-based simulations, without requiring the reactive surface to coincide
-with an explicitly resolved mesh boundary. This capability is directly relevant
-to reactive porous-media problems in which selectivity and surface accessibility
-control performance, including contaminant retention, radionuclide migration,
-and critical-mineral recovery by sorbent-bearing porous media. The natural
-extensions of this work include Strang splitting for reduced
-operator-splitting error, better constraints and sensitivity studies for
-intrinsic surface-area inputs and masking thresholds, and extensions to
-evolving reactive area and kinetic surface chemistry, tests beyond the present
-P\'{e}clet-number and geometry range, and validation against a wider range of
-mineral surfaces and aqueous compositions.
+Surface complexation can therefore be carried conservatively on cells whose
+reactive area is unresolved, freeing the reactive surface from the resolved
+mesh boundary in multi-scale image-based simulation. This matters for reactive
+porous-media problems in which selectivity and surface accessibility control
+performance, among them contaminant retention, radionuclide migration, and
+critical-mineral recovery by sorbent-bearing porous media. Constraining the intrinsic surface-area input against measured internal area is
+the step that would most improve predictive accuracy, and extending the
+formulation to evolving reactive area and kinetic surface chemistry would open
+the dissolution and precipitation problems that the equilibrium treatment
+excludes.

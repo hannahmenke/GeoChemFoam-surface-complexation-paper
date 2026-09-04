@@ -1,13 +1,5 @@
 \section{Reactive-Area Construction and Capacity Mapping}
 
-The cell-centred reactive-area density is the sum of an image-scale interface
-term and an intrinsic sub-voxel term. For the interface term, a segmented owner
-phase is converted to a smoothed occupancy field, a sub-voxel boundary is
-extracted, and the resulting line or surface measure is accumulated in the
-finite-volume cells that carry the reactive surface. The designated owner is
-only the image label whose visible boundary is counted; it can represent a
-microporous grain, dense solid, or another reactive phase.
-
 In three dimensions, the reconstruction extracts an isosurface and deposits
 triangle areas into their owning cells. In quasi-two-dimensional images, it
 extracts an isoline in the image plane, multiplies its length by the physical
@@ -16,268 +8,66 @@ The two routes therefore return the same field type and units,
 m$^2$\,m$^{-3}_{\mathrm{bulk}}$. The field is constructed before flow and is
 held fixed throughout reactive transport.
 
-The interface term excludes roughness and pore walls below the segmented image
-resolution. An intrinsic surface density $s_j$ (m$^2$\,m$^{-3}$) can therefore
-be assigned independently to each image label $j$. Multiplication by its local
-phase fraction $f_j$ preserves mixed-cell volume, and summation over phases
-gives $a_{\mathrm{surf}}^{\mathrm{intrinsic}}=\sum_jf_js_j$. The same label
-may contribute both its reconstructed outer boundary and its intrinsic area.
-Values inferred per phase volume or grain mass must first be converted to a
-bulk-volume basis, for example using phase fraction and grain density. This
-step is essential because porosity is not a conversion factor for a field
-already expressed per bulk volume.
+Intrinsic densities inferred per phase volume or grain mass must first be
+converted to a bulk-volume basis, for example using phase fraction and grain
+density. Porosity is not a conversion factor for a field already expressed per
+bulk volume.
 
-PhreeqcRM receives area per representative bulk litre. Accordingly,
+PhreeqcRM \citep{parkhurst2015phreeqcrm} receives area per representative bulk
+litre. Accordingly,
 $a_{\mathrm{surf}}$ in m$^2$\,m$^{-3}$ is divided by $10^3$ and is not divided
 by the mobile-water fraction. For surface master $k$, multiplication by the
-site density $s_k$ (mol\,m$^{-2}$) gives the site capacity per representative
+site density $N_k$ (mol\,m$^{-2}$) gives the site capacity per representative
 bulk volume. OpenFOAM stores amount in kmol, so a dictionary site-density field
 in kmol\,m$^{-2}$ is multiplied numerically by $10^3$ when interpreted as
-mol\,m$^{-2}$. This sequence makes the units explicit:
+mol\,m$^{-2}$. The units then compose as
 \[
 \left[\frac{\mathrm{m}^2}{\mathrm{m}^3_{\mathrm{bulk}}}\right]
 \left[\frac{\mathrm{mol}}{\mathrm{m}^2}\right]
 =\left[\frac{\mathrm{mol}}{\mathrm{m}^3_{\mathrm{bulk}}}\right].
 \]
 
-The porosity field defines mobile-water storage in OpenFOAM and solution volume
-in PHREEQC. Cells below \texttt{epsChemistryMin} are excluded from the fixed
-chemistry mapping, and their surface contribution is
-suppressed. The reported calculations use $10^{-3}$ as this threshold.
+The chemistry mask threshold is set by \texttt{epsChemistryMin} in
+\texttt{constant/thermoPhysicalProperties}, and every calculation reported here
+uses $\theta_{\mathrm{mask}} = 10^{-3}$.
 
-\section{Discrete PHREEQCRM Coupling}
+\section{Discrete PhreeqcRM Coupling}
 
-All aqueous components, porosity, total reactive area, and surface-species
-fields are stored at cell centres. Darcy velocity is represented by face
-fluxes. Implicit Euler time integration and first-order upwind advection are
-used, with Gauss linear diffusion and non-orthogonality correction. The
-diffusion operator is linear; negative aqueous values are clipped before
-chemistry under the configured relative mass-addition limit.
 The surface-complexation cases select \texttt{mixtureType phreeqcMixture} in
-\texttt{constant/thermoPhysicalProperties}.
-
-At construction, every active finite-volume cell is registered as a PHREEQC
-solution. Reactive cells also receive a PHREEQC \texttt{SURFACE} definition
-whose area and site capacities are derived from the fixed fields. The active
-mapping does not change during the run. Porosity is, however, reread and set
-for every mapped PHREEQC cell at each chemistry correction. Reconstruction is
-needed only if a threshold crossing changes the active-cell map or its topology;
-changing the fixed area capacity likewise requires reconstruction.
-
-One timestep performs the following operations: (1) advance each aqueous
-species with the conservative DBS equation; (2) transfer aqueous and surface
-fields to PHREEQCRM; (3) reread porosity and set it in every mapped PHREEQC cell;
-(4) clip negative
-aqueous inputs to zero while measuring the mass introduced by clipping and
-abort if the configured relative bound is exceeded; (5) execute
-\texttt{runCells()}; and (6) transfer equilibrated aqueous and adsorbed states
-back to the finite-volume fields. Chemistry is therefore a cell-local update
-after transport, not a redistributed volumetric source or a face flux.
+\texttt{constant/thermoPhysicalProperties}. The active mapping between
+finite-volume cells and PhreeqcRM cells is established once and does not change
+during the run. Reconstruction is needed only when a threshold crossing changes
+the active-cell map or its topology, or when the fixed area capacity changes.
 
 Each OpenFOAM process constructs PhreeqcRM with one worker thread. Domain
 decomposition provides process-level parallelism, and \texttt{runCells()}
-advances only the chemistry cells held by that rank. The application cases use
-the decompositions in Table~\ref{tab:si-simParams}.
+advances only the chemistry cells held by that rank. Each case is decomposed
+according to the \texttt{NPX}, \texttt{NPY}, and \texttt{NPZ} entries in its
+\texttt{system} directory. Every case uses its case-local
+\texttt{constant/GeoChem.dat} database. The image-based cases use kinematic
+viscosity $\nu = 10^{-6}$~m$^2$\,s$^{-1}$ and pressure drop
+$\Delta p = 5\times10^{-5}$~Pa, and write output every 10~s for the 1D
+benchmark, 2000~s for the fracture case, and 20~s for the Estaillades case.
 
-\subsection{Checkpoint and restart lifecycle}
+\subsection{Checkpoint and Restart Lifecycle}
 
-Unless restoration is requested, chemistry is initialised from the written
-aqueous and surface fields at the selected start time. A restart can instead
-set \texttt{phreeqcRestoreCheckpoint} and load a complete matched PHREEQCRM
-state. Restoration fails if its dump or completion marker is missing or
-inconsistent. At an output time, a checkpoint-enabled run first invalidates
-the old completion marker collectively, writes a new rank-local dump, writes
-the finite-volume fields, and publishes a completion marker only after the
-field write succeeds. Thus a crash before publication cannot authenticate a
-partially updated field--chemistry pair. The PHREEQCRM dump and marker must be
-retained with the corresponding finite-volume time directory; the
-\texttt{Surf\_*} fields alone do not reconstruct the complete internal state.
-
-\section{Analytical and Closed-Batch Protocols}
-
-The one-dimensional benchmark uses an $80\times1\times1$ mesh, uniform
-$\theta=0.5$, $a_{\mathrm{surf}}=10^5$~m$^{-1}$,
-$U_D=10^{-6}$~m\,s$^{-1}$, $D=10^{-11}$~m$^2$\,s$^{-1}$, timestep 0.25~s,
-and final time 80~s. Two dilute batch equilibrations provide the secant Henry
-coefficient $K_s=\Delta\Gamma/\Delta C=4.253\times10^{-6}$~m. The inventory
-then becomes $(\theta+a_{\mathrm{surf}}K_s)C$ and gives
-$R=1+a_{\mathrm{surf}}K_s/\theta=1.851$.
-
-The spatial comparison at 10~s uses the cell average of the analytical
-advection--diffusion profile rather than its point value. The outlet comparison
-uses a finite-domain solution on $[0,L]$ with the same Dirichlet inlet and
-Neumann outlet as the OpenFOAM case. The semi-infinite Ogata--Banks solution is
-retained as a boundary-condition diagnostic \citep{ogata1961solution}; it
-predicts later breakthrough because solute can diffuse beyond $L$. Predicted
-advective breakthrough is $L\theta/U_D$ without surface reaction and
-$L\theta R/U_D$ with surface reaction, giving 20.0 and 37.0~s.
-
-The closed-batch test removes flow and boundary flux. For initial aqueous
-concentration $C_0$, linear equilibrium gives
-\[
-C_{\mathrm{eq}}=\frac{\theta C_0}
-{\theta+a_{\mathrm{surf}}K_s},\qquad
-\mathcal M=\theta C+a_{\mathrm{surf}}\Gamma=\mathrm{constant}.
-\]
-The tested $C_0$ values are $10^{-9}$ and $2\times10^{-9}$~mol\,L$^{-1}$.
-After one chemistry update, relative inventory drifts are
-$8.9\times10^{-10}$ and $1.1\times10^{-10}$.
-
-\section{Secondary Interface-Area Validation}
-
-\subsection{Controlled circular and spherical interfaces}
-
-The controlled tests separate geometric error from transport and chemistry.
-A quasi-two-dimensional circular post is compared with $2\pi Rh$, where $h$
-is the out-of-plane thickness, and voxelised spheres are compared with
-$4\pi R^2$. The two dimensional branches are both required because the
-quasi-two-dimensional path reconstructs a contour whereas the
-three-dimensional path reconstructs triangles.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.82\linewidth]{figures/png/fig09_sphere_surface_area_validation.png}
-    \caption{Controlled interface-area validation. Circular-post and sphere
-    reconstructions are compared with their analytical interfaces and with
-    body-fitted resolved-wall references. The cell-based reconstruction remains
-    within $0.2\%$ for the quasi-two-dimensional post and gives $-0.06\%$ and
-    $+0.87\%$ for spheres at $R/\Delta x=8$ and 16.}
-    \label{fig:si-controlled-area}
-\end{figure}
-
-Figure~\ref{fig:si-controlled-area} shows that the controlled reconstructions
-remain accurate in both the contour and isosurface branches.
-
-\subsection{Reactive image micromodel}
-
-The solid-grain micromodel compares two numerical representations of the same
-segmented geometry. The body-fitted case maps each wall-face area to its
-adjacent chemistry cell. DBS maps its reconstructed interface area to the
-corresponding Cartesian cells. Pressure drops are calibrated separately so
-that inlet volumetric fluxes agree within $0.004\%$. The comparison therefore
-assesses integrated reactive area, its spatial distribution, aqueous transport,
-and sorbed inventory rather than exact wall placement.
-
-At 200~s the body-fitted and DBS areas are $1.65\times10^{-5}$ and
-$1.67\times10^{-5}$~m$^2$, respectively. The DBS-minus-reference differences
-are $+1.48\%$ in area, $-0.07\%$ in dissolved inventory, and $+1.68\%$ in
-sorbed inventory; the streamwise aqueous-profile L1 error is $0.48\%$.
-
-Figure~\ref{fig:si-micromodel-area} locates these agreement measures in the
-resolved-wall and DBS fields without treating their native supports as
-cellwise identical.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.98\linewidth]{figures/png/fig10_hm12_surface_area_validation.png}
-    \caption{Resolved-wall and DBS micromodel comparison at 200~s. Rows show
-    dissolved Sr$^{2+}$, the cell-supported reactive-area field, and
-    sorbed inventory. Resolved wall faces contribute to adjacent chemistry
-    cells; the two methods retain their native numerical supports.}
-    \label{fig:si-micromodel-area}
-\end{figure}
-
-\subsection{Three-dimensional external surface}
-
-A $128^3$ Estaillades crop is remapped so the micropore label is solid, thereby
-isolating the external pore--grain boundary. A body-fitted wall case and DBS
-reconstruction use the same Sr$^{2+}$/Ca$^{2+}$ chemistry and separately
-calibrated pressure drops of 0.0112 and 0.00925406150930~Pa, respectively,
-at $\nu=10^{-6}$~m$^2$\,s$^{-1}$. The DBS reconstruction uses an
-occupancy-Gaussian field with $\sigma=0.74$ voxel. At 2.5~s the Darcy
-velocities agree within $1.12\%$.
-The DBS area is $1.52\%$ greater and its sorbed Sr$^{2+}$ inventory is $1.84\%$
-lower. For visual comparison only, resolved wall faces are binned onto the
-image grid; reported integrals are calculated on native supports.
-
-Figure~\ref{fig:si-external-area} provides the corresponding volume, projected
-area, difference, and streamwise-profile comparison.
-
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.93\linewidth]{figures/png/fig11_3d_external_surface_area_validation.png}
-    \caption{Three-dimensional external-surface validation on the Estaillades
-    crop. The volume rendering identifies the connected interface; projected
-    area maps, differences, and streamwise profiles compare the resolved wall
-    with the DBS reconstruction. Projected-area maps share a logarithmic
-    2nd--99.2nd-percentile range; the difference map is symmetrically clipped
-    at the 99th percentile of absolute difference. Values outside either range
-    use the end colours and the corresponding arrow extensions.}
-    \label{fig:si-external-area}
-\end{figure}
-
-\section{Application and Chemistry Specifications}
-
-Tables~\ref{tab:si-simParams} and~\ref{tab:si-chemParams} give the runtime
-parameters for the reported one-dimensional and image calculations and the
-associated chemical configurations. Every case uses its case-local
-\texttt{constant/GeoChem.dat} database. The
-2D fracture case uses eight MPI ranks with a $4\times2\times1$ decomposition;
-the reported Estaillades calculation uses 64 ranks with a
-$4\times4\times4$ decomposition. Table~\ref{tab:si-simParams} lists the
-result-supporting simulations, while Table~\ref{tab:si-chemParams} additionally
-documents the prescribed Kelvin-cell chemistry used for the three-dimensional
-implementation test.
-
-\begin{table}[htbp]
-\centering
-\caption{Simulation and image parameters. Image sizes are in voxels;
-$D$ and $\nu$ are in m$^2$\,s$^{-1}$, $a_{\rm intr}$ in m$^{-1}$, and
-$\Delta p$ in Pa. Timing entries are $\Delta t$/write/$t_{\rm end}$ in s.}
-\label{tab:si-simParams}
-\scriptsize
-\setlength{\tabcolsep}{1pt}
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Case & Image/grid ($\delta x$, $\mu$m) & Reactive label & $D/a_{\rm intr}/\nu/\Delta p$ & $\Delta t$/write/$t_{\rm end}$\\
-\midrule
-1D Ca & --/$80\times1\times1$ (--) & uniform & $10^{-11}/10^5/10^{-6}$/-- & 0.25/10/80\\
-2D Pb/HFO & $500^2/250^2$ (100) & matrix (1) & $10^{-9}/10^5/10^{-6}/5\times10^{-5}$ & 0.25/2000/20000\\
-3D Sr/Ca & $500^3/500^3$ (4) & micropore (2) & $10^{-9}/10^5/10^{-6}/5\times10^{-5}$ & 2/20/120\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\caption{Surface-chemistry parameters. Concentrations are mol\,L$^{-1}$ and
-site densities are mol\,m$^{-2}$. All cases use pH 7 and
-$\theta_{\mathrm{mask}}=10^{-3}$.}
-\label{tab:si-chemParams}
-\scriptsize
-\setlength{\tabcolsep}{2.5pt}
-\begin{tabular}{@{}p{0.15\linewidth}p{0.19\linewidth}p{0.19\linewidth}p{0.20\linewidth}p{0.20\linewidth}@{}}
-\toprule
-Parameter & 1D Ca & 2D Pb/HFO & 3D Mn/Mg & 3D Sr/Ca\\
-\midrule
-Surface model & \texttt{Surf\_a} & two-site HFO & two-site HFO & \texttt{Surf\_a}\\
-Reactive species & Ca$^{2+}$ & Pb$^{2+}$ & Mn$^{2+}$, Mg$^{2+}$ & Sr$^{2+}$, Ca$^{2+}$\\
-Site density & $2.4\times10^{-6}$ & Hfo$_s$: $2\times10^{-4}$; Hfo$_w$: $6\times10^{-3}$ & Hfo$_s$: $2\times10^{-4}$; Hfo$_w$: $6\times10^{-3}$ & $2.4\times10^{-6}$\\
-$\log K$ & Ca: $-5.85$ & Pb/Hfo$_s$: $+4.65$; Pb/Hfo$_w$: $+0.30$ & Mn/Hfo$_s$: $-0.40$; Mn/Hfo$_w$: $-3.50$; Mg/Hfo$_w$: $-4.60$ & Ca: $-5.85$; Sr: $-5.5$\\
-$\theta$ & 0.5 & 0.4 (matrix) & 0.4 (micropore) & 0.4 (micropore)\\
-Inlet & Ca: $2\times10^{-9}$ & Pb: $10^{-3}$ & Mn: $10^{-5}$; Mg: $10^{-3}$ & Sr: $10^{-4}$; Ca: 0\\
-Initial & Ca: 0 & Pb: approximately 0 & Mn: 0; Mg: $10^{-3}$ & Sr: 0; Ca: $10^{-3}$\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The 2D case uses the Dzombak--Morel strong and weak HFO reactions for Pb
-\citep{dzombak1990surface}. In the Kelvin configuration, Mn binds to strong and
-weak HFO sites with $\log K=-0.40$ and $-3.50$, while Mg competes on weak sites
-with $\log K=-4.60$. The Estaillades case uses
-$\mathrm{Surf_aH}+\mathrm{Ca^{2+}}\rightleftharpoons
-\mathrm{Surf_aCa^+}+\mathrm{H^+}$ and the corresponding Sr reaction, with
-$\log K=-5.85$ and $-5.5$. Initial Ca occupancy is displaced by the invading
-Sr solution.
+At an output time, a checkpoint-enabled run first invalidates the old
+completion marker collectively, writes a new rank-local dump, writes the
+finite-volume fields, and publishes a completion marker only after the field
+write succeeds. A crash before publication therefore leaves the partially
+updated fields and chemistry state without a marker, and restoration rejects
+them. The PhreeqcRM dump and marker must be retained with the corresponding
+finite-volume time directory; the \texttt{Surf\_*} fields alone do not
+reconstruct the complete internal state.
 
 \section{Short Two-Scale Reconstruction Sensitivity}
 
-The two-scale calculation is a matched short-interval sensitivity test
-within the DBS representation. It is not a DBS-versus-resolved transport
-comparison. Both cases use a $3600\times1200\times1$ grid with $5~\mu$m cells,
+The two-scale calculation is a matched short-interval sensitivity test between
+two DBS cases that differ only in the surface field. Both use a
+$3600\times1200\times1$ grid with $5~\mu$m cells,
 16 MPI ranks, $Pe=1$, $D=10^{-9}$~m$^2$\,s$^{-1}$, and prescribed Darcy velocity
-$5.46297\times10^{-5}$~m\,s$^{-1}$. The surface field is the sole intended
-input difference; 495 other input files were verified as matched.
+$5.46297\times10^{-5}$~m\,s$^{-1}$. The surface field is the only input that
+differs, and the other 495 input files were verified as identical.
 
 Both short cases use their case-local \texttt{GeoChem.dat} together with the
 same illustrative Li-selective sorbent chemistry. The surface reactions are
@@ -285,8 +75,8 @@ $\mathrm{Sor\_aH}+\mathrm{Li^+}\rightleftharpoons\mathrm{Sor\_aLi}+\mathrm{H^+}$
 ($\log K=-5.8$), and the corresponding Na$^+$, K$^+$, and Mg$^{2+}$ reactions
 have $\log K=-7.2$, $-7.0$, and $-7.4$, respectively. Initially Li-free brine
 contains 0.10~M Na, 0.01~M K, 0.01~M Mg, $10^{-12}$~M Li, and 0.13~M Cl at pH
-7; the inflow changes Li to $10^{-3}$~M and Cl to 0.131~M. These chemistry
-details describe only the reported short $Pe=1$ sensitivity.
+7; the inflow changes Li to $10^{-3}$~M and Cl to 0.131~M. These parameters
+apply to the short $Pe=1$ sensitivity test only.
 
 Three common checkpoints at 0.0058517566, 0.11703513, and 0.99564208~s meet
 the predefined material-response limits. The maximum absolute differences
@@ -294,10 +84,10 @@ are $0.000647\%$ in integrated area, $0.000703\%$ in aqueous Li inventory,
 $0.2110\%$ in sorbed Li inventory, $0.00172\%$ in aqueous normalised L1,
 $0.5147\%$ in sorbed normalised L1, and $0.03993\%$ in fixed-reference-area
 sorbed-response L2. Aqueous and sorbed $x_{50}$ shifts are zero. The native-cell
-sorbed inventory-density L2 is 3.61--4.49\%, dominated by the deliberate
-relocation of area; pointwise identity is therefore not inferred. The accepted
-last reported checkpoint covers 0.489\% of the configured 203.5305~s horizon, which bounds the
-claim to early material-response agreement.
+sorbed inventory-density L2 is $3.61$ to $4.49\%$, dominated by the deliberate
+relocation of area, so the agreement is in integrated response rather than
+pointwise. The last accepted checkpoint covers $0.489\%$ of the configured
+$203.53$~s horizon, so the test establishes early material-response agreement.
 
 \section{Reproducibility and Provenance Entry Points}
 
@@ -307,19 +97,21 @@ references. From the repository root, the provenance verifier is run with
 papers/scalarTransportDBSFoam-phreeqc-surface-complexation/
     validate_accepted_nonkelvin_artifacts.sh
 \end{verbatim}
-This command runs the focused verifier tests and validates
+This command runs the verifier tests and validates
 \texttt{figures/accepted\_nonkelvin\_provenance.json}. The manifest binds the
 reported 1D, fracture, and Estaillades figures to their source data, renderers,
 sidecars, and evidence records by path, size, and SHA-256.
 
-Case-level entry points are the \texttt{runAll.sh} scripts in
-\nolinkurl{cases/1d_linear_retardation},
-\nolinkurl{cases/2d_4StraightFractures}, and
-\nolinkurl{cases/3d_estaillades}. Each case directory also provides separate
-mesh, flow, reactive-transport, processing, and cleanup scripts. The short
+The case-level entry point for the 1D benchmark is
+\texttt{runPhase8AnalyticalBenchmark.sh} in
+\nolinkurl{cases/1d_linear_retardation}. The fracture and Estaillades cases are
+run through the \texttt{runAll.sh} scripts in
+\nolinkurl{cases/2d_4StraightFractures} and \nolinkurl{cases/3d_estaillades},
+each of which also provides separate mesh, flow, reactive-transport,
+processing, and cleanup scripts. The short
 two-scale record is in the \texttt{results} directory of
 \nolinkurl{cases/two_scale_micromodel_sorption_validation}; it records exact
-checkpoints, thresholds, collection hashes, runtime identity, and analyzer
+checkpoints, thresholds, collection hashes, runtime identity, and analyser
 identity. The paper sources and both PDFs are built with \texttt{build.sh}. The
 flat Springer submission archive is generated transactionally with
 \texttt{export\_submission.sh OUTPUT.zip}; its manifest and SHA-256 inventory
