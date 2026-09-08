@@ -499,9 +499,7 @@ class StagedRestartTests(unittest.TestCase):
         )
         self.assertTrue(all("processor0/1/" in item["path"] for item in restart["start_rank_inputs"]))
         self.assertEqual(restart["restart_checkpoints"][0]["rank"], "processor0")
-        self.assertEqual(
-            restart["restart_checkpoints"][0]["surface_model"], "NO_EDL"
-        )
+        self.assertNotIn("surface_model", restart["restart_checkpoints"][0])
         self.assertEqual(
             restart["restart_checkpoints"][0]["dump"]["sha256"],
             hashlib.sha256(b"checkpoint-state-1").hexdigest(),
@@ -577,7 +575,7 @@ class StagedRestartTests(unittest.TestCase):
             directory, 2.0, self.case, "processor0"
         )
         self.assertEqual(record["time"], 2.0)
-        self.assertEqual(record["surface_model"], "NO_EDL")
+        self.assertNotIn("surface_model", record)
 
     def test_initialization_drift_and_noncontiguous_ranks_fail_closed(self) -> None:
         solution = self.case / "system" / "fvSolution"

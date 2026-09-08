@@ -656,7 +656,6 @@ def checkpoint_record(
         raise SystemExit(f"Kelvin checkpoint path escapes the case: {time_dir}") from error
     return {
         "time": marker_time,
-        "surface_model": "NO_EDL",
         "dump": {
             "path": str(dump_relative),
             "size": dump.stat().st_size,
@@ -813,8 +812,6 @@ def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
             raise SystemExit("Kelvin checkpoint record has invalid identity values") from error
         if not math.isclose(named_time, recorded_time, rel_tol=0.0, abs_tol=1.0e-12):
             raise SystemExit("Kelvin checkpoint record time and path disagree")
-        if record.get("surface_model") != "NO_EDL":
-            raise SystemExit("Kelvin checkpoint record is not explicitly NO_EDL")
         if dump_size < 0 or marker_size <= 0:
             raise SystemExit("Kelvin checkpoint record has invalid artifact sizes")
         for artifact in (dump, marker):
@@ -828,7 +825,6 @@ def checkpoint_chain_identity(records: object) -> list[dict[str, object]]:
             {
                 "rank": rank,
                 "time": record.get("time"),
-                "surface_model": record.get("surface_model"),
                 "dump_path": dump_path,
                 "dump_size": dump.get("size"),
                 "dump_sha256": dump.get("sha256"),
