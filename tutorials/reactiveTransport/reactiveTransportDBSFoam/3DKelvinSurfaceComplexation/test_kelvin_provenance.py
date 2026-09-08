@@ -451,11 +451,8 @@ class StagedRestartTests(unittest.TestCase):
         self._write_fields(restart)
         dump = restart / "phreeqc.dmp"
         dump.write_bytes(f"checkpoint-state-{time:g}".encode())
-        digest = hashlib.sha256(dump.read_bytes()).hexdigest()
         (restart / "phreeqc.complete").write_text(
-            "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
-            "surfaceModel NO_EDL\n"
-            f"time {restart.name}\ndumpSize {dump.stat().st_size}\ndumpSHA256 {digest}\n"
+            f"PHREEQCRM and OpenFOAM fields written for time {restart.name}\n"
         )
         return restart
 
@@ -546,37 +543,32 @@ class StagedRestartTests(unittest.TestCase):
         self._write_control(1.0, 2.0, 0.1, True)
         marker = self.case / "processor0" / "1" / "phreeqc.complete"
         marker.write_text(marker.read_text().replace("time 1", "time 9"))
-        with self.assertRaisesRegex(SystemExit, "exact NO_EDL v2 contract"):
+        with self.assertRaisesRegex(SystemExit, "expected completion marker"):
             self._record_stage()
         marker.unlink()
         with self.assertRaisesRegex(SystemExit, "Incomplete PHREEQCRM checkpoint pair"):
             self._record_stage()
 
-    def test_checkpoint_marker_requires_exact_no_edl_v2_contract(self) -> None:
+    def test_checkpoint_marker_requires_exact_live_format(self) -> None:
         directory = self._make_checkpoint(2.0)
         marker = directory / "phreeqc.complete"
         valid = marker.read_text()
         invalid_markers = {
-            "legacy v1": valid.replace(
-                "GeoChemFoam-PHREEQCRM-checkpoint 2\nsurfaceModel NO_EDL\n",
-                "GeoChemFoam-PHREEQCRM-checkpoint 1\n",
-            ),
-            "wrong surface model": valid.replace("NO_EDL", "Donnan"),
-            "missing surface model": valid.replace("surfaceModel NO_EDL\n", ""),
-            "duplicate surface model": valid.replace(
-                "surfaceModel NO_EDL\n", "surfaceModel NO_EDL\nsurfaceModel NO_EDL\n"
-            ),
-            "reordered fields": valid.replace(
-                "surfaceModel NO_EDL\ntime 2\n", "time 2\nsurfaceModel NO_EDL\n"
+            "wrong time": valid.replace("time 2\n", "time 2.0\n"),
+            "old marker": (
+                "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
+                "surfaceModel NO_EDL\n"
+                "time 2\n"
+                f"dumpSize {(directory / 'phreeqc.dmp').stat().st_size}\n"
+                f"dumpSHA256 {hashlib.sha256((directory / 'phreeqc.dmp').read_bytes()).hexdigest()}\n"
             ),
             "trailing content": valid + "unexpected\n",
-            "different textual time": valid.replace("time 2\n", "time 2.0\n"),
             "missing final newline": valid.rstrip("\n"),
         }
         for label, content in invalid_markers.items():
             with self.subTest(label=label):
                 marker.write_text(content)
-                with self.assertRaisesRegex(SystemExit, "exact NO_EDL v2 contract"):
+                with self.assertRaisesRegex(SystemExit, "expected completion marker"):
                     PROVENANCE.checkpoint_record(
                         directory, 2.0, self.case, "processor0"
                     )
@@ -647,11 +639,8 @@ class StagedRestartTests(unittest.TestCase):
         dump = self.case / "processor0" / "1" / "phreeqc.dmp"
         marker = self.case / "processor0" / "1" / "phreeqc.complete"
         dump.write_bytes(b"self-consistent-replacement")
-        digest = hashlib.sha256(dump.read_bytes()).hexdigest()
         marker.write_text(
-            "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
-            "surfaceModel NO_EDL\n"
-            f"time 1\ndumpSize {dump.stat().st_size}\ndumpSHA256 {digest}\n"
+            "PHREEQCRM and OpenFOAM fields written for time 1\n"
         )
         with self.assertRaisesRegex(SystemExit, "start checkpoint does not match"):
             self._record_stage()

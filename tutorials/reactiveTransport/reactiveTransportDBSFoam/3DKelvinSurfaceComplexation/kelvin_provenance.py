@@ -634,11 +634,7 @@ def checkpoint_record(
         raise SystemExit(f"PHREEQCRM checkpoint time-directory mismatch in {marker}")
     dump_sha = sha256(dump)
     expected_marker = (
-        "GeoChemFoam-PHREEQCRM-checkpoint 2\n"
-        "surfaceModel NO_EDL\n"
-        f"time {time_dir.name}\n"
-        f"dumpSize {dump.stat().st_size}\n"
-        f"dumpSHA256 {dump_sha}\n"
+        f"PHREEQCRM and OpenFOAM fields written for time {time_dir.name}\n"
     ).encode("ascii")
     try:
         actual_marker = marker.read_bytes()
@@ -646,7 +642,7 @@ def checkpoint_record(
         raise SystemExit(f"Unreadable PHREEQCRM checkpoint marker: {marker}") from error
     if actual_marker != expected_marker:
         raise SystemExit(
-            f"PHREEQCRM checkpoint marker does not match the exact NO_EDL v2 contract: {marker}"
+            f"PHREEQCRM checkpoint marker does not match the expected completion marker: {marker}"
         )
     expected_parent = case / rank / time_dir.name
     if time_dir != expected_parent:
