@@ -1,0 +1,57 @@
+{
+  "figure": "Figure 9: resolved-to-DBS P\u00e9clet sweep",
+  "comparison_distance_x_over_L": 1.25,
+  "manifest": {
+    "path": "cases/two_scale_micromodel_sorption_validation/figure9_verified_manifest.json",
+    "sha256": "b81835e029cbdde0cd54949a2e4daa615add8be3ff4e5a1fea88ba20cb112e56",
+    "size_bytes": 3159
+  },
+  "renderer": {
+    "path": "cases/two_scale_micromodel_sorption_validation/scripts/plot_paper_validation_figures.py",
+    "commit": "9e20ad0ba7fc166f77cbd11d900b64a48d809b42"
+  },
+  "outputs": {
+    "png_sha256": "08d5c833c85ef9548e287cce288258979a686c383d92a5bafb7a3f0da53447cc"
+  },
+  "plotted_values_percent": [
+    {
+      "pe": "0.1",
+      "aqueous_inventory_percent": "-0.511529993871923",
+      "sorbed_inventory_percent": "0.429386747297159",
+      "aqueous_profile_l1_percent": "0.537806031896269",
+      "sorbed_profile_l1_percent": "4.742055404903316",
+      "aqueous_map_dissimilarity": "5.050170875930959e-07",
+      "sorbed_map_dissimilarity": "5.883038435294807e-07"
+    },
+    {
+      "pe": "1.0",
+      "aqueous_inventory_percent": "-0.5676668928417998",
+      "sorbed_inventory_percent": "0.38894784158453205",
+      "aqueous_profile_l1_percent": "0.5681174765278558",
+      "sorbed_profile_l1_percent": "4.743581782003277",
+      "aqueous_map_dissimilarity": "2.040931292968118e-06",
+      "sorbed_map_dissimilarity": "2.8653983443760467e-06"
+    },
+    {
+      "pe": "3.0",
+      "aqueous_inventory_percent": "-0.5836990446296437",
+      "sorbed_inventory_percent": "0.37125389029256073",
+      "aqueous_profile_l1_percent": "0.5814120601883666",
+      "sorbed_profile_l1_percent": "4.7449719692500985",
+      "aqueous_map_dissimilarity": "8.117674507479578e-06",
+      "sorbed_map_dissimilarity": "9.03834531440495e-06"
+    },
+    {
+      "pe": "10.0",
+      "aqueous_inventory_percent": "-0.5667236493953978",
+      "sorbed_inventory_percent": "0.3893491137524302",
+      "aqueous_profile_l1_percent": "0.5697304375281838",
+      "sorbed_profile_l1_percent": "4.746083728890062",
+      "aqueous_map_dissimilarity": "6.250577224253817e-06",
+      "sorbed_map_dissimilarity": "7.4193193699834126e-06"
+    }
+  ],
+  "rendered_utc": "2026-10-13T14:56:35+00:00",
+  "values_csv": "figures/png/fig09_two_scale_error_vs_peclet.csv",
+  "values_csv_sha256": "ce3cb4d3e7b9865cc08bc29c5515cb366aa6facb1915c564014a0eb385ed80e9"
+}

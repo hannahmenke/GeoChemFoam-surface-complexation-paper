@@ -1,0 +1,135 @@
+{
+  "case": "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades",
+  "criterion": "Finite Cl- and Sr+2 fields in chemistry-active cells with no more than 0.1% overshoot above their imposed maximum concentrations",
+  "chemistry_active_eps_min": 0.001,
+  "expected_ranks": 64,
+  "passed": true,
+  "samples": [
+    {
+      "time_s": 20.0,
+      "fields": {
+        "Cl-": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 0.00020000107388150397,
+          "maximum_mol_per_litre": 0.002000015835219849,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.002002,
+          "passed": true
+        },
+        "Sr+2": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 1.0027576762550452e-12,
+          "maximum_mol_per_litre": 0.0001000712304364687,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.0001001,
+          "passed": true
+        }
+      }
+    },
+    {
+      "time_s": 40.0,
+      "fields": {
+        "Cl-": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 0.00020000008581379415,
+          "maximum_mol_per_litre": 0.0020000034393845866,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.002002,
+          "passed": true
+        },
+        "Sr+2": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 6.956892510937841e-12,
+          "maximum_mol_per_litre": 0.00010006997484883608,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.0001001,
+          "passed": true
+        }
+      }
+    },
+    {
+      "time_s": 60.0,
+      "fields": {
+        "Cl-": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 0.00020000001751834827,
+          "maximum_mol_per_litre": 0.0019999886305804193,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.002002,
+          "passed": true
+        },
+        "Sr+2": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 4.78695122243288e-10,
+          "maximum_mol_per_litre": 0.00010006880417148256,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.0001001,
+          "passed": true
+        }
+      }
+    },
+    {
+      "time_s": 80.0,
+      "fields": {
+        "Cl-": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 0.00020000000417793093,
+          "maximum_mol_per_litre": 0.0019998523271315587,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.002002,
+          "passed": true
+        },
+        "Sr+2": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 6.13925443378479e-09,
+          "maximum_mol_per_litre": 0.00010006806284979982,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.0001001,
+          "passed": true
+        }
+      }
+    },
+    {
+      "time_s": 100.0,
+      "fields": {
+        "Cl-": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 0.000200000001019438,
+          "maximum_mol_per_litre": 0.0019991610910063025,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.002002,
+          "passed": true
+        },
+        "Sr+2": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 3.47836707979197e-08,
+          "maximum_mol_per_litre": 0.00010006851508960804,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.0001001,
+          "passed": true
+        }
+      }
+    },
+    {
+      "time_s": 120.0,
+      "fields": {
+        "Cl-": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 0.00020000000020503126,
+          "maximum_mol_per_litre": 0.0019972404428361145,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.002002,
+          "passed": true
+        },
+        "Sr+2": {
+          "chemistry_active_cells": 94031005,
+          "minimum_mol_per_litre": 1.1785438449204875e-07,
+          "maximum_mol_per_litre": 0.00010006947409528146,
+          "lower_bound_mol_per_litre": -1e-10,
+          "upper_bound_mol_per_litre": 0.0001001,
+          "passed": true
+        }
+      }
+    }
+  ]
+}

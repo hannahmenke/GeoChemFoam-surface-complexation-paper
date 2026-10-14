@@ -1,0 +1,114 @@
+\section{Introduction}
+
+Chemical exchange between the flowing aqueous phase and the solid matrix
+governs the transport of dissolved species in porous media alongside advection
+and diffusion. In many subsurface systems this exchange proceeds by surface
+complexation, ion adsorption, and fast local equilibrium reactions, which
+retard dissolved species, reshape concentration fronts, and alter the apparent
+accessibility of pore space \citep{dzombak1990surface}. The effects are
+strongest in multi-scale rocks that combine open macropores with microporous
+matrix regions, where a single image may contain fast transport pathways, slow
+exchange domains, and a large internal reactive area that the image cannot
+resolve \citep{menke2021upscaling}. The same physics governs contaminant
+retention and acid mine drainage treatment
+\citep{webster1998trace,blowes2000treatment}, critical-mineral recovery and
+direct lithium extraction \citep{reich2022lithium,vera2023environmental}, and
+radionuclide transport for geological disposal
+\citep{miller2010upscaling,dewindt2019reactive,bildstein2019rtm}, in all of
+which selective adsorption or ion exchange may be controlled by surface area
+that is not resolved at the image scale.
+
+Three classes of models are available, and each is limited in a different way.
+Classical Darcy-scale reactive transport models represent adsorption and
+surface complexation through effective source terms, bulk sorption
+coefficients, or equilibrium closures applied to the continuum volume
+\citep{steefel1990kinetic,steefel1994coupled,steefel2015reactive,mayer2002multicomponent,xu2006toughreact,lichtner1985continuum}.
+They remain indispensable for large-domain prediction, but they require
+constitutive upscaling assumptions for both transport and reactive surface
+area, and they cannot reproduce the spatial heterogeneity of surface inventory
+that image-based data make visible \citep{battiato2011applicability}. Fully
+resolved pore-scale models, including direct numerical simulation
+\citep{molins2021simulation,molins2015reactive,molins2012investigation,starchenko2018development},
+lattice Boltzmann methods \citep{yoon2015lattice,kang2007lattice}, and
+explicit-boundary DBS approaches
+\citep{maes2018direct,maes2021geochemfoam,soulaine2017mineral}, instead locate
+reactive uptake at the meshed grain surface. This is appropriate when the
+dominant surface area coincides with the resolved interface between pore and
+grain, but it is bounded by image resolution: once internal micro-scale area
+falls below the mesh scale, a boundary-resolved description is no longer
+faithful to the physical geometry, and the cost of resolving it rises steeply.
+Pore-network and other reduced pore-scale models occupy a middle ground
+\citep{blunt2001flow}, but they depend on idealised throat-and-pore
+representations and do not deliver the voxel-by-voxel field description used in
+image-based DBS simulations.
+
+The consequences are specific in image-based simulations of carbonate and other
+multi-scale porous media \citep{menke2015dynamic, menke2018fourd,
+menke2021upscaling,wildenschild2013xray,blunt2013porescale}. Segmented images
+routinely separate macropore, microporous, and nearly solid regions, but the
+reactive internal surface of the microporous phase is not the same object as
+the explicitly meshed boundary of the coarse computational cells. Ignoring that
+internal area under-predicts reactive uptake. Inserting it as an ad hoc
+volumetric sink leaves both the conservation properties and the meaning of the
+cell-scale surface inventory unclear.
+
+PHREEQC and its reaction-module form, PhreeqcRM, already provide the required
+chemistry: aqueous speciation, surface complexation, equilibrium and kinetic
+reactions, and operator-split coupling to transport simulators
+\citep{parkhurst2013phreeqc, parkhurst2015phreeqcrm,charlton2011modules}.
+Existing PHREEQC-coupled workflows serve structured-grid continuum models and
+operator-split multi-component solvers well \citep{jyoti2021validation}. The
+open question is how to embed that engine in a transport formulation consistent
+with unresolved image-based geometry. The closest existing approach is
+\texttt{porousMedia4Foam} \citep{soulaine2021porousmedia4foam,
+pavuluri2022reactive}, which couples a micro-continuum OpenFOAM solver to
+PHREEQC at pore, hybrid, and Darcy scales, but which applies chemistry through
+kinetic or equilibrium flux conditions at the diffuse fluid-solid interface. It
+therefore inherits the limitation of the fully resolved methods, in that the
+reactive surface must overlap the resolved computational boundary, and it draws
+no explicit distinction between the numerical DBS porosity used to regularize
+transport and the physical mobile-water fraction that governs chemistry.
+Earlier PHREEQC-coupled cases within GeoChemFoam itself
+\citep{maes2022heat,maes2022vos} share this restriction: they support reactive
+transport and surface complexation where the reactive surface coincides with an
+explicit mesh boundary, which remains valid but does not cover the case in
+which the dominant reactive area lies inside the coarse cell.
+
+In this work we develop a DBS-compatible reactive transport formulation in
+which the reactive surface is a property of the cell rather than of the mesh
+boundary. Aqueous transport is written for the physical mobile-water fraction;
+unresolved reactive surface area is prescribed as a cell field and carried as a
+cell-centred adsorbed inventory; local PHREEQC chemistry transfers mass
+conservatively between the aqueous and adsorbed states; and no heuristic
+redistribution of source terms is used. Two consequences follow. The numerical
+DBS porosity and physical mobile-water fraction have distinct roles: the former
+sets flow resistance \citep{soulaine2016micro}, whereas the latter sets aqueous
+storage and chemical solution volume. The saturated calculations reported here
+use the same numerical field for both quantities. The surface inventory is
+defined separately at cell centres and driven by an unresolved internal
+surface-area density, rather than reconstructed on mesh
+faces. Together these choices let the method act on microporous matrix regions
+instead of only on explicitly resolved boundaries between pore and grain. The
+governing equations are posed on general finite-volume meshes; the image-based
+cases used here are the motivating application.
+
+The solver that results, \texttt{reactiveTransportDBSFoam}, couples
+conservative DBS transport to PHREEQC-based surface complexation at the cell
+scale. A one-dimensional retardation benchmark compares the coupled advection,
+diffusion, and sorption response with a boundary-matched finite-domain
+reference, while closed-system batch calculations calibrate the dilute surface
+response and test the aqueous and adsorbed mass balance.
+The surface-area algorithms are verified on controlled geometries of known area
+and on image-based micromodels, and a resolved-to-DBS two-scale benchmark of
+selective Li$^{+}$ uptake tests whether the upscaled cell-based description
+reproduces a fully resolved calculation of the same system. The formulation is
+then applied to three image-based geometries of increasing complexity:
+Pb$^{2+}$ uptake on hydrous ferric oxide (HFO) in a two-dimensional fracture
+network, as an analogue for heavy-metal remediation in fractured aquifers and
+permeable reactive barriers; selective Mn$^{2+}$ uptake from a Mg$^{2+}$-rich
+brine on HFO in a three-dimensional Kelvin-cell sorbent, as an analogue for
+critical-metal capture; and Sr$^{2+}$ migration in Estaillades limestone, as an
+analogue for radionuclide transport in a deep geological repository (DGR).
+Together these cases determine how resolved pore geometry and unresolved
+internal surface area interact to control the spatial distribution of aqueous
+and adsorbed species in multi-scale porous media.

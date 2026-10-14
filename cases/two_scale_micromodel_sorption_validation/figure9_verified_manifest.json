@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "description": "Verified completed ARCHER2 checkpoints for manuscript Figure 9.",
+  "domain_length_m": 0.018,
+  "comparison_distance_x_over_L": 1.25,
+  "runtime_identity_sha256": "19a41e4c49086f3ad74eaef312d48f8200cbc345a1e171623f4ff0d7ea1b6380",
+  "runs": [
+    {
+      "peclet": 0.1,
+      "resolved": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_resolved-reference_pe_0.1_occupancy-production_15481065/resolved-reference",
+        "time": "2260.7265052181228",
+        "job_id": 15481065,
+        "UD_m_s": 4.94531e-06,
+        "porosity": 0.496889,
+        "processors": 960,
+        "x_over_L": 1.2499989818338855
+      },
+      "dbs": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_dbs-upscaled_pe_0.1_occupancy-production_15481066/dbs-upscaled",
+        "time": "2035.2993634289082",
+        "job_id": 15481066,
+        "UD_m_s": 5.46317e-06,
+        "porosity": 0.494169,
+        "processors": 256,
+        "x_over_L": 1.2500431614942245
+      }
+    },
+    {
+      "peclet": 1.0,
+      "resolved": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_resolved-reference_pe_1_occupancy-production_15481067/resolved-reference",
+        "time": "226.07265052257375",
+        "job_id": 15481067,
+        "UD_m_s": 4.94531e-05,
+        "porosity": 0.496889,
+        "processors": 960,
+        "x_over_L": 1.2499989818380959
+      },
+      "dbs": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_dbs-upscaled_pe_1_occupancy-production_15481068/dbs-upscaled",
+        "time": "203.52993233197378",
+        "job_id": 15481068,
+        "UD_m_s": 5.46317e-05,
+        "porosity": 0.494169,
+        "processors": 256,
+        "x_over_L": 1.2500431368599152
+      }
+    },
+    {
+      "peclet": 3.0,
+      "resolved": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_resolved-reference_pe_3_occupancy-production_15481069/resolved-reference",
+        "time": "75.357550174277307",
+        "job_id": 15481069,
+        "UD_m_s": 0.000148359,
+        "porosity": 0.496889,
+        "processors": 960,
+        "x_over_L": 1.2499964541941748
+      },
+      "dbs": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_dbs-upscaled_pe_3_occupancy-production_15481070/dbs-upscaled",
+        "time": "67.84331284946101",
+        "job_id": 15481070,
+        "UD_m_s": 0.000163895,
+        "porosity": 0.494169,
+        "processors": 256,
+        "x_over_L": 1.250042412330646
+      }
+    },
+    {
+      "peclet": 10.0,
+      "resolved": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_resolved-reference_pe_10_occupancy-production_15481071/resolved-reference",
+        "time": "22.607265052201129",
+        "job_id": 15481071,
+        "UD_m_s": 0.000494531,
+        "porosity": 0.496889,
+        "processors": 960,
+        "x_over_L": 1.2499989818349857
+      },
+      "dbs": {
+        "case": "${TWO_SCALE_ARCHIVE_ROOT}/two_scale_dbs-upscaled_pe_10_occupancy-production_15481072/dbs-upscaled",
+        "time": "20.352993294427328",
+        "job_id": 15481072,
+        "UD_m_s": 0.000546317,
+        "porosity": 0.494169,
+        "processors": 256,
+        "x_over_L": 1.250043140620545
+      }
+    }
+  ]
+}

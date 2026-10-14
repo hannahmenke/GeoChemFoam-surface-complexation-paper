@@ -1,0 +1,38 @@
+# Generated geometry and case outputs.
+shared/*.raw
+shared/metadata.json
+archer_work/
+
+# Flow/reactive-transport outputs.
+results/*
+*/0/
+*/[0-9]*/
+*/processor*/
+*/constant/polyMesh/
+*/constant/triSurface/
+*/constant/transportProperties
+*/constant/thermoPhysicalProperties
+*/constant/eps
+*/constant/theta*
+*/system/NPX
+*/system/NPY
+*/system/NPZ
+*/system/Nx1
+*/system/Ny1
+*/system/Nz1
+*/system/controlDict
+*/system/fvSolution
+*/system/postProcessDict
+*/system/SPDict
+*/poroPerm.csv
+*.out
+
+# Detached run bookkeeping.
+*.log
+*.pid
+*.status
+
+# Python caches.
+.venv/
+__pycache__/
+*/__pycache__/

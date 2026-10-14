@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "case_id": "3d_estaillades",
+  "scope": "Estaillades-specific curation record; this is not the repository-wide final fail-closed provenance schema.",
+  "production_run": {
+    "name": "estaillades_production_t120_batchfix_tightYi_20260826_145839",
+    "host": "HWLX0042",
+    "started": "2026-08-26T14:58:39+01:00",
+    "finished": "2026-08-26T21:15:21+01:00",
+    "exit_status": 0,
+    "wrapper_log_sha256": "ef6c84974d50ab2211ed2e325e3a7c64b31124319c998b0a555bd76d67246fe2",
+    "solver_log_sha256": "b40c2c64c054f4017f4198a107a0ae04fc0fef1e1bf0d4335cc7d257232b8efb",
+    "solver_clock_time_s": 22566,
+    "executed_command": "env HOME='${RUN_HOME}' PATH='/usr/local/anaconda3/condabin:/usr/bin:/bin' LD_LIBRARY_PATH='' GCFOAM_RUNTIME_ROOT='${GCFOAM_RUNTIME_ROOT}' RUN_TIMESTEP=2 WRITE_TIMESTEP=20 TOTAL_TIME=120 ./runCaseReactiveTransport.sh",
+    "raw_output_policy": "Processor and time directories, full logs, PID files, and status files are retained outside Git and are intentionally excluded from the paper artifact branch.",
+    "raw_output_location_at_curation": "${PAPER_REPO}/cases/3d_estaillades"
+  },
+  "runtime": {
+    "geochemfoam_commit": "92145f07807af4f49c36ef8ede209e76d330ee26",
+    "phreeqcrm_commit": "8aa2a9047d883d295b9afadab50df3234abd9d66",
+    "openfoam_version": "2512",
+    "phreeqcrm_version": "3.3.9-11951",
+    "tracked_source_dirty_paths": [],
+    "untracked_generated_build_outputs_excluded_from_tracked_source_cleanliness": [
+      "ThirdParty/PhreeqcRM/lib/",
+      "ThirdParty/PhreeqcRM/src/Make/linux64GccDPInt32Opt/",
+      "ThirdParty/PhreeqcRM/src/lnInclude/"
+    ],
+    "solver_sha256": "d7a55047bee24211730e05e6ba7c00752e8c6a07ceb4510572bb8912a6435b10",
+    "reaction_library_sha256": "d69d5eff9ea89f3b872b8aa91d12974a115f677dae351002b05c08f8a16a49dd",
+    "phreeqcrm_library_sha256": "07a2e906ab756fc64861d49bfc7274739909f9c8a649d98655510828a53e7fde"
+  },
+  "paper_state_at_run": {
+    "commit": "103685cb597e75c4bdceb84adb9d26ade8604928",
+    "branch": "migration/reactiveTransportDBSFoam",
+    "note": "The four production input modifications that were uncommitted at launch are bound below by their exact file hashes and are included on this curation branch."
+  },
+  "configuration": {
+    "grid_cells": [500, 500, 500],
+    "voxel_size_m": 0.000004,
+    "decomposition": [4, 4, 4],
+    "mpi_ranks": 64,
+    "chemistry_active_cells": 94031005,
+    "chemistry_active_eps_min": 0.001,
+    "delta_t_s": 2,
+    "write_interval_s": 20,
+    "end_time_s": 120,
+    "yi_tolerance": 1e-10,
+    "yi_relative_tolerance": 0,
+    "courant_number_mean": 5.4244802,
+    "courant_number_maximum": 63.399818,
+    "surface_reconstruction": {
+      "mode": "occupancyGaussian",
+      "sigma_vox": 0.74,
+      "combined_area_m2_from_surface_log": 0.000522861342891493,
+      "combined_area_m2_from_fields": 0.0005228613428914902,
+      "intrinsic_micropore_area_m2": 0.000521895296,
+      "surface_log_sha256": "34f0330b4f446c0c39d24554e0b180675271ef0a0d35a10f99d7629be7f8c28a",
+      "intrinsic_surface_log_sha256": "38620c393a3dc705ab159fac74db88e7e866e994270aa902de9b349bed2762cc"
+    }
+  },
+  "retained_output_coverage": {
+    "times_s": [0, 20, 40, 60, 80, 100, 120],
+    "processor_directories_per_time": 64,
+    "required_final_fields_verified_on_all_ranks": [
+      "Ca+2",
+      "Sr+2",
+      "Cl-",
+      "Surf_aCa+",
+      "Surf_aSr+",
+      "eps",
+      "aSurf"
+    ]
+  },
+  "inputs": {
+    "images/raw/Est_3phase500cubed4micron.raw.tar.gz": "aa258b5a0d21ae36e23b0cb5f931b1f5c2f2455f0fa766adacb379fcb7f3189b",
+    "images/raw/Est_3phase500cubed4micron.txt": "99bf01dbd908acf5ae823673041be5f4b32676fdcd2020758610c8ad028074a2",
+    "scripts/createASurfMarchingCubes.py": "3e60ee8064c22d6f1c56f04a33e677ea52618e0243c2b3f2ec354750dcd14aa1",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/createMesh.sh": "28e154f4b4bc805dc71543a89a21cd740e3180329030df3eaa6dd471be7d4469",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/initCaseFlow.sh": "4ffc0bba5a5655b307a06de7beae2a457f3fe973d40b92b87884e0282fb145b5",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/runCaseFlow.sh": "e5d67effe746ddb672e3ee10d7802b0bf90ccae916f18777c5bf429f342a11d8",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/initCaseReactiveTransport.sh": "d34c801553828eea1d58d19ea6e8b95e1a6b97e40b896729a142d1c6da9ab7be",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/runCaseReactiveTransport.sh": "27d00b74c78ce67a99a7fd097975b3eeb46619913296d3468afc94604702daeb",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/runAll.sh": "ad90871907f8fae2898a62b33389ffea30cea96c29dfc395d4f747eb44728338",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/constant/phreeqcReactions": "efbf1a390a98af0f7399e632d8044635a8db78ef1993223727320f65a8075dcb",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/constant/thermoPhysicalProperties1": "eca3bb5fb52d328ca41b6d0a270dbad843db3849996e633a0cd129b014be9485",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/constant/transportProperties2": "225b3a86f0a27c48c33abe522b07ff987aad2a9fb9b5eb34642ad81b35adfd4b",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/system/controlDict1": "cdb4494482941fb5e4d278099eb2b996d76e720cd52ed83c67a698c9f6ab27ba",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/system/fvSolution": "18a505a993895c9b9b5f6267d0fb1fecb70e7c160eda323dfc548a7ad0ba5a8c",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/system/fvSolution1": "18a505a993895c9b9b5f6267d0fb1fecb70e7c160eda323dfc548a7ad0ba5a8c"
+  },
+  "validation": {
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/3d_estaillades/validation/surface_area.json": "9774cc144cfb9c6c5e816989816edd1e5764ade86258e2fa10965e59269def1b",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig08_estaillades_concentration_bounds.json": "eee55e79427265778814437051f25f2d6086fcd8ced7540fd992606cf051e938",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig08_estaillades_temporal.json": "0c5b21a5857c379e71c4d195c06fd9c97458c2283a05be5be1c3e03a8886901e"
+  },
+  "figures": {
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig04_3d_estaillades.png": {
+      "sha256": "e53a69063be67b3158077149e78f26d2b56884ab12ae413400a492bf78efb8b4",
+      "dimensions_px": [3200, 3200],
+      "output_time_s": 40
+    },
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig08_estaillades_temporal.png": {
+      "sha256": "2e0d7b8417c110f9310b76bd5f8124ba7bf4a1b5647d6d8c3fcac163ce78a399",
+      "dimensions_px": [1839, 780],
+      "output_times_s": [0, 20, 40, 60, 80, 100, 120]
+    }
+  },
+  "renderers": {
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_estaillades_figures.sh": "066aae94d56a235cc3918f29f2c3a807a8c6648f41766e22d139ac9932caf4a1",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_3d_volume_pyvista_egl.sh": "bc3f4a79cea01e0f9575cd2a64ad86827e2db7d66f28214032e685ea04f497d1",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_3d_volume_render_pyvista.py": "d83757eca4e2890a85e387edc5eaaa4e675db846698f2c56aaa4b045de4c312d",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_estaillades_temporal_plot.py": "9314531bea99301975e423c55ddf8f4f0d68826228749d07d83ffb841554d936",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/validate_estaillades_checkpoint.py": "100dfb715e5184eeeb0576fbbb7eb98a58af3f2e7b2f0c2abd051192a6f64dc5",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/validate_estaillades_surface_area.py": "e0e1f18fb1ef2a582f7afcd0ca4c5ca67da816c6888e92423c0c65be57fba4f0",
+    "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/openfoam_field_io.py": "a97a55a93545e88770e4a756b2076ebeee07d1783eae2451e306f8dd2c275b81"
+  },
+  "renderer_environment": {
+    "conda_environment": "gcfoam",
+    "matplotlib_version": "3.9.2",
+    "numpy_version": "2.1.2",
+    "pyvista_version": "0.47.1",
+    "note": "The project environment reproduces the accepted Figure 8 PNG byte-for-byte; system Matplotlib 3.8.4 reproduces the numerical series but not identical raster antialiasing."
+  }
+}

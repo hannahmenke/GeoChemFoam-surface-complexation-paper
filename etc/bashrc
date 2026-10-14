@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Runtime environment for paper-owned GeoChemFoam cases. The solver source and
+# build remain in a separate checkout; all case inputs and outputs remain here.
+_paper_repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GCFOAM_RUNTIME_ROOT="${GCFOAM_RUNTIME_ROOT:-${GCFOAM_RUNTIME_DIR:-$(cd "$_paper_repo_root/.." && pwd)/GeoChemFoam-main-runtime}}"
+GCFOAM_RUNTIME_DIR="$GCFOAM_RUNTIME_ROOT"
+export GCFOAM_RUNTIME_ROOT GCFOAM_RUNTIME_DIR
+
+if [ ! -d "$GCFOAM_RUNTIME_ROOT" ]; then
+    echo "GeoChemFoam runtime not found: $GCFOAM_RUNTIME_ROOT" >&2
+    echo "Set GCFOAM_RUNTIME_ROOT to a built checkout of upstream main." >&2
+    return 1
+fi
+
+if [ -f /usr/lib/openfoam/openfoam2512/etc/bashrc ]; then
+    _paper_had_nounset=0
+    _paper_had_errexit=0
+    case "$-" in *u*) _paper_had_nounset=1 ;; esac
+    case "$-" in *e*) _paper_had_errexit=1 ;; esac
+    set +e
+    set +u
+    # shellcheck disable=SC1091
+    source /usr/lib/openfoam/openfoam2512/etc/bashrc
+    if [ "$_paper_had_nounset" -eq 1 ]; then
+        set -u
+    fi
+    if [ "$_paper_had_errexit" -eq 1 ]; then
+        set -e
+    fi
+    unset _paper_had_nounset _paper_had_errexit
+fi
+
+export GCFOAM_DIR="$GCFOAM_RUNTIME_ROOT"
+export GCFOAM_SRC="$GCFOAM_DIR/src"
+export GCFOAM_APPBIN="$GCFOAM_DIR/bin"
+export GCFOAM_LIBBIN="$GCFOAM_DIR/lib"
+export PHREEQCRM_DIR="$GCFOAM_DIR/ThirdParty/PhreeqcRM"
+export PHREEQCRM_LIBBIN="$PHREEQCRM_DIR/lib"
+export PLATFORM="${PLATFORM:-LOCAL}"
+export PATH="$GCFOAM_APPBIN:$PATH"
+export LD_LIBRARY_PATH="$GCFOAM_LIBBIN:$PHREEQCRM_LIBBIN:${LD_LIBRARY_PATH:-}"
+
+unset _paper_repo_root

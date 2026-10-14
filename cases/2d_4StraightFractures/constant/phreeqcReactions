@@ -1,0 +1,60 @@
+TITLE Pb2+ sorption on Dzombak-Morel hydrous ferric oxide (HFO) coating
+# Two-site HFO model (Dzombak & Morel 1990) representing iron-oxyhydroxide
+# coatings on fracture walls. Strong sites (Surf_s) provide near-irreversible
+# high-affinity uptake; weak sites (Surf_w) provide reversible bulk capacity.
+# Log K values from the standard Dzombak-Morel database (GeoChem.dat).
+
+SURFACE_MASTER_SPECIES
+    Surf_s  Surf_sOH
+    Surf_w  Surf_wOH
+
+SURFACE_SPECIES
+    # Strong-site proton reactions
+    Surf_sOH = Surf_sOH
+    Surf_sOH + H+ = Surf_sOH2+
+        -log_k  7.29
+        -mole_balance Surf_sOH2+
+    Surf_sOH = Surf_sO- + H+
+        -log_k -8.93
+        -mole_balance Surf_sO-
+    # Strong-site Pb2+ complexation
+    Surf_sOH + Pb+2 = Surf_sOPb+ + H+
+        -log_k  4.65
+        -mole_balance Surf_sOPb+
+
+    # Weak-site proton reactions
+    Surf_wOH = Surf_wOH
+    Surf_wOH + H+ = Surf_wOH2+
+        -log_k  7.29
+        -mole_balance Surf_wOH2+
+    Surf_wOH = Surf_wO- + H+
+        -log_k -8.93
+        -mole_balance Surf_wO-
+    # Weak-site Pb2+ complexation
+    Surf_wOH + Pb+2 = Surf_wOPb+ + H+
+        -log_k  0.3
+        -mole_balance Surf_wOPb+
+
+SOLUTION 0 background clean groundwater
+    units   mol/L
+    Pb      1e-15
+    Cl      1e-15
+    pH      7 charge
+
+SOLUTION 1 initial surface equilibration state (clean)
+    units   mol/L
+    Pb      1e-15
+    Cl      1e-15
+    pH      7 charge
+
+SELECTED_OUTPUT
+    -molalities Surf_sOH Surf_sO- Surf_sOPb+ Surf_wOH Surf_wO- Surf_wOPb+
+    -ionic_strength true
+
+USER_PUNCH
+    -headings psi_s
+    -start
+    10 PUNCH SURF("Surf_s","psi")
+    -end
+
+END

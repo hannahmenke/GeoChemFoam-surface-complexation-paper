@@ -1,0 +1,36 @@
+\section{Conclusions}
+
+This work presents a conservative DBS formulation for PHREEQC-coupled reactive
+transport with cell-based surface complexation in image-based porous media,
+validated across analytical, image-based, and multi-scale porous-media cases.
+
+The key contribution is a cell-based representation of unresolved reactive
+surface area that sits inside the DBS micro-continuum framework. One fixed
+porosity field serves aqueous accumulation, transport, and the PHREEQC cell
+volumes alike, which keeps the aqueous transport conservative and the local
+mass balance closed cell by cell. The unresolved micropore surface enters as an
+additive intrinsic volumetric density, so reactive uptake can be represented in
+image phases whose internal surface area lies inside the coarse cell rather
+than on its boundary.
+
+The 1D tests preserve the closed-batch Ca inventory to a relative residual
+below $10^{-9}$ and show approximately first-order mesh and timestep
+convergence, while the surface-area reconstruction recovers analytic interface
+area to sub-percent accuracy for 3D spheres at $R/\Delta x\ge16$ and
+quasi-2D circular posts at all four tested resolutions. In the Li micromodel, the
+intrinsic-area representation keeps both aqueous and sorbed inventories within
+$0.6\%$ of the resolved result over $Pe=0.1$--10, while the sorbed streamwise
+profile differs by up to $4.75\%$. Across the 2D and 3D image-based cases, the
+model resolves the dissolved and adsorbed fields that follow from the local
+pore geometry and competition between species for surface sites.
+
+Surface complexation can therefore be carried conservatively on cells whose
+reactive area is unresolved, freeing the reactive surface from the resolved
+mesh boundary in multi-scale image-based simulation. This matters for reactive
+porous-media problems in which selectivity and surface accessibility control
+performance, among them contaminant retention, radionuclide migration, and
+critical-mineral recovery by sorbent-bearing porous media. Constraining the intrinsic surface-area input against measured internal area is
+the step that would most improve predictive accuracy, and extending the
+formulation to evolving reactive area and kinetic surface chemistry would open
+the dissolution and precipitation problems that the equilibrium treatment
+excludes.

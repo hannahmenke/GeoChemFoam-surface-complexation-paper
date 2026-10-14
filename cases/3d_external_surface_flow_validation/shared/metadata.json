@@ -1,0 +1,29 @@
+{
+  "source_image": "Est_3phase500cubed4micron",
+  "source_dims_xyz": [
+    500,
+    500,
+    500
+  ],
+  "crop_min_xyz": [
+    300,
+    340,
+    40
+  ],
+  "crop_size_xyz": [
+    128,
+    128,
+    128
+  ],
+  "labels": {
+    "pore": 1,
+    "micropore_remapped_to_solid": 2,
+    "solid": 3,
+    "snappy_pore": 255,
+    "snappy_solid": 0
+  },
+  "porosity": 0.27832937240600586,
+  "connected_pore_voxels": 583699,
+  "inlet_pore_voxels": 5588,
+  "outlet_pore_voxels": 2081
+}

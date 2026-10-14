@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.py[cod]
+
+# LaTeX build products
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.pdf
+*.synctex.gz
+
+# Detached local validation runs
+.codex-runs/
+
+# Case-generated numerical results remain local or in external run archives
+/cases/**/results/
+/tutorials/reactiveTransport/**/results/
+/cases/3d_estaillades/validation/*.json
+
+# GeoChemFoam-owned raw images materialised by prepare_external_assets.sh
+/images/raw/*.raw.tar.gz
+/cases/two_scale_micromodel_sorption_validation/shared/source/*.raw.tar.gz
+
+# Local editor and OS files
+.DS_Store
+*~

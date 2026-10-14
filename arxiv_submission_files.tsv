@@ -1,0 +1,21 @@
+# Source path relative to this directory<TAB>flat arXiv export name.
+# references.bib and sn-basic.bst are build inputs only; export_arxiv.sh
+# generates main.bbl from them and deliberately excludes them from the ZIP.
+main.tex	main.source.tex
+references.bib	references.bib
+sn-jnl.cls	sn-jnl.cls
+sn-basic.bst	sn-basic.bst
+figures/png/fig05_solver_workflow.png	figure01.png
+figures/png/fig01_1d_retardation.png	figure02.png
+figures/png/fig06_1d_breakthrough.png	figure03.png
+figures/png/fig09_sphere_surface_area_validation.png	figure04.png
+figures/png/fig10_hm12_surface_area_validation.png	figure05.png
+figures/png/fig11_3d_external_surface_area_validation.png	figure06.png
+figures/png/fig12_two_scale_lithium_nested_geometries.png	figure07.png
+figures/png/fig10_two_scale_pe1_fields.png	figure08.png
+figures/png/fig09_two_scale_error_vs_peclet.png	figure09.png
+figures/png/fig02_2d_fractures.png	figure10.png
+figures/png/fig03_3d_kelvin.png	figure11.png
+figures/png/fig07_kelvin_temporal.png	figure12.png
+figures/png/fig04_3d_estaillades.png	figure13.png
+figures/png/fig08_estaillades_temporal.png	figure14.png

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+cd "$(dirname "$0")"
+
+if [ "${ALLOW_RT_OVERRIDES:-0}" != "1" ]; then
+  for name in \
+    RT_TOTAL_TIME RT_WRITE_TIMESTEP RT_TIMESTEP RT_TIMESTEP_OVERRIDE \
+    RT_CFL_TARGET RT_LOCAL_VELOCITY_FACTOR RT_FACE_VELOCITY_SAFETY \
+    RT_TIMESTEP_MAX FLOW_TOTAL_TIME \
+    RT_INIT_ONLY RT_DRY_RUN_ONLY RT_RESTART RT_RESTART_TIME
+  do
+    if [ -n "${!name:-}" ]; then
+      echo "Refusing production sweep with inherited $name=${!name}." >&2
+      echo "Unset smoke/restart overrides, or set ALLOW_RT_OVERRIDES=1 deliberately." >&2
+      exit 2
+    fi
+  done
+fi
+
+pes="${PE_SWEEP:-0.1 1 3 10}"
+# Full matched figure matrix: 5 um resolved and DBS cases at each Pe.
+cases="${CASE_SWEEP:-resolved-reference dbs-upscaled}"
+submit_script="${SUBMIT_SCRIPT:-submit_archer_two_scale_case.slurm}"
+account="${GCFOAM_SLURM_ACCOUNT:-}"
+qos="${GCFOAM_SLURM_QOS:-standard}"
+runtime_root="${GCFOAM_RUNTIME_ROOT:-}"
+env_file="${GCFOAM_ENV_FILE:-${runtime_root:+$runtime_root/.archer2-tools/gcfoam-env.sh}}"
+if [ ! -f "$env_file" ]; then
+  echo "Set GCFOAM_ENV_FILE to a GeoChemFoam ARCHER environment helper" >&2
+  exit 2
+fi
+surface_mode="${ASURF_SURFACE_MODE:-occupancyGaussian}"
+run_label="${SURFACE_RECONSTRUCTION_LABEL:-production}"
+if [[ ! "$run_label" =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+  echo "Invalid SURFACE_RECONSTRUCTION_LABEL=$run_label" >&2
+  exit 2
+fi
+
+for pe in $pes; do
+  pe_tag="${pe//./p}"
+  for case_name in $cases; do
+    case_tag="${case_name//-/_}"
+    if [ "$case_name" = "resolved-reference" ]; then
+      resolved_factor="${RESOLVED_COARSEN_FACTOR:-5}"
+      if [ "$resolved_factor" -eq 1 ]; then
+        nodes="${RESOLVED_NODES:-128}"
+        resolved_npx="${RESOLVED_NPX:-256}"
+        resolved_npy="${RESOLVED_NPY:-64}"
+      else
+        nodes="${RESOLVED_NODES:-8}"
+        resolved_npx="${RESOLVED_NPX:-40}"
+        resolved_npy="${RESOLVED_NPY:-24}"
+      fi
+      tasks=$((resolved_npx * resolved_npy * ${RESOLVED_NPZ:-1}))
+      export_args="TARGET_CASE=${case_name},TARGET_PE=${pe},SURFACE_RECONSTRUCTION_LABEL=${run_label},ASURF_SURFACE_MODE=${surface_mode},GCFOAM_RUNTIME_ROOT=${runtime_root},GCFOAM_ENV_FILE=${env_file},RESOLVED_COARSEN_FACTOR=${resolved_factor},RESOLVED_NPX=${resolved_npx},RESOLVED_NPY=${resolved_npy},RESOLVED_NPZ=${RESOLVED_NPZ:-1}"
+    elif [ "$case_name" = "dbs-upscaled" ]; then
+      nodes="${DBS_NODES:-2}"
+      tasks=$(( ${DBS_NPX:-32} * ${DBS_NPY:-8} * ${DBS_NPZ:-1} ))
+      export_args="TARGET_CASE=${case_name},TARGET_PE=${pe},SURFACE_RECONSTRUCTION_LABEL=${run_label},ASURF_SURFACE_MODE=${surface_mode},GCFOAM_RUNTIME_ROOT=${runtime_root},GCFOAM_ENV_FILE=${env_file},DBS_NPX=${DBS_NPX:-32},DBS_NPY=${DBS_NPY:-8},DBS_NPZ=${DBS_NPZ:-1}"
+    else
+      echo "Unknown case in CASE_SWEEP: ${case_name}" >&2
+      exit 2
+    fi
+    if [ $((tasks % nodes)) -ne 0 ] || [ $((tasks / nodes)) -gt 128 ]; then
+      echo "Invalid decomposition: ${tasks} ranks across ${nodes} nodes." >&2
+      exit 2
+    fi
+    tasks_per_node=$((tasks / nodes))
+    echo "Submitting ${case_name} Pe=${pe}, label=${run_label} on ${nodes} nodes"
+    sbatch_args=(
+      --job-name="ts_${case_tag}_${pe_tag}_${run_label}" \
+      --qos="$qos" \
+      --nodes="$nodes" \
+      --ntasks="$tasks" \
+      --ntasks-per-node="$tasks_per_node" \
+      --export="ALL,${export_args}" \
+      "$submit_script"
+    )
+    if [ -n "$account" ]; then
+      sbatch_args+=(--account="$account")
+    fi
+    if [ "${SUBMIT_DRY_RUN:-0}" = "1" ]; then
+      printf 'sbatch'
+      printf ' %q' "${sbatch_args[@]}"
+      printf '\n'
+    else
+      sbatch "${sbatch_args[@]}"
+    fi
+  done
+done

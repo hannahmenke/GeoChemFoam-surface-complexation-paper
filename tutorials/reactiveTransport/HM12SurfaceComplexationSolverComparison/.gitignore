@@ -1,0 +1,17 @@
+# Common run outputs
+processor*/
+[0-9]*/
+*.out
+*.pid
+*.status
+*.wrapper.log
+*.solver.log
+poroPerm.csv
+error.inp
+createASurfReactive.out
+Paraview_loader.foam
+
+# Generated resolved-wall geometry
+resolved-snappy/constant/polyMesh/
+resolved-snappy/constant/triSurface/*
+!resolved-snappy/constant/triSurface/raw2stl.py

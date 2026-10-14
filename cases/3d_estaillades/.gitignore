@@ -1,0 +1,17 @@
+# Generated case outputs
+processor*/
+[0-9]*/
+0.*
+*.out
+*.pid
+*.status
+*.log
+poroPerm.csv
+error.inp
+createASurfReactive.out
+createASurfIntrinsicReactive.out
+Paraview_loader.foam
+
+# Generated geometry and mesh
+constant/polyMesh/
+constant/triSurface/*

@@ -1,0 +1,57 @@
+TITLE Mn2+ capture from Mg-rich water on Dzombak-Morel hydrous ferric oxide
+
+SURFACE_MASTER_SPECIES
+    Surf_s  Surf_sOH
+    Surf_w  Surf_wOH
+
+SURFACE_SPECIES
+    Surf_sOH = Surf_sOH
+    Surf_sOH + H+ = Surf_sOH2+
+        -log_k  7.29
+        -mole_balance Surf_sOH2+
+    Surf_sOH = Surf_sO- + H+
+        -log_k -8.93
+        -mole_balance Surf_sO-
+    Surf_sOH + Mn+2 = Surf_sOMn+ + H+
+        -log_k -0.4
+        -mole_balance Surf_sOMn+
+
+    Surf_wOH = Surf_wOH
+    Surf_wOH + H+ = Surf_wOH2+
+        -log_k  7.29
+        -mole_balance Surf_wOH2+
+    Surf_wOH = Surf_wO- + H+
+        -log_k -8.93
+        -mole_balance Surf_wO-
+    Surf_wOH + Mg+2 = Surf_wOMg+ + H+
+        -log_k -4.6
+        -mole_balance Surf_wOMg+
+    Surf_wOH + Mn+2 = Surf_wOMn+ + H+
+        -log_k -3.5
+        -mole_balance Surf_wOMn+
+
+SOLUTION 0 Mg-rich background water
+    units   mol/L
+    Mn      1e-12
+    Mg      1e-3
+    Cl      2e-3
+    pH      7 charge
+
+SOLUTION 1 initial surface equilibration state
+    units   mol/L
+    Mn      1e-12
+    Mg      1e-3
+    Cl      2e-3
+    pH      7 charge
+
+SELECTED_OUTPUT
+    -molalities Surf_sOH Surf_sO- Surf_sOMn+ Surf_wOH Surf_wO- Surf_wOMg+ Surf_wOMn+
+    -ionic_strength true
+
+USER_PUNCH
+    -headings psi_s
+    -start
+    10 PUNCH SURF("Surf_s","psi")
+    -end
+
+END

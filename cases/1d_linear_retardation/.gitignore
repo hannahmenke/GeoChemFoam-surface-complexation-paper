@@ -1,0 +1,17 @@
+# Generated OpenFOAM state and benchmark outputs
+0/
+processor*/
+[0-9]*/
+!0_orig/
+!0_orig/**
+constant/polyMesh/
+postProcessing/
+results/
+benchmarks/
+*.out
+*.pid
+*.status
+error.inp
+run_provenance.json
+!run_provenance.json
+__pycache__/

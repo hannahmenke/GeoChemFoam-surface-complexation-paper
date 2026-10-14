@@ -1,0 +1,11 @@
+FoamFile
+{
+version     4.0;
+format      ascii;
+class       dictionary;
+location    "system";
+object      postProcessDict;
+}
+
+poro 0.423917 ;
+perm 1.70205e-09 ;

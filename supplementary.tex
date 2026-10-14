@@ -1,0 +1,229 @@
+\documentclass[pdflatex,sn-basic]{sn-jnl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{manyfoot}
+\usepackage[section]{placeins}
+
+\raggedbottom
+
+\begin{document}
+
+\title[Supplementary Information]{Supplementary Information for ``A
+Conservative Darcy-Brinkman-Stokes Formulation for PHREEQC-Coupled Reactive
+Transport with Cell-Based Surface Complexation''}
+
+\author*[1,2]{\fnm{Hannah P.} \sur{Menke}}\email{H.Menke@hw.ac.uk}
+\author[1,2]{\fnm{Florian} \sur{Doster}}
+\author[1,2]{\fnm{Julien} \sur{Maes}}
+
+\affil*[1]{\orgdiv{Institute for GeoEnergy Engineering}, \orgname{Heriot-Watt University}, \orgaddress{\city{Edinburgh}, \country{United Kingdom}}}
+\affil[2]{\orgdiv{SET-IT (Subsurface Energy Transition \& Innovation Centre)}, \orgname{Heriot-Watt University}, \orgaddress{\city{Edinburgh}, \country{United Kingdom}}}
+
+\maketitle
+
++\section{One-Dimensional Numerical Convergence}
+
+The spatial and temporal sensitivity of the 1D retardation
+benchmark was evaluated at $t=10$~s for both the surface-enabled and matched
+aqueous-only cases. The mesh study used $N_x=40$, 80, 160, and 320 cells with
+$\Delta t=0.015625$~s. The timestep study used $N_x=320$ with
+$\Delta t=0.25$, 0.125, 0.0625, 0.03125, and 0.015625~s. All other physical and
+chemical inputs were unchanged from the benchmark reported in the main text.
+
+Table~\ref{tab:1dConvergence} reports the relative $E_1$ difference between
+each concentration profile and the next finer result. For the mesh comparison,
+the finer profile was conservatively averaged onto the coarser cells before
+evaluation. The successive differences decrease monotonically for both cases.
+The observed orders range from 0.83 to 0.96 for the surface-enabled mesh
+sequence and from 0.95 to 0.96 for its timestep sequence; the corresponding
+aqueous-only ranges are 0.76--0.99 and 0.94--1.13. These values are consistent
+with the first-order Euler time integration, upwind advection, and sequential
+transport--equilibrium coupling used here. Because these are pairwise numerical
+differences, they do not depend on a semi-infinite reference profile.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Mesh and timestep refinement for the 1D retardation benchmark at
+    $t=10$~s. Values are relative $E_1$ differences (\%) from the next finer
+    result. A dash identifies the finest result in each sequence.}
+    \label{tab:1dConvergence}
+    \begin{tabular}{llrrr}
+        \toprule
+        Study & Resolution & $N_x$ & Surface-enabled & Aqueous-only \\
+        \midrule
+        Mesh & $\Delta x=1.000~\mu$m & 40  & 0.949 & 0.583 \\
+             & $\Delta x=0.500~\mu$m & 80  & 0.532 & 0.344 \\
+             & $\Delta x=0.250~\mu$m & 160 & 0.274 & 0.173 \\
+             & $\Delta x=0.125~\mu$m & 320 & --    & --    \\
+        \midrule
+        Timestep & $\Delta t=0.250000$~s & 320 & 1.444 & 0.465 \\
+                 & $\Delta t=0.125000$~s & 320 & 0.747 & 0.213 \\
+                 & $\Delta t=0.062500$~s & 320 & 0.383 & 0.109 \\
+                 & $\Delta t=0.031250$~s & 320 & 0.198 & 0.057 \\
+                 & $\Delta t=0.015625$~s & 320 & --    & --    \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+The $80$-cell, $\Delta t=0.25$~s discretisation used for the main validation
+differs from the finest combined result
+($N_x=320$, $\Delta t=0.015625$~s) by $3.01\%$ and $1.05\%$ for the
+surface-enabled and aqueous-only profiles, respectively. The monotonic
+pairwise differences and observed orders quantify the combined spatial,
+temporal, and sequential-coupling errors in the reported discretisation.
+
+\section{Reactive-Area Construction and Capacity Mapping}
+
+For each ordered pair of segmented labels, the owner and other phase define
+a pair mask through their union. In \texttt{occupancyGaussian}, the
+Gaussian-filtered owner indicator is divided by the Gaussian-filtered pair
+mask to form a normalised occupancy field. The $0.5$ level is extracted
+within the pair mask.
+
+In three dimensions, reconstructed triangle area is assigned to computational
+cells and divided by bulk cell volume. Paper-local three-dimensional
+deposition probes owner points at offsets from $0.2$ to $3.0$ voxels along
+the triangle normal, followed by a nearest-owner search in the surrounding
+voxels. If this search finds no owner voxel, the triangle centroid supplies
+the mapping point.
+
+In quasi-two-dimensional images, reconstructed contour length is multiplied
+by the physical out-of-plane thickness before division by bulk cell volume.
+The serial construction probes offsets from $0.2$ to $1.5$ voxels along the
+contour normal and uses the contour-piece midpoint if the probes find no
+owner point. Weighted redistribution assigns each contour piece to
+owner-side first-shell contact cells, with weights based on distance and
+contact support. Candidate weights are normalised for each piece.
+Local quasi-two-dimensional construction uses contact-support-based mapping
+and deposits the weighted shares assigned to rank-owned cells. Pieces with
+empty support contribute zero area to the deposited field. Both dimensional
+routes return m$^2$\,m$^{-3}_{\mathrm{bulk}}$. The field is constructed before
+flow and held fixed throughout reactive transport.
+
+For intrinsic area, $s_k$ is defined per unit volume of phase $k$
+(m$^2$\,m$^{-3}_{k}$). The geometric phase fraction $f_k$ converts this
+end-member density to a bulk-volume cell contribution:
+$a_{\mathrm{surf}}^{\mathrm{intrinsic}}=\sum_k f_k s_k$.
+A mass-specific measurement is converted to phase-volume density using the
+corresponding mass per unit phase volume. A density already expressed per
+bulk cell volume represents the cell contribution directly.
+
+The \texttt{phreeqcMixture} builds used for the reported calculations supply
+PhreeqcRM \citep{parkhurst2015phreeqcrm} with area per representative bulk
+litre, obtained by dividing $a_{\mathrm{surf}}$ in
+m$^2$\,m$^{-3}_{\mathrm{bulk}}$ by $10^3$. For surface master $k$, the site
+density $N_k$ (mol\,m$^{-2}$) gives the surface-master inventory per bulk
+volume as $N_k a_{\mathrm{surf}}$. These bulk-volume conversions apply
+without division by $\theta$. The inventory units are
+\[
+\left[\frac{\mathrm{m}^2}{\mathrm{m}^3_{\mathrm{bulk}}}\right]
+\left[\frac{\mathrm{mol}}{\mathrm{m}^2}\right]
+=\left[\frac{\mathrm{mol}}{\mathrm{m}^3_{\mathrm{bulk}}}\right].
+\]
+
+The chemistry mask threshold is set by \texttt{epsChemistryMin} in
+\texttt{constant/thermoPhysicalProperties}, and every calculation reported here
+uses $\theta_{\mathrm{mask}}=10^{-3}$.
+
+\section{Discrete PhreeqcRM Coupling}
+
+The surface-complexation cases select \texttt{mixtureType phreeqcMixture} in
+\texttt{constant/thermoPhysicalProperties}. The active mapping between
+finite-volume cells and PhreeqcRM cells is established once and does not change
+during the run. Reconstruction is needed only when a threshold crossing changes
+the active-cell map or its topology, or when the fixed area capacity changes.
+
+Each OpenFOAM process constructs PhreeqcRM with one worker thread. Domain
+decomposition provides process-level parallelism, and \texttt{runCells()}
+advances only the chemistry cells held by that rank. Each case is decomposed
+according to the \texttt{NPX}, \texttt{NPY}, and \texttt{NPZ} entries in its
+\texttt{system} directory. Every case uses its case-local
+\texttt{constant/GeoChem.dat} database. The image-based cases use kinematic
+viscosity $\nu = 10^{-6}$~m$^2$\,s$^{-1}$ and kinematic pressure drop
+$\Delta p = 5\times10^{-5}$~m$^2$\,s$^{-2}$, and write output every 10~s for the 1D
+benchmark, 2000~s for the fracture case, and 20~s for the Estaillades case.
+
+\subsection{Checkpoint and Restart Lifecycle}
+
+At an output time, a checkpoint-enabled run first invalidates the old
+completion marker collectively, writes a new rank-local dump, writes the
+finite-volume fields, and publishes a completion marker only after the field
+write succeeds. A crash before publication therefore leaves the partially
+updated fields and chemistry state without a marker, and restoration rejects
+them. The PhreeqcRM dump and marker must be retained with the corresponding
+finite-volume time directory; the \texttt{Surf\_*} fields alone do not
+reconstruct the complete internal state.
+
+\section{Short Two-Scale Reconstruction Sensitivity}
+
+The two-scale calculation is a matched short-interval sensitivity test between
+two DBS cases that differ only in the surface field. Both use a
+$3600\times1200\times1$ grid with $5~\mu$m cells,
+16 MPI ranks, $Pe=1$, $D=10^{-9}$~m$^2$\,s$^{-1}$, and prescribed Darcy velocity
+$5.46297\times10^{-5}$~m\,s$^{-1}$. The surface field is the only input that
+differs, and the other 495 input files were verified as identical.
+
+Both short cases use their case-local \texttt{GeoChem.dat} together with the
+same illustrative Li-selective sorbent chemistry. The surface reactions are
+$\mathrm{Sor\_aH}+\mathrm{Li^+}\rightleftharpoons\mathrm{Sor\_aLi}+\mathrm{H^+}$
+($\log K=-5.8$), and the corresponding Na$^+$, K$^+$, and Mg$^{2+}$ reactions
+have $\log K=-7.2$, $-7.0$, and $-7.4$, respectively. Initially Li-free brine
+contains 0.10~M Na, 0.01~M K, 0.01~M Mg, $10^{-12}$~M Li, and 0.13~M Cl at pH
+7; the inflow changes Li to $10^{-3}$~M and Cl to 0.131~M. These parameters
+apply to the short $Pe=1$ sensitivity test only.
+
+Three common checkpoints at 0.0058517566, 0.11703513, and 0.99564208~s meet
+the predefined material-response limits. The maximum absolute differences
+are $0.000647\%$ in integrated area, $0.000703\%$ in aqueous Li inventory,
+$0.2110\%$ in sorbed Li inventory, $0.00172\%$ in the aqueous profile-shape
+diagnostic, $0.5147\%$ in the sorbed profile-shape diagnostic, and $0.03993\%$
+in fixed-reference-area sorbed-response L2. The two profile-shape diagnostics
+compare independently normalised profiles and are not the relative $E_1$
+measure used for validation. Shifts in the aqueous and sorbed cumulative-inventory median positions
+($x_{50}$) are zero. The native-cell
+sorbed inventory-density L2 is $3.61$ to $4.49\%$, dominated by the deliberate
+relocation of area, so the agreement is in integrated response rather than
+pointwise. The last accepted checkpoint covers $0.489\%$ of the configured
+$203.53$~s horizon, so the test establishes early material-response agreement.
+
+\section{Reproducibility and Provenance Entry Points}
+
+The paper directory contains self-contained case definitions and source-data
+references. From the repository root, the provenance verifier is run with
+\begin{verbatim}
+./validate_accepted_nonkelvin_artifacts.sh
+\end{verbatim}
+This command runs the verifier tests and validates
+\texttt{figures/accepted\_nonkelvin\_provenance.json}. The manifest binds the
+reported 1D, fracture, and Estaillades figures to their source data, renderers,
+sidecars, and evidence records by path, size, and SHA-256.
+
+The case-level entry point for the 1D benchmark is
+\texttt{runPhase8AnalyticalBenchmark.sh} in
+\nolinkurl{cases/1d_linear_retardation}. The mesh and timestep sequences are
+reproduced by \texttt{runConvergenceStudy.sh}; the resulting metrics and exact
+runtime identities are retained in \texttt{convergence\_results.json} and
+\texttt{convergence\_provenance.json}. The fracture and Estaillades cases are
+run through the \texttt{runAll.sh} scripts in
+\nolinkurl{cases/2d_4StraightFractures} and \nolinkurl{cases/3d_estaillades},
+each of which also provides separate mesh, flow, reactive-transport,
+processing, and cleanup scripts. The short
+two-scale record is in the \texttt{results} directory of
+\nolinkurl{cases/two_scale_micromodel_sorption_validation}; it records exact
+checkpoints, thresholds, collection hashes, runtime identity, and analyser
+identity. The paper sources and both PDFs are built with \texttt{build.sh}. The
+flat Springer submission archive is generated transactionally with
+\texttt{export\_submission.sh OUTPUT.zip}; its manifest and SHA-256 inventory
+are included in the archive.
+
+
+\backmatter
+\bibliography{references}
+
+\end{document}

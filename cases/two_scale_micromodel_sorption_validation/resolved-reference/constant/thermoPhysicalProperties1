@@ -1,0 +1,85 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2106                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermoPhysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+mixtureType phreeqcMixture;
+epsChemistryMin 1e-3;
+maxRelativeClippedMass 1e-8;
+
+kineticPhases
+{
+}
+
+kineticPhaseReactions
+{
+}
+
+solutionSpecies
+{
+	Li+
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	Na+
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	K+
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	Mg+2
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	Cl-
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	H+
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+	OH-
+	{
+		D D [ 0 2 -1 0 0 0 0 ] 1e-9;
+	}
+};
+
+surfaceSpecies
+{
+	Sor_a-;
+	Sor_aLi;
+	Sor_aNa;
+	Sor_aK;
+	Sor_aMg+;
+	Sor_aH;
+};
+
+surfaceMasters
+{
+	Sor_a;
+};
+
+surfaceMasterDensities
+{
+	// OpenFOAM amount units: kmol of sites per m2 (2.4e-6 mol/m2).
+	Sor_a 2.4e-9;
+};
+
+surfaceInitialSolutionId 1;
+
+// ************************************************************************* //

@@ -1,0 +1,9 @@
+{
+  "time_s": 10.0,
+  "retardation_factor": 1.8505264599307552,
+  "metric": "relative_L1_percent",
+  "surface_aqueous_profile": 3.5596447538963725,
+  "aqueous_only_profile": 1.797727599433463,
+  "surface_loading_profile": 4.048050369659092,
+  "surface_aqueous_linf_percent_of_inlet": 2.734754055072818
+}

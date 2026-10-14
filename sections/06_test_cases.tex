@@ -1,0 +1,405 @@
+\section{Test Cases}
+
+Three image-based surface-complexation applications are considered here, each
+exercising nonlinear multi-species coupling beyond a single retardation factor
+and representing a different subsurface setting:
+(i)~Pb$^{2+}$ sorption on a two-site Dzombak-Morel hydrous ferric oxide (HFO)
+coating for the 2D four-fracture network case, representative of heavy-metal
+retardation in fractured rock systems and permeable reactive barrier
+remediation;
+(ii)~selective Mn$^{2+}$ uptake from Mg$^{2+}$-rich brine on a two-site HFO
+surface for the Kelvin-cell 3D case, representative of critical-metal capture
+in microporous industrial sorbent media; and
+(iii)~Sr$^{2+}$ leachate invading Ca$^{2+}$-bearing limestone formation water
+for the Estaillades 3D case, representative of radionuclide migration from a
+deep geological repository (DGR) for radioactive waste.
+Each case applies the coupling, the image-derived interface area, and the
+two-scale DBS reactive surface validated in Section~\ref{sec:validation}, and
+in each the intrinsic micropore term in $a_{\mathrm{surf}}$
+(Section~\ref{sec:aSurf}) adds to the uptake carried by the resolved interface.
+Table~\ref{tab:simParams} lists the simulation parameters for the three
+application cases together with the 1D retardation benchmark, and
+Table~\ref{tab:chemParams} lists their geochemical parameters.
+In all cases cells with $\theta \le \theta_{\mathrm{mask}} = 10^{-3}$ are
+treated as chemically inactive, and PHREEQC thermodynamic data are drawn from
+the \texttt{GeoChem.dat} database distributed with GeoChemFoam.
+The 1D benchmark is presented in Section~\ref{sec:1D} and uses a prescribed
+uniform Darcy velocity $U_D = 10^{-6}\ \mathrm{m\,s^{-1}}$; the 2D and 3D
+image-based cases use a velocity field from a \texttt{simpleDBSFoam} flow
+calculation with kinematic pressure drop
+$\Delta p = 5\times10^{-5}\ \mathrm{m^{2}\,s^{-2}}$ and kinematic viscosity
+$\nu = 10^{-6}\ \mathrm{m^{2}\,s^{-1}}$.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Simulation parameters for the three image-based application cases
+    and the 1D retardation benchmark of Section~\ref{sec:1D}. Image dimensions
+    are given in voxels and the voxel spacing $\delta x$ sets the physical scale
+    of each model. Phase labels are integers in the segmented image; (r)
+    follows the name of the reactive phase receiving the phase-volume end
+    member $s_k$, whose cellwise intrinsic contribution is $f_k s_k$. The 1D
+    case instead uses a prescribed uniform $a_{\mathrm{surf}}$ in a synthetic
+    domain with no image source.
+    The 2D four-fracture network case uses 8 Message Passing Interface (MPI)
+    ranks
+    ($4\times2\times1$ decomposition) and the Estaillades case uses 64 MPI ranks
+    ($4\times4\times4$ decomposition); the 1D case is serial.}
+    \label{tab:simParams}
+    \scriptsize
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabular}{@{}p{0.13\linewidth}p{0.09\linewidth}p{0.06\linewidth}p{0.09\linewidth}p{0.16\linewidth}p{0.08\linewidth}p{0.10\linewidth}p{0.07\linewidth}p{0.07\linewidth}@{}}
+        \toprule
+        Case
+            & Image [vox]
+            & $\delta x$ ($\mu$m)
+            & Comp.\ grid
+            & Phase labels
+            & $D$ (m$^{2}$\,s$^{-1}$)
+            & Reactive-area input (m$^{-1}$)
+            & $\Delta t$ (s)
+            & $t_{\mathrm{end}}$ (s) \\
+        \midrule
+        1D retardation
+            & n/a
+            & n/a
+            & $80\times1\times1$
+            & \mbox{bulk ($\theta=0.5$)}
+            & $10^{-11}$
+            & $10^{5}$
+            & $0.25$
+            & $80$ \\
+        2D fractures (Pb$^{2+}$/HFO)
+            & $500\times500\times1$
+            & $100$
+            & $250\times250\times1$
+            & 1=\mbox{micropore (r)}, 2=pore
+            & $10^{-9}$
+            & $10^{5}$
+            & $0.25$
+            & $20000$ \\
+        3D Kelvin (Mn$^{2+}$/Mg$^{2+}$)
+            & $200^{3}$
+            & $10$
+            & $200^{3}$
+            & 1=pore, 2=\mbox{micropore (r)}
+            & $10^{-9}$
+            & $10^{5}$
+            & $4$
+            & $120$ \\
+        3D Estaillades (Sr$^{2+}$/Ca$^{2+}$)
+            & $500^{3}$
+            & $4$
+            & $500^{3}$
+            & 1=pore, 2=\mbox{micropore (r)}, 3=solid
+            & $10^{-9}$
+            & $10^{5}$
+            & $2$
+            & $120$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Geochemical and physical parameters for the three image-based
+    application cases and the 1D retardation benchmark of
+    Section~\ref{sec:1D}.
+    All surface reactions are written in the form
+    $\mathrm{SiteOH} + \mathrm{M}^{n+} \rightleftharpoons \mathrm{SiteOM}^{(n-1)+} + \mathrm{H}^+$,
+    so positive $\log K$ indicates sorption that is thermodynamically
+    favourable at neutral pH relative to proton release.
+    The two-site HFO reaction set and $\log K$ values for Pb$^{2+}$,
+    Mn$^{2+}$, and Mg$^{2+}$ follow \citet{dzombak1990surface}; the site
+    densities used in the simulations are listed in the table.
+    \texttt{Surf\_a} equilibrium constants for Ca$^{2+}$ and
+    Sr$^{2+}$ are from the \texttt{GeoChem.dat} database distributed with
+    GeoChemFoam \citep{maes2021geochemfoam,parkhurst2013phreeqc}.
+    The diffusivity $D = 10^{-9}$\,m$^2$\,s$^{-1}$ is a representative
+    free-aqueous value for divalent cations at 25\,\textdegree{}C; the reduced
+    value $D = 10^{-11}$\,m$^2$\,s$^{-1}$ for the 1D benchmark is chosen to
+    give a P\'{e}clet number of order unity over the 80-cell domain so that
+    both advective and diffusive spreading are visible in the spatial profiles.
+    In the 1D case, $10^{5}$\,m$^{-1}$ is the prescribed uniform cell field
+    $a_{\mathrm{surf}}$. In each image case, $10^{5}$\,m$^{-1}$ is instead the
+    microporous-phase end member $s_{\mathrm{micro}}$, and the local intrinsic
+    field is $f_{\mathrm{micro}}s_{\mathrm{micro}}$; see
+    Section~\ref{sec:aSurf}.}
+    \label{tab:chemParams}
+    \scriptsize
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabular}{@{}p{0.13\linewidth}p{0.19\linewidth}p{0.19\linewidth}p{0.19\linewidth}p{0.19\linewidth}@{}}
+        \toprule
+        Parameter
+            & 1D retardation
+            & 2D Pb$^{2+}$/HFO
+            & 3D Mn$^{2+}$/Mg$^{2+}$
+            & 3D Sr$^{2+}$/Ca$^{2+}$ \\
+        \midrule
+        Surface model
+            & \texttt{Surf\_a} (single-site)
+            & Dzombak-Morel HFO (two-site)
+            & Dzombak-Morel HFO (two-site)
+            & \texttt{Surf\_a} (single-site) \\
+        Reactive species
+            & Ca$^{2+}$
+            & Pb$^{2+}$
+            & Mn$^{2+}$, Mg$^{2+}$
+            & Sr$^{2+}$, Ca$^{2+}$ \\
+        Site density $N_k$ (mol\,m$^{-2}$)
+            & $2.4\times10^{-6}$
+            & Hfo$_s$: $2\times10^{-4}$;\enspace Hfo$_w$: $6\times10^{-3}$
+            & Hfo$_s$: $2\times10^{-4}$;\enspace Hfo$_w$: $6\times10^{-3}$
+            & $2.4\times10^{-6}$ \\
+        Surface $\log K$
+            & Ca: $-5.85$
+            & Pb/Hfo$_s$: $+4.65$;\enspace Pb/Hfo$_w$: $+0.30$
+            & Mn/Hfo$_s$: $-0.40$;\enspace Mn/Hfo$_w$: $-3.50$;\enspace Mg/Hfo$_w$: $-4.60$
+            & Ca: $-5.85$;\enspace Sr: $-5.5$ \\
+        Diffusivity $D$ (m$^2$\,s$^{-1}$)
+            & $10^{-11}$
+            & $10^{-9}$
+            & $10^{-9}$
+            & $10^{-9}$ \\
+        Uniform cell water fraction $\theta$
+            & $0.5$
+            & n/a
+            & n/a
+            & n/a \\
+        Micropore end-member porosity $\phi_{\mathrm{micro}}$
+            & n/a
+            & $0.4$
+            & $0.4$
+            & $0.4$ \\
+        Reactive-area input (m$^{-1}$)
+            & $a_{\mathrm{surf}}=10^{5}$
+            & $s_{\mathrm{micro}}=10^{5}$
+            & $s_{\mathrm{micro}}=10^{5}$
+            & $s_{\mathrm{micro}}=10^{5}$ \\
+        $\theta_{\mathrm{mask}}$
+            & $10^{-3}$
+            & $10^{-3}$
+            & $10^{-3}$
+            & $10^{-3}$ \\
+        $C_{\mathrm{in}}$ (mol\,L$^{-1}$)
+            & Ca: $2\times10^{-9}$
+            & Pb: $10^{-3}$
+            & Mn: $10^{-5}$;\enspace Mg: $10^{-3}$
+            & Ca: $0$;\enspace Sr: $10^{-4}$ \\
+        $C_{\mathrm{init}}$ (mol\,L$^{-1}$)
+            & Ca: $0$
+            & $\approx 0$
+            & Mn: $0$;\enspace Mg: $10^{-3}$
+            & Ca: $10^{-3}$;\enspace Sr: $0$ \\
+        pH (inlet / initial)
+            & 7
+            & 7
+            & 7
+            & 7 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\FloatBarrier
+
+\subsection{\texorpdfstring{2D Fracture Network: Pb$^{2+}$ on
+Dzombak-Morel HFO}{2D Fracture Network: Pb2+ on Dzombak-Morel HFO}}
+
+The 2D demonstration uses the GeoChemFoam benchmark fracture-network image
+\nolinkurl{4StraightFractures}. The segmented domain has dimensions
+$500 \times 500 \times 1$ with two labels corresponding to micropore ($1$) and
+pore ($2$). The computational grid is $250 \times 250 \times 1$.
+The four straight fractures give a simple flow field in which retardation by
+iron-oxide coatings on the fracture walls can be followed cell by cell, as it
+occurs in iron-rich fractured aquifers, acid mine drainage pathways, and
+engineered permeable reactive barriers where HFO is the sorbent phase.
+
+The chemistry represents equilibrium Pb$^{2+}$ sorption on HFO using the
+Dzombak-Morel two-site model \citep{dzombak1990surface}. The strong-site
+reaction has $\log K = +4.65$, compared with $+0.30$ for the weak-site
+reaction, whereas weak sites are thirty times more abundant. Pb$^{2+}$ enters
+a Pb-free domain at $C_{\mathrm{in}} = 10^{-3}$~mol~L$^{-1}$ and pH~7.
+
+Flow is directed from the left inlet to the right outlet along $+x$, with
+kinematic pressure fixed at $5\times10^{-5}$ and $0$~m$^2$\,s$^{-2}$ on the
+respective faces. Velocity is zero-gradient at the inlet and outlet and
+no-slip at the lateral walls. The inlet fixes Pb$^{2+}$, Cl$^{-}$, H$^{+}$,
+and OH$^{-}$ to the inflow composition, while the dissolved fields are
+zero-gradient at the outlet and lateral walls; the front and back patches are
+empty. At pH~7 the HFO sites retard dissolved Pb$^{2+}$, which reaches most of
+the domain by $t=20000$~s. The total reactive-area field combines the
+reconstructed interface for micropore 1 $\rightarrow$ pore 2 with the
+microporous-phase end member $s_{\mathrm{micro}}=10^{5}\ \mathrm{m^{-1}}$.
+The label-1 phase has $\phi_{\mathrm{micro}}=0.4$, and mixed-cell contributions
+are weighted by its geometric fraction $f_{\mathrm{micro}}$.
+
+Figure~\ref{fig:2DFractures} shows the segmented geometry,
+Pb$^{2+}/C_{\mathrm{in}}$, and the strong-site occupancy
+Hfo$_s$\allowbreak OPb$^+$/\allowbreak Hfo$_{s,\mathrm{tot}}$ at $t=20000$~s. Dissolved Pb$^{2+}$
+concentrations are higher along the open fracture channels than in the
+surrounding microporous matrix. Strong-site occupancy is greatest near the
+inlet and is locally enhanced in microporous material at fracture
+intersections.
+
+\begin{figure}[p]
+    \centering
+    \includegraphics[width=\linewidth]{figures/png/fig02_2d_fractures.png}
+    \caption{Dissolved Pb$^{2+}$ and strong-site occupancy in the 2D
+    fracture-network case at $t=20000$~s. Left: segmented geometry, with
+    microporous material in blue and open fracture space in white.
+    Middle: Pb$^{2+}$/$C_{\mathrm{in}}$. Right:
+    Hfo$_s$OPb$^+$/Hfo$_{s,\mathrm{tot}}$. Both are shown with logarithmic
+    colour normalisation, and cells with zero reactive area are masked, leaving
+    the open fracture geometry visible.}
+    \label{fig:2DFractures}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{\texorpdfstring{3D Kelvin Cell: Selective Mn$^{2+}$
+Capture from Mg$^{2+}$-Rich Brine}{3D Kelvin Cell: Selective Mn2+
+Capture from Mg2+-Rich Brine}}
+
+This case uses a Kelvin-cell image dataset with dimensions
+$200 \times 200 \times 200$ and voxel size $10~\mu\mathrm{m}$, where
+label $1$ denotes pore and label $2$ denotes a connected microporous lattice.
+Transport is solved in DBS form through both labels; the micropore cells carry
+$\theta = 0.4$ and the intrinsic reactive surface area.
+Trace Mn$^{2+}$ is carried through a Mg$^{2+}$-rich background brine and the
+two cations compete for the same HFO sites, as they do when Mn$^{2+}$ is
+recovered from a high-hardness process or mine-water stream in an open-cell
+sorbent medium. Mn$^{2+}$ complexes more strongly with HFO than Mg$^{2+}$ does,
+so breakthrough and surface loading are set both by advection through the
+Kelvin-cell geometry and by competitive exchange on the reactive coating.
+
+The chemistry uses the same Dzombak-Morel two-site HFO model as the 2D Pb
+case, with Mn$^{2+}$ and Mg$^{2+}$ competing on weak sites and Mn$^{2+}$ also
+complexing with strong sites:
+\begin{align}
+    \mathrm{Hfo_sOH} + \mathrm{Mn^{2+}} &\rightleftharpoons \mathrm{Hfo_sOMn^{+}} + \mathrm{H^{+}}, \quad \log K = -0.40 \\
+    \mathrm{Hfo_wOH} + \mathrm{Mn^{2+}} &\rightleftharpoons \mathrm{Hfo_wOMn^{+}} + \mathrm{H^{+}}, \quad \log K = -3.50 \\
+    \mathrm{Hfo_wOH} + \mathrm{Mg^{2+}} &\rightleftharpoons \mathrm{Hfo_wOMg^{+}} + \mathrm{H^{+}}, \quad \log K = -4.60
+\end{align}
+Mg$^{2+}$ is present at $10^{-3}$~mol~L$^{-1}$ both in the initial water and at
+the inlet, and Mn$^{2+}$ enters at $10^{-5}$~mol~L$^{-1}$ into a domain that
+starts free of it. The surface sites are first equilibrated with the Mg-bearing
+background water, so incoming Mn$^{2+}$ must displace part of the Mg inventory
+in order to load the sites. Site densities are as in the 2D case, and
+$a_{\mathrm{surf}}^{\mathrm{intrinsic}} = 10^{5}$~m$^{-1}$ in the micropore phase.
+
+Figure~\ref{fig:3DKelvin} shows the geometry, volume renders of the two
+competing dissolved species, and the adsorbed-amount changes at $t = 120$~s.
+Figure~\ref{fig:KelvinTemporal} follows the pore-volume weighted aqueous
+Mn$^{2+}$, the aqueous Mg$^{2+}$ released above the background concentration,
+and the surface-area-weighted strong- plus weak-site HFO loadings over the
+120~s simulation. The adsorbed-amount panel quantifies the competitive
+exchange: HFO-Mn accumulates behind the front, while the HFO-Mg inventory
+decreases wherever the Mn-bearing water has reached the sorbent.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/png/fig03_3d_kelvin.png}
+    \caption{Competitive Mn$^{2+}$ and Mg$^{2+}$ sorption in the Kelvin case at
+    $t = 120$~s.
+    (a)~Segmented geometry: micropore diamond lattice in blue, pore space in grey.
+    (b)~Normalised dissolved Mn$^{2+}$ / $C_{\mathrm{in}}$; the advancing front enters
+    from the left.
+    (c)~Normalised dissolved Mg$^{2+}$ / $C_{\mathrm{init}}$.
+    (d)~Incremental adsorbed Mn, summed over strong and weak HFO sites,
+    concentrated in the microporous diamond-lattice channels.
+    (e)~Magnitude of the displaced adsorbed Mg, showing where Mn$^{2+}$ has
+    replaced part of the initially sorbed Mg$^{2+}$ inventory on weak HFO sites.}
+    \label{fig:3DKelvin}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig07_kelvin_temporal.png}
+    \caption{Temporal evolution of domain-mean fields for the Kelvin case
+    ($t = 0$ to $120$~s, sampled every $12$~s).
+    Left: Mn$^{2+}$ normalised by the inlet concentration and the Mg$^{2+}$
+    excess above the background concentration, both pore-volume weighted.
+    Right: normalised signed change in surface-area-weighted adsorbed amount
+    for summed strong- plus weak-site HFO-Mn and weak-site HFO-Mg, defined relative to
+    their values at $t = 0$.}
+    \label{fig:KelvinTemporal}
+\end{figure}
+
+\FloatBarrier
+\clearpage
+\subsection{\texorpdfstring{3D Estaillades Limestone: Sr$^{2+}$ in a Deep
+Geological Repository}{3D Estaillades Limestone: Sr2+ in a Deep Geological
+Repository}}
+
+This case uses a three-phase segmented Estaillades limestone image
+\citep{menke2021upscaling} with dimensions $500 \times 500 \times 500$ and
+voxel size $4~\mu\mathrm{m}$, in which the phases are pore ($1$), micropore
+($2$), and solid ($3$). Transport is solved at the native voxel resolution on
+64 MPI ranks, which places the nonlinear surface exchange in a geologically
+realistic carbonate pore structure.
+
+The chemistry models Sr$^{2+}$ leachate from a waste package invading
+Ca$^{2+}$-bearing limestone formation water. Before transport begins, the
+surface sites are equilibrated locally with a $10^{-3}$~mol~L$^{-1}$ Ca$^{2+}$
+solution at pH~7,
+so the initial sorbed inventory is Ca-dominated. The two competing surface
+reactions are:
+\begin{align}
+    \mathrm{Surf_a H} + \mathrm{Ca^{2+}} &\rightleftharpoons \mathrm{Surf_a Ca^{+}} + \mathrm{H^{+}}, \quad \log K = -5.85 \\
+    \mathrm{Surf_a H} + \mathrm{Sr^{2+}} &\rightleftharpoons \mathrm{Surf_a Sr^{+}} + \mathrm{H^{+}}, \quad \log K = -5.5
+\end{align}
+The single \texttt{Surf\_a} site has a density of
+$2.4\times10^{-6}$~mol~m$^{-2}$, and Sr$^{2+}$ binds slightly more strongly
+than Ca$^{2+}$ ($\log K = -5.5$ against $-5.85$). The domain and the outlet
+boundary start at Ca$^{2+} = 10^{-3}$~mol~L$^{-1}$ with no Sr$^{2+}$, and the
+inlet carries Sr$^{2+} = 10^{-4}$~mol~L$^{-1}$ with no Ca$^{2+}$, both at pH~7.
+
+This produces a chromatographic exchange pattern in which a Ca$^{2+}$
+desorption wave precedes the Sr$^{2+}$ adsorption front, and Sr$^{2+}$ is
+retarded less than a single-species calculation would give because Ca$^{2+}$
+still competes for sites ahead of that front. Over the saved output sequence ($t = 0, 20, \ldots, 120$~s) the
+porosity-weighted mean Sr$^{2+}$ concentration rises from zero to
+$0.865\,C_{\mathrm{in}}$ while the Ca$^{2+}$ concentration falls from
+$1.000$ to $0.095\,C_{\mathrm{init}}$. On the surface,
+\mbox{$\Delta$\texttt{Surf\_aSr+}} increases monotonically and
+\mbox{$\Delta$\texttt{Surf\_aCa+}} becomes progressively more negative,
+quantifying the net replacement of Ca$^{2+}$ by Sr$^{2+}$.
+
+Figure~\ref{fig:3DEstaillades} shows the geometry and 3D volume renders of the
+dissolved and adsorbed fields at $t = 40$~s.
+Figure~\ref{fig:EstailladesTemporal} summarises the weighted exchange history.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{figures/png/fig04_3d_estaillades.png}
+    \caption{3D volume renders of the Estaillades DGR case at $t = 40$~s.
+    (a)~Segmented geometry: solid in white, micropore in grey, and pore in black.
+    (b)~Normalised dissolved Sr$^{2+}$ / $C_{\mathrm{in}}$ in the mobile-water
+    domain; the plume advances from the inlet (left face).
+    (c)~Normalised dissolved Ca$^{2+}$ / $C_{\mathrm{init}}$ in the same domain;
+    the complementary depletion wave shows that Sr$^{2+}$ has displaced Ca$^{2+}$
+    in the swept region.
+    (d)~Incremental adsorbed Sr$^{2+}$ (\mbox{$\Delta$\texttt{Surf\_aSr+}}),
+    relative to $t = 0$ and normalised by its maximum at $t = 40$~s. The
+    distributed loading shows Sr$^{2+}$ accumulating throughout the reactive
+    microporous phase.}
+    \label{fig:3DEstaillades}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/png/fig08_estaillades_temporal.png}
+    \caption{Temporal evolution of weighted fields for the Estaillades DGR
+    case ($t = 0$ to $120$~s, write interval $= 20$~s).
+    Left: porosity-weighted dissolved Ca$^{2+}$ and Sr$^{2+}$ normalised by
+    $C_{\mathrm{init}}$ and $C_{\mathrm{in}}$, respectively.
+    Right: normalised incremental surface-area-weighted adsorbed amount
+    (\mbox{$\Delta$\texttt{Surf\_aCa+}} and \mbox{$\Delta$\texttt{Surf\_aSr+}}),
+    defined relative to their values at $t = 0$ and divided by the largest
+    absolute surface-loading change over the plotted sequence.
+    The curves show the chromatographic exchange: Sr$^{2+}$ invades and
+    accumulates on the surface while Ca$^{2+}$ is displaced from both the
+    aqueous and sorbed phases.}
+    \label{fig:EstailladesTemporal}
+\end{figure}
+
+\FloatBarrier

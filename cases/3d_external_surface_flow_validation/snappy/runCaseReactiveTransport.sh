@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Explicit-aSurf, fixed-eps cases do not use the solver's auxiliary normalized gradient.
+export FOAM_SIGFPE="${FOAM_SIGFPE:-false}"
+
+repo_root="$(cd "$(dirname "$0")"/../../.. && pwd)"
+
+if [ -f /usr/local/anaconda3/etc/profile.d/conda.sh ]; then
+    set +e
+    set +u
+    # shellcheck disable=SC1091
+    source /usr/local/anaconda3/etc/profile.d/conda.sh
+    conda activate gcfoam
+    set -e
+    set -u
+fi
+
+if [ -f "$repo_root/etc/bashrc" ]; then
+    set +e
+    set +u
+    # shellcheck disable=SC1090
+    source "$repo_root/etc/bashrc"
+    set -e
+    set -u
+fi
+
+###### USERS INPUT ############################################################
+
+## Define the total time of the simulation and how often to output concentration fields
+TotalTime="${TOTAL_TIME:-2.5}"
+WriteTimestep="${WRITE_TIMESTEP:-2.5}"
+# Previous runs at 0.01 s reached max Co ~= 19 on snapped cells.
+runTimestep="${RUN_TIMESTEP:-0.00025}"
+
+#### END OF USER INPUT #######################################################
+
+cp system/controlDictReactiveTransport system/controlDict
+sed -i "s/TotalTime/$TotalTime/g" system/controlDict
+sed -i "s/WriteTimestep/$WriteTimestep/g" system/controlDict
+sed -i "s/runTimestep/$runTimestep/g" system/controlDict
+
+if [ -d "processor0" ]
+then
+    export NP="$(find processor* -maxdepth 0 -type d -print| wc -l)"
+
+    echo -e "Run reactiveTransportDBSFoam in parallel on $NP processors"
+    mpirun -np $NP reactiveTransportDBSFoam -parallel > reactiveTransportDBSFoamRT.out
+else
+    echo -e "Run reactiveTransportDBSFoam"
+    reactiveTransportDBSFoam > reactiveTransportDBSFoamRT.out
+fi

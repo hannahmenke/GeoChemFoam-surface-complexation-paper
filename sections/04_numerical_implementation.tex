@@ -1,0 +1,126 @@
+\section{Numerical Implementation}
+
+The implementation couples conservative Darcy-Brinkman-Stokes (DBS) transport
+with cell-centred PHREEQC chemistry and cell-based surface complexation in a
+single operator-split formulation.
+
+\subsection{Field Locations and Discretisation}
+
+All chemistry-bearing state is cell-centred. The solution species, $\theta$,
+$a_{\mathrm{surf}}$, and the adsorbed surface-species fields are stored at cell
+centres, as is the Darcy velocity $\bm{u}_D$. Transport uses face interpolation
+to assemble conservative fluxes on cell faces, while surface chemistry is
+evaluated as a cell-local update. The additive decomposition of
+$a_{\mathrm{surf}}$ into interface and intrinsic contributions is defined in
+Section~\ref{sec:aSurf}
+(Eqs.~\eqref{eq:asurf} and~\eqref{eq:asurf_intrinsic}).
+
+Time integration uses the first-order implicit Euler scheme, matching the
+first-order Lie splitting of the transport and chemistry operators. The
+convective term $\nabla\cdot(\bm{u}_D C_i)$ is discretised with the standard
+first-order upwind scheme, which is bounded and monotone on the unstructured
+image-based meshes. The diffusive term $\nabla\cdot(\theta D_i \nabla C_i)$
+uses a second-order Gauss linear scheme. The Cartesian image cases run without
+non-orthogonality correction, which their orthogonal grids do not require. The
+combination is first-order accurate in both time and space for
+advection-dominated transport.
+
+\subsection{PHREEQC Coupling}
+
+The reported calculations use \texttt{reactiveTransportDBSFoam} with
+\texttt{mixtureType phreeqcMixture} in
+\texttt{constant/thermoPhysicalProperties}. This mixture wraps the PhreeqcRM
+interface \citep{parkhurst2015phreeqcrm}. At
+initialisation, each active computational cell is registered as a separate
+PHREEQC solution. When surface complexation is active, a PHREEQC \texttt{SURFACE}
+block is also created for each reactive cell. For surface master $k$, its
+capacity per representative bulk volume is
+\begin{equation}
+q_{\mathrm{sites},k} = N_k \, a_{\mathrm{surf}},
+\label{eq:nsites}
+\end{equation}
+where $N_k$ (mol\,m$^{-2}$) is the user-prescribed site density for surface
+master species $k$.
+The OpenFOAM dictionary stores $N_k$ in kmol\,m$^{-2}$, following the native
+OpenFOAM amount unit; it is therefore multiplied numerically by $10^3$ when
+interpreted as mol\,m$^{-2}$. Each surface-master density is supplied as an
+OpenFOAM field, allowing spatially heterogeneous site densities.
+
+The total $a_{\mathrm{surf}}$ field is computed before the simulation begins
+(Section~\ref{sec:aSurf}), written as an OpenFOAM volume field, and read
+explicitly by \texttt{reactiveTransportDBSFoam}. It is held constant throughout
+the reactive-transport calculation; it is not updated by the flow or chemistry
+solvers. The area and site capacity are transferred when the per-cell
+PHREEQC surface templates are created and remain internal to PhreeqcRM during
+the time loop. Consequently, the present implementation supports spatially
+heterogeneous but time-independent $\epsilon$ and $a_{\mathrm{surf}}$; changing
+either field during reactive transport would require rebuilding the PHREEQC
+surface state. The surface mode is optional and reduces exactly to
+aqueous-only mode when $a_{\mathrm{surf}} = 0$ everywhere.
+The interface algorithms, owner support, and case-specific parameters are given
+in Section~\ref{sec:aSurf} and Table~\ref{tab:surfaceConstruction}. Both the 2D
+line-length--thickness route and the 3D triangle-area route produce
+$a_{\mathrm{surf}}$ in m$^2$\,m$^{-3}_{\mathrm{bulk}}$ for the same
+cell-local PHREEQC mapping.
+
+Cells with negligible mobile-water fraction
+($\theta < \texttt{epsChemistryMin}$) are excluded from the fixed
+finite-volume-to-PhreeqcRM mapping and do not contribute to chemistry.
+
+The chemistry update is local to each mapped cell. Each solver process
+constructs PhreeqcRM with one worker thread, and OpenFOAM domain decomposition
+provides process-level parallelism.
+The \texttt{runCells()} call advances the chemistry cells held by that process.
+
+\subsection{Per-Timestep Algorithm}
+
+At startup, \texttt{reactiveTransportDBSFoam} reads the fixed porosity,
+velocity, pressure, aqueous-species, and total surface-area fields. The
+\texttt{phreeqcMixture} constructor establishes a fixed mapping between active
+finite-volume cells and PhreeqcRM cells and caches the surface-area and
+site-capacity data. Unless checkpoint restoration is explicitly requested, the
+chemistry state is initialised from the written aqueous and surface fields at
+the selected start time. When \texttt{phreeqcRestoreCheckpoint} is enabled, a
+complete matched checkpoint restores the serialised PhreeqcRM state;
+restoration fails if either checkpoint component is absent or inconsistent.
+
+At each timestep, the aqueous transport equations are advanced in conservative
+DBS form using the implicit Euler upwind discretisation described above. A
+single call to \texttt{species}\allowbreak\texttt{Mixture.}\allowbreak\texttt{correct()} transfers the updated aqueous
+and surface fields to PhreeqcRM, refreshes the fixed porosity values, clips
+negative aqueous inputs to zero subject to a fail-fast relative added-mass
+limit, executes \texttt{runCells()}, and copies the equilibrated aqueous and
+surface species back to the finite-volume fields. At configured output times,
+checkpoint-enabled runs write the aqueous and surface fields together with the
+corresponding rank-local PhreeqcRM checkpoint and publish its completion marker
+only after the field write succeeds. Conservation is assessed from the written
+fields using the domain-integrated bulk inventory
+$M_{\mathrm{total}} = \sum_{\mathrm{cells}} V_{\mathrm{cell}}
+\left( \theta C + a_{\mathrm{surf}}\Gamma \right)$,
+where $V_{\mathrm{cell}}$ is the cell volume. In
+a closed domain this quantity should remain constant to within discretisation
+error; in a flow-through domain it should balance the net flux through the
+inlet and outlet faces.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.96\linewidth]{figures/png/fig05_solver_workflow.png}
+    \caption{Source-traced solution procedure for
+    \texttt{reactiveTransportDBSFoam} with \texttt{phreeqcMixture}. The
+    constructor establishes the active-cell mapping and initial PhreeqcRM
+    state. Each timestep advances all aqueous species in conservative DBS
+    form, after which \texttt{speciesMixture.correct()} transfers the aqueous
+    and surface state to PhreeqcRM, executes \texttt{runCells()}, and returns
+    the updated species fields. At output times, it writes the fields and, when
+    enabled, a matching complete PhreeqcRM checkpoint.}
+    \label{fig:dbsWorkflow}
+\end{figure}
+
+Figure~\ref{fig:dbsWorkflow} illustrates the algorithm. Solver selection is
+made through \texttt{mixtureType}: the surface-complexation cases use
+\texttt{phreeqcMixture}, whereas the upstream kinetic-mineral formulation uses
+\texttt{inertMultiComponentMixture}. The chemistry state remains cell-centred
+throughout the loop: transport acts through the aqueous face fluxes, while
+PHREEQC updates the cell-local aqueous and adsorbed inventories after each
+transport solve. The unresolved surface reaction stays a cell-local update
+rather than an equivalent face flux.

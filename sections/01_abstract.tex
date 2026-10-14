@@ -1,0 +1,28 @@
+\abstract{We present a mass-conservative Darcy-Brinkman-Stokes (DBS)
+formulation for reactive transport with cell-based surface complexation in
+image-based porous media, coupled to PHREEQC and implemented in GeoChemFoam,
+an OpenFOAM-based toolbox. Dissolved species are transported in the physical
+mobile-water fraction, adsorbed species are stored as conservative cell-scale
+surface inventories, and each reactive cell is coupled to PHREEQC. Reactive
+surface area is prescribed independently as a cell field, so that internal
+area left unresolved by segmentation of microporous phases can be represented
+while DBS flow and transport are retained in the resolved pore space.
+
+The implementation is verified with a test suite that isolates the coupling
+of transport and chemistry from the construction of reactive surface area.
+Aqueous and adsorbed mass balance is evaluated against a one-dimensional
+analytical retardation benchmark and closed-system batch calculations. The
+smooth-interface surface-area algorithms are tested on idealised two- and
+three-dimensional geometries. In a two-scale lithium micromodel, DBS
+reproduces fully resolved aqueous and sorbed inventories within $0.6\%$
+across $Pe=0.1$--10.
+
+The applications comprise Pb$^{2+}$ retardation by hydrous ferric oxide
+coatings in a two-dimensional fracture network, competitive Mn$^{2+}$/Mg$^{2+}$
+exchange in a three-dimensional Kelvin-cell sorbent, and Sr$^{2+}$/Ca$^{2+}$
+exchange in Estaillades limestone. In the fracture-network and limestone cases,
+the formulation yields spatially resolved aqueous and adsorbed inventories even
+where reactive surface area is only partly resolved at the image scale. The
+framework therefore supports conservative surface-complexation modelling in
+both resolved and unresolved pore structures, with relevance to contaminant
+retention, selective ion capture, and radionuclide transport.}

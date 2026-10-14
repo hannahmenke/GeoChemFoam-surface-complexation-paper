@@ -1,0 +1,74 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2106                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermoPhysicalProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+mixtureType phreeqcMixture;
+epsChemistryMin 1e-3;
+maxRelativeClippedMass 1e-8;
+
+kineticPhases
+{
+}
+
+kineticPhaseReactions
+{
+}
+
+solutionSpecies
+{
+	Ca+2
+	{
+		D D [ 0 2 -1 0 0 0 0 ] Diff;
+	}
+	Sr+2
+	{
+		D D [ 0 2 -1 0 0 0 0 ] Diff;
+	}
+	Cl-
+	{
+		D D [ 0 2 -1 0 0 0 0 ] Diff;
+	}
+	H+
+	{
+		D D [ 0 2 -1 0 0 0 0 ] Diff;
+	}
+	OH-
+	{
+		D D [ 0 2 -1 0 0 0 0 ] Diff;
+	}
+};
+
+surfaceSpecies
+{
+	Surf_a-;
+	Surf_aCa+;
+	Surf_aSr+;
+	Surf_aH;
+};
+
+surfaceMasters
+{
+	Surf_a;
+};
+
+surfaceMasterDensities
+{
+	Surf_a 2.4e-9;
+};
+
+surfaceInitialSolutionId 1;
+
+// ************************************************************************* //

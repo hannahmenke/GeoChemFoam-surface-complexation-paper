@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "completed_utc": "2026-09-10T17:11:22.460899+00:00",
+  "runtime_root": "${GCFOAM_RUNTIME_ROOT}",
+  "runtime_commit": "da69d292c0bae0a0ec2f8faf626a7df5271376b9",
+  "phreeqcrm_commit": "32ce8c319376d6279b4538c0d0ba54cf7fbbe97c",
+  "solver_executable": "${GCFOAM_RUNTIME_ROOT}/bin/reactiveTransportDBSFoam",
+  "solver_sha256": "d88f8d469ce76da5341b4f9509c4c5116a22bbd08d24b325820f315c70028dc6",
+  "results_sha256": "699e8b728a9cfacf205200035d55cb6fb282e104d72682035db4faaa151b0e59",
+  "study_script_sha256": "4cd2002e723c7165236098e4bb2a1dc33a01f59466dcb5500939c0810a593cf7",
+  "analysis_script_sha256": "1ec7b07064348f193a8ca8f82879b0aeea01c7098151833b549badae7a2c41cc"
+}

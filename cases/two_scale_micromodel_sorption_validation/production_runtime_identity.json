@@ -1,0 +1,11 @@
+{
+  "artifacts": {
+    "ThirdParty/PhreeqcRM/lib/libPhreeqcRM.so": "c63a1d55bb5792a19944b11d7966292d1f4e8c5cebda9c54f85a1e88fe16ae65",
+    "bin/reactiveScalarTransportDBSFoam": "0bb38c5831ba5a2b4f35af8c2b46ec5c2199524aaaf28b000d1f7b093dca7912",
+    "lib/libreactionThermophysicalModelsGCFOAM.so": "f947b05b6a6d355b4e280afdf4c9c11f056e3dab34577b7f2cdcba6588c965d9"
+  },
+  "phreeqcrm_tree": "3b7192a17297f07e4c71e3518f15d9c3852c1775",
+  "runtime_commit": "fc275fc7081bfd3b9db9b2ad6a108f314f5f7ed4",
+  "runtime_tree": "d21378cfb7b340aabba339b8ab0f98eb527cd2a7",
+  "schema_version": 2
+}

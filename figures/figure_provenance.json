@@ -1,0 +1,774 @@
+{
+  "figures": {
+    "fig02_2d_fractures.png": {
+      "checkpoint_contract": "legacy-v1",
+      "chemistry": {
+        "files": [
+          {
+            "path": "${RUN_CASE_DIR}/constant/thermoPhysicalProperties",
+            "sha256": "7b8033d1790f412f74cabd33992763e727dc70e19323c0f9e7f07eaf270694bf"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/thermoPhysicalProperties1",
+            "sha256": "7b8033d1790f412f74cabd33992763e727dc70e19323c0f9e7f07eaf270694bf"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/phreeqcReactions",
+            "sha256": "5745e708e23f4f98d686aa51ee53ec2b7da15c01ba5b803ddb2fd91b9007be27"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/GeoChem.dat",
+            "sha256": "2cfa5be85bd29bd7556946a0b7f104857ff848d04b18c9f57e9d2508195e72fe"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/dynamicMeshDict",
+            "sha256": "31fbb851de01ed23db3b6fc98a6e964688abc53678d4951dbb912c22c521c315"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/g",
+            "sha256": "6f241b529a84ab307aed418045676a8e94d7605819ce9af184a68e9ddeebe971"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/transportProperties1",
+            "sha256": "fe97aeaff12c61a416352a9bce0af0abb29e1c288810b7d592f124952eb1a78b"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/constant/turbulenceProperties",
+            "sha256": "ee3ded398d6cfe54b9a42450e8d0d01e966756066304ebe5dd5efffc6ae2f550"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/controlDict1",
+            "sha256": "e270fed1dd9d7e1551cbc6c473d69cd01f64fb70c35ecc1587a8ce4932563ba7"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/fvSchemes",
+            "sha256": "4cebcca11bfda486f9e2a77094237236d0b568bf07d86f1dffb095d598a6c352"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/fvSolution1",
+            "sha256": "40e0c0c721d360ed8217479cb8f30632c020b95fc7e852a423d5c25e7d6d2392"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/postProcessDict1",
+            "sha256": "b98d19924b5a8b2673f3b1f837867180e781daf4073cfe6ccd18608b8d4afea2"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/SPDict",
+            "sha256": "0155213dc4ec031ddcc8a1b779252586ffecb195bc3e7cb571b5ce670f5e47de"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/NPX",
+            "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/NPY",
+            "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/NPZ",
+            "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/Nx1",
+            "sha256": "e4355a05c3a4b156700c4a1a32867d8f7a25a0dd24c6146c2deb2a1c96a6c93c"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/Ny1",
+            "sha256": "e4355a05c3a4b156700c4a1a32867d8f7a25a0dd24c6146c2deb2a1c96a6c93c"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/system/Nz1",
+            "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/createMesh.sh",
+            "sha256": "b00bf78f3f51bacfaf7847e2d12dc7bd954fad1b885147a8c5a13aba1956a97b"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/initCaseFlow.sh",
+            "sha256": "acde7490f98e59160d7fb35d998e934895d4e6d505dc0d184de3660d3f8ac8e2"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/runCaseFlow.sh",
+            "sha256": "babb22501a1d59e3e405b1f6530973241fb15cad3baf34c38f0e385955b51cb8"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processFlow.sh",
+            "sha256": "69ffeb9a0fdfe98f8ddc1b1677dd4154d1974dd8e7b2cd1e4c0c106c0eb55645"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/initCaseReactiveTransport.sh",
+            "sha256": "a24f79065951790279422ed48401488d85352d8f6cf6b868df2167b1b1e76858"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/runCaseReactiveTransport.sh",
+            "sha256": "28d6ab5b110b2b50c8ec8e7b9c1ce22b276410570c5351e4c24bd764ef69391c"
+          },
+          {
+            "path": "${RUN_PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/configure_runtime.sh",
+            "sha256": "ada94fac25802b66bb1f1e945a3963d29d8b0e33bd654a4859339dcdb070ba18"
+          },
+          {
+            "path": "${RUN_PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/case_provenance.py",
+            "sha256": "a8d4effcd6de5f4413a31abd33370f486fa86e7b281c72076b96167c914a0cfb"
+          },
+          {
+            "path": "${RUN_PAPER_REPO}/scripts/createASurfMarchingCubes.py",
+            "sha256": "3e60ee8064c22d6f1c56f04a33e677ea52618e0243c2b3f2ec354750dcd14aa1"
+          },
+          {
+            "path": "${RUN_PAPER_REPO}/images/raw/4StraightFractures.raw.tar.gz",
+            "sha256": "042de7f02d0e8316977787cd72bb6db3c5154eb8ee6745cd59376759ec6759c1"
+          },
+          {
+            "path": "${RUN_PAPER_REPO}/images/raw/4StraightFractures.txt",
+            "sha256": "30a2f9e6480f5e50cb5f8ece9e740b3ff61efb489e8bf01b725a66373ced9528"
+          }
+        ],
+        "surface_master_densities_kmol_m2": {
+          "Surf_s": 2e-07,
+          "Surf_w": 6e-06
+        }
+      },
+      "figure_inputs": [
+        {
+          "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
+          "sha256": "8879a416291d72b893176af8572f481ce88bb4ae007289d6f674b86cc972f60b"
+        },
+        {
+          "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
+          "sha256": "92940bd9b10e32f3ceb03ef706b5a2db9b8bc57bf5d66dcc1ce05144b5cbcc79"
+        },
+        {
+          "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
+          "sha256": "6f1577140073105a7fefa1960c2b7217ff7a3b9d40b9502598043aca45c2ed43"
+        },
+        {
+          "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
+          "sha256": "85754589f4e398173664e09aa3435541e5db1c9cc17b8ea4f9ddf04bd23da718"
+        },
+        {
+          "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_item2_validation_metrics.json",
+          "sha256": "4bb785d0f89c251bbdac51e8f44966301f9b0630ebb3dbe75ceb28c2ceb618c8"
+        },
+        {
+          "path": "${PAPER_REPO}/images/raw/4StraightFractures.raw.tar.gz",
+          "sha256": "042de7f02d0e8316977787cd72bb6db3c5154eb8ee6745cd59376759ec6759c1"
+        },
+        {
+          "path": "${PAPER_REPO}/images/raw/4StraightFractures.txt",
+          "sha256": "30a2f9e6480f5e50cb5f8ece9e740b3ff61efb489e8bf01b725a66373ced9528"
+        }
+      ],
+      "figure_path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/png/fig02_2d_fractures.png",
+      "figure_sha256": "59710d26fefc3140fe5627e6378a3b9f71c05ecd8192c8886ad46f19ce67cd86",
+      "intrinsic_surface": {
+        "integrated_area_m2": 0.021960000000000004,
+        "mode": "occupancyGaussian",
+        "path": "${RUN_CASE_DIR}/createASurfIntrinsicReactive.out",
+        "sha256": "34d25b0d50108298293246c671c3a6d0a4960ac503be1f780d61f32bb6cdab68",
+        "sigma_vox": 0.75
+      },
+      "output_time_s": 20000.0,
+      "paper": {
+        "branch": "",
+        "commit": "fdd31c399d6fd6317027474ce9667d9850a7bb18",
+        "dirty": true,
+        "dirty_paths": [
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/0/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/poroPerm.csv",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor0/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor1/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor2/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor3/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor4/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor5/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor6/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor7/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/SPDict"
+        ],
+        "root": "${RUN_PAPER_REPO}",
+        "source_dirty_paths": [
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/0/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/poroPerm.csv",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor0/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor1/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor2/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor3/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor4/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor5/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor6/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor7/",
+          "papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/SPDict"
+        ],
+        "status_porcelain": [
+          " M papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/constant/transportProperties",
+          " M papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/controlDict",
+          " M papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/fvSolution",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/0/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.pid",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190526.status",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.pid",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/item1_final_10f_a43_20260828_190623.status",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/launch_provenance.json",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/poroPerm.csv",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor0/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor1/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor2/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor3/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor4/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor5/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor6/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/processor7/",
+          "?? papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/system/SPDict"
+        ],
+        "tracked_diff_sha256": "fc6b9e34a3ed3a0d93284c87b3e0892b7c4ec9b147978cbbf041eeae1d32fe91"
+      },
+      "path_roots": {
+        "PAPER_REPO": "checkout of the paper repository",
+        "RUNTIME_REPO": "checkout used to build the solver and libraries",
+        "RUN_CASE_DIR": "completed 2D fracture case directory",
+        "RUN_PAPER_REPO": "checkout used to execute the archived run"
+      },
+      "realized_transport": {
+        "control_dict": {
+          "path": "${RUN_CASE_DIR}/system/controlDict",
+          "sha256": "efe0f94b3321e6ef743d6c056af9fbb34247172e5bb69482cd3d6192828593ab"
+        },
+        "deltaT": 0.25,
+        "endTime": 20000.0,
+        "surface_master_fields": [
+          {
+            "path": "${RUN_CASE_DIR}/processor0/0/Surf_s",
+            "sha256": "0fbc02d877ad500fd92d19497427ec6b0848001f731314446e2c348d3ca29269",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/0/Surf_w",
+            "sha256": "f31c7a1a1efe6a610e8ef5857bc7214cf1f68adc7520423d8e9977ba051caedd",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/0/Surf_s",
+            "sha256": "52b3e052f231b1a6dd6f3de4852fbd9767d0f2e30b5dc422bdc51ee0f2a9fd4a",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/0/Surf_w",
+            "sha256": "efb7ad6a1a9a1d76c2877b793975a8c403f7ab0a16ffab01e0873abca350c57b",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/0/Surf_s",
+            "sha256": "3d556d440f1c688caa1ad663c408530db55e31c868a1ae740048091cdacd0595",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/0/Surf_w",
+            "sha256": "9bf1ba4d230431708296f7dcc01a9644bc7fff36053da42960c5faa54f628c9f",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/0/Surf_s",
+            "sha256": "9299f4249f7e16f056bcdcb8c683f696ab20112108b27a856a8f6e3220b931e0",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/0/Surf_w",
+            "sha256": "e5c52173fec2189d2845c1e3317c44cbaba56eedd54a3a7d5ec71d90f06235b7",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/0/Surf_s",
+            "sha256": "56ea4573eb0d5145ef68eb46daeb0e64f4b4f84748feb1cbfa7a4d0a0dffba7f",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/0/Surf_w",
+            "sha256": "f4faaf80ea32643645c31743ece0d43d80308d8fa81a8eef4eded7b5f2b60f41",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/0/Surf_s",
+            "sha256": "4758b94105e799cab230caed359050ca1e30e85d0f74fb2811f431f2a9c4cebe",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/0/Surf_w",
+            "sha256": "ac2a91a4575f2123dc4a52e300e4c9eef346e50d1eb5ad60a41cd5b6bd5ab6ee",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/0/Surf_s",
+            "sha256": "8c4a48261510f5640b640c28c782be7134c17d7579d0b5653e50a868bf7c582f",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/0/Surf_w",
+            "sha256": "44ac984473c3fd1f3e22cd1760b6917aa48f8c0f985135193bcc4125bbffdb71",
+            "value_kmol_m2": 6e-06
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/0/Surf_s",
+            "sha256": "40de204d314a3f08f1a51220fa58c7c0ed573d1337645f4ccceb5bb64c8672cf",
+            "value_kmol_m2": 2e-07
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/0/Surf_w",
+            "sha256": "c2c9408211921c1d2dccfc0b144d1787ed3f379a6e837dda46d4516a1234b28b",
+            "value_kmol_m2": 6e-06
+          }
+        ],
+        "thermo_file": {
+          "path": "${RUN_CASE_DIR}/constant/thermoPhysicalProperties",
+          "sha256": "7b8033d1790f412f74cabd33992763e727dc70e19323c0f9e7f07eaf270694bf"
+        },
+        "writeInterval": 2000.0
+      },
+      "accepted_figure_recorded_utc": "2026-08-29T12:21:23.377416+00:00",
+      "recorded_utc": "2026-09-03T10:59:46.609576+00:00",
+      "renderer": {
+        "base_commit": "00c4c5aa3817659976137c60dd430424d8f2a05d",
+        "repository": "https://github.com/hannahmenke/GeoChemFoam-surface-complexation-paper.git",
+        "source_authority": "Exact SHA-256 records in source_files are authoritative; base_commit identifies only the underlying Git state.",
+        "source_files": [
+          {
+            "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/render_2d_fractures_figure.sh",
+            "sha256": "8879a416291d72b893176af8572f481ce88bb4ae007289d6f674b86cc972f60b"
+          },
+          {
+            "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/generate_2d_raw_geometry.py",
+            "sha256": "92940bd9b10e32f3ceb03ef706b5a2db9b8bc57bf5d66dcc1ce05144b5cbcc79"
+          },
+          {
+            "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/figures/scripts/figure2_provenance.py",
+            "sha256": "6f1577140073105a7fefa1960c2b7217ff7a3b9d40b9502598043aca45c2ed43"
+          },
+          {
+            "path": "${PAPER_REPO}/papers/scalarTransportDBSFoam-phreeqc-surface-complexation/cases/2d_4StraightFractures/validate_item2_outputs.py",
+            "sha256": "85754589f4e398173664e09aa3435541e5db1c9cc17b8ea4f9ddf04bd23da718"
+          }
+        ],
+        "source_files_authoritative": true,
+        "source_files_sha256": "9e0ba75f23432d2e442fb52ae007775c0e2f4fd87653a697d8259cfe6490a327",
+        "source_state": "curated_dirty_at_base"
+      },
+      "run_manifest_path": "${RUN_CASE_DIR}/run_provenance.json",
+      "run_manifest_sha256": "93a4aed8a657f0ec060c39845071016c857cb19db8dce16f69893b070debd87c",
+      "run_outputs": {
+        "final_rank_fields": [
+          {
+            "path": "${RUN_CASE_DIR}/processor0/20000/Pb+2",
+            "sha256": "4eb4fdea1fc09fc9b63dd869b18d95cda3817819859748401c40ecff658cac18"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/20000/Cl-",
+            "sha256": "3d63070ac06edf3dda8914f4bc4ee664c3975608d05fd4bd0e0314d791b4c01a"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/20000/H+",
+            "sha256": "6c69550cdfaeeb3c18cf4d05ecde55fb87b6646ceaf4ea4fe4333be478de7898"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/20000/OH-",
+            "sha256": "92b467369a2e58423d2127999bbacf66418c2c583a41c37c194e26043b4e5f01"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/20000/Surf_sOPb+",
+            "sha256": "cedfa10edfd9ad2ae44e005a474f2cd56dd7c0a865ffedbabb65d1ff7c91f931"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/20000/Surf_wOPb+",
+            "sha256": "1663fd321e0badafd2ca9e600dc77c80299798003f24908f8efced8d8c7d84e0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/20000/Pb+2",
+            "sha256": "bcb5dff4978231a9cbe365d4301d0a0a542a9200cf2dcfab0b0805dea561ec34"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/20000/Cl-",
+            "sha256": "349f56adc01b448ab7c3044daaf04f1da2cd29395330963d3a4bd1733723f9df"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/20000/H+",
+            "sha256": "1a32f7dbaf2a1555e45b02ea456fed2960dd4b0ba41b7c9c48953bc767a39d78"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/20000/OH-",
+            "sha256": "aecc79b40f8a19fd12d8bdac1c3c8a842ba0f08c4b8cc264c574a982ab6d91a3"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/20000/Surf_sOPb+",
+            "sha256": "97b2bf4bef9a0258af7a2faa472ee0181111ac2c255a6647d223f4519c8e11c3"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/20000/Surf_wOPb+",
+            "sha256": "2d772fa3de5041d72b7c5076b0fff0eaf67dece17efc5f834ad46c5f2cd8e23b"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/20000/Pb+2",
+            "sha256": "75b7b2015dfa27d74545bd8d2bb8bc672cda6b00763851a6998b6f973fe3f699"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/20000/Cl-",
+            "sha256": "0200c9cff3ff210fe810309aaa61aa75a8ef246d80160bc32d840c8183452dc7"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/20000/H+",
+            "sha256": "cbecb25a2fb59e125fc33f903c8c44ce4b98202b489974b6766feb7a07c030f8"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/20000/OH-",
+            "sha256": "c960993ee4153037b870706fd576a7c08c8cd2735713c8cf9357354644a27a5e"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/20000/Surf_sOPb+",
+            "sha256": "5511462e62c4fb109f0103337f5a9591e0b8afa4b0f86e6559f457c77f2a51c3"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/20000/Surf_wOPb+",
+            "sha256": "08647e16ca24784d2d4a75d9a46b0203d63faf9b20c6c6b3810ea6919d01f932"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/20000/Pb+2",
+            "sha256": "d38a904042ded554145724131551bb33331b2de5e45e0fb0c3b5437893a0c0f3"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/20000/Cl-",
+            "sha256": "e9e16e9165766d5f2cb0b657b2c92d8209b7597bc9a3dc92b63e7b4959d14b95"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/20000/H+",
+            "sha256": "89544e141066c109d7c5c96871ae96757a64c4acdfb3f63c5461c947b72291f0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/20000/OH-",
+            "sha256": "d7ed45865a6cb8ba92dd960c564a33b7b994862b4bfb522ddf6651032cbc5677"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/20000/Surf_sOPb+",
+            "sha256": "8f8e3b298f4ee5781ccb1640bbb181d7d6207dafa12d05e1894d5fc8ec82b8cc"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/20000/Surf_wOPb+",
+            "sha256": "af655d33580827aa51dab43e5872555decbeec4c4048fedd1e44f56bd21a5e5c"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/20000/Pb+2",
+            "sha256": "49d92106949f840201a35614bb1f10d0a9167868fd83f56f3dbe1404b694b569"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/20000/Cl-",
+            "sha256": "85c7847f439272ffd67e472feb083e5805c9082779c206c992ff6d8c44f0f3e3"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/20000/H+",
+            "sha256": "57a549d0fd166572ddcc19d8dd3eda9bb1a5ed0ac593cb9fd754e1c97be6f33a"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/20000/OH-",
+            "sha256": "41c2f368ce866f3bf1399e436fc93de08240e207c9396143ef8ff4b91570833b"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/20000/Surf_sOPb+",
+            "sha256": "f18a2f749fd0f65d5c9fd38bb41aaf5db33d52f46037d53dd5556fbb5bc073bb"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/20000/Surf_wOPb+",
+            "sha256": "93a5ed82d4b4cadb6ff375290029b1d304c2b7164920c4b5872f60967f185127"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/20000/Pb+2",
+            "sha256": "e57ff5287677d17c0fa7c9e486a171f44a268395bce787ce81a81b4985b9c5f8"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/20000/Cl-",
+            "sha256": "adbc29971eb55679ab5796941f253ca396c4c616977713f25b3244d5ac3137d6"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/20000/H+",
+            "sha256": "ab4dc265d928848e520210fae31bd89590a8752f8b1816d448f6fb1b6fa39c73"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/20000/OH-",
+            "sha256": "db7f066af4de16179f2c28e2cff79d97c078557a3b0953e23ab6967a5eba9de8"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/20000/Surf_sOPb+",
+            "sha256": "f6ca6d85fa732101b30411a1813e928121af96a0e14af1d1afda92c1c554191b"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/20000/Surf_wOPb+",
+            "sha256": "8487cca0c32f69ca0b681751d40081493302879a3093131ea9018ceea58db2be"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/20000/Pb+2",
+            "sha256": "5448330a663770c1410365bdc0f575a5778e7d4f4c86deee0cc6ea85d3cdb1d5"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/20000/Cl-",
+            "sha256": "896c7568db6b00fd6984fb114047617ee484bde6b1311e41655a315f29d08bd5"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/20000/H+",
+            "sha256": "4b3c6d14f3fb8ce4df49d69ad5db3397a87bf4266083c355d3d52412fdb48adc"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/20000/OH-",
+            "sha256": "13ff7a33174197c587d46d3f839d62974e4b632557ad38b681aa4ef54c01eed6"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/20000/Surf_sOPb+",
+            "sha256": "1b0c24d5b99cc907118c85afad9d080eb81e12b0ab99091620d449537040b7c0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/20000/Surf_wOPb+",
+            "sha256": "59497313a5135fca387ee40b6e50366fdb320796698502f74dcee49d1d08392a"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/20000/Pb+2",
+            "sha256": "6c39986f404c15ee68198ecffe9725540fc9bda7b07883f084a62ad594658fa0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/20000/Cl-",
+            "sha256": "714a20a58bba3d10a23613f5d88ef5403399bea48a1d49cbae70497255245adb"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/20000/H+",
+            "sha256": "92d989f7abd81d24da6da1c1b20bdd10d9d39abe629d5f0241d2489518b9b20c"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/20000/OH-",
+            "sha256": "3491730609680a6f8a0fa1ac2de3198e7eb560eeeae94979cf52dfc7328fd3df"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/20000/Surf_sOPb+",
+            "sha256": "a3f8de739d30497ec1e0571f836e9f6555bae3776cc4d6a8b432a2bba1dbfdd4"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/20000/Surf_wOPb+",
+            "sha256": "bf111f9f29848aad2595a4e2eda248c75f6538217aaac64d34d4c680566ae9a3"
+          }
+        ],
+        "final_rank_fields_sha256": "d0e2bf3b1548da999c0001abfb32775a90d75164acedeed74dd72ca9f83043c3",
+        "solver_log": {
+          "path": "${RUN_CASE_DIR}/reactiveTransportDBSFoamRT.out",
+          "sha256": "05a4a26cc1c394294cda88a67fc846adc94273624e7f137b56570a06b103f846"
+        },
+        "support_rank_fields": [
+          {
+            "path": "${RUN_CASE_DIR}/processor0/0/eps",
+            "sha256": "d0dab1b00fd7b89d5b71c570a215a3afd7966a981f82252520ce1140b2163ef4"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/0/aSurf",
+            "sha256": "fead2a6f52acf5ebe22a1521d44a7c579217aac68e660817ea54d7d246a44857"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/0/Surf_s",
+            "sha256": "0fbc02d877ad500fd92d19497427ec6b0848001f731314446e2c348d3ca29269"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor0/0/Surf_w",
+            "sha256": "f31c7a1a1efe6a610e8ef5857bc7214cf1f68adc7520423d8e9977ba051caedd"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/0/eps",
+            "sha256": "337b167b0e6ae41d910cbb5093c8ce6ff7cff61892bf63328e0536377df585c0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/0/aSurf",
+            "sha256": "f5cd87f705e3eb9ad48c00e7a4eb9e73643716d6d46af4e466d574f27d43c0ad"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/0/Surf_s",
+            "sha256": "52b3e052f231b1a6dd6f3de4852fbd9767d0f2e30b5dc422bdc51ee0f2a9fd4a"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor1/0/Surf_w",
+            "sha256": "efb7ad6a1a9a1d76c2877b793975a8c403f7ab0a16ffab01e0873abca350c57b"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/0/eps",
+            "sha256": "cf1c9cdd3dd4fa8a944468a222c531d6e716036eb64b2d4c3476d27174eab0b9"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/0/aSurf",
+            "sha256": "7bb8aef1aa5c923a26660c4fce77f53a29faff60f64c18fc42c3733dbfc1b4e0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/0/Surf_s",
+            "sha256": "3d556d440f1c688caa1ad663c408530db55e31c868a1ae740048091cdacd0595"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor2/0/Surf_w",
+            "sha256": "9bf1ba4d230431708296f7dcc01a9644bc7fff36053da42960c5faa54f628c9f"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/0/eps",
+            "sha256": "1004459bddef1299a7b993103e014cf93c103fe3552a90896c14edbbe76c0134"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/0/aSurf",
+            "sha256": "e5f4e5805e33472993cba2501b2b15ed86b2547f0506044854dcf464193767ab"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/0/Surf_s",
+            "sha256": "9299f4249f7e16f056bcdcb8c683f696ab20112108b27a856a8f6e3220b931e0"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor3/0/Surf_w",
+            "sha256": "e5c52173fec2189d2845c1e3317c44cbaba56eedd54a3a7d5ec71d90f06235b7"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/0/eps",
+            "sha256": "25cc48350598de453320b9dfb94499a777130c804f7949ac5a1907684f6f0e53"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/0/aSurf",
+            "sha256": "bdcbc065f22b86650fdcb2f852a24a0053fa7caf51a1aecbe877004c1853897f"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/0/Surf_s",
+            "sha256": "56ea4573eb0d5145ef68eb46daeb0e64f4b4f84748feb1cbfa7a4d0a0dffba7f"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor4/0/Surf_w",
+            "sha256": "f4faaf80ea32643645c31743ece0d43d80308d8fa81a8eef4eded7b5f2b60f41"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/0/eps",
+            "sha256": "1a26dc31c0f14faa8e264f7ca8ac4ce98103b85325b7191b90f37212c8aa4c06"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/0/aSurf",
+            "sha256": "2ac02f421868544952ea6c3279d9c73551b54b911ca22faee308b27eea10bcd2"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/0/Surf_s",
+            "sha256": "4758b94105e799cab230caed359050ca1e30e85d0f74fb2811f431f2a9c4cebe"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor5/0/Surf_w",
+            "sha256": "ac2a91a4575f2123dc4a52e300e4c9eef346e50d1eb5ad60a41cd5b6bd5ab6ee"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/0/eps",
+            "sha256": "da1219f92c5aee32e3495f749c3767af6e3b30cf7270bd2431005e52a6aecf70"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/0/aSurf",
+            "sha256": "b693faad95eaae4f57126f97c4f9b587152139741a7c2026deb8ff79a8e0866e"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/0/Surf_s",
+            "sha256": "8c4a48261510f5640b640c28c782be7134c17d7579d0b5653e50a868bf7c582f"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor6/0/Surf_w",
+            "sha256": "44ac984473c3fd1f3e22cd1760b6917aa48f8c0f985135193bcc4125bbffdb71"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/0/eps",
+            "sha256": "080bde06f9baf011a58e104125b15e65dcbba5e972cb246ef8332f9e86a50192"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/0/aSurf",
+            "sha256": "fdae9f6433ee1cbf746f203d3f53a7585073fa986110b8b066911148a6235dba"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/0/Surf_s",
+            "sha256": "40de204d314a3f08f1a51220fa58c7c0ed573d1337645f4ccceb5bb64c8672cf"
+          },
+          {
+            "path": "${RUN_CASE_DIR}/processor7/0/Surf_w",
+            "sha256": "c2c9408211921c1d2dccfc0b144d1787ed3f379a6e837dda46d4516a1234b28b"
+          }
+        ],
+        "support_rank_fields_sha256": "121d8a422a48088736c49c4ce102f3cbdb9dcdc4a1bcafbb10f5aa5ecac0b0db"
+      },
+      "runtime": {
+        "branch": "codex/paper-candidate-pr53-10f-adapter-a43",
+        "commit": "3c4a34326b5573d76d48664093a1933a5a65b316",
+        "dirty": true,
+        "dirty_paths": [
+          "ThirdParty/PhreeqcRM"
+        ],
+        "root": "${RUNTIME_REPO}",
+        "source_dirty_paths": [],
+        "status_porcelain": [
+          " M ThirdParty/PhreeqcRM"
+        ],
+        "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "runtime_artifacts": {
+        "ldd_sha256": "20aded39ba5e86bf46435b5bfd63587abc2d9201921bb3333b51e09f6d29ecc4",
+        "phreeqcrm_submodule": {
+          "branch": "",
+          "commit": "a43de2c1d1dd5c0f93489d560fa3cd3e94646471",
+          "dirty": true,
+          "dirty_paths": [
+            "lib/",
+            "src/Make/linux64GccDPInt32Opt/",
+            "src/lnInclude/"
+          ],
+          "root": "${RUNTIME_REPO}/ThirdParty/PhreeqcRM",
+          "source_dirty_paths": [
+            "lib/",
+            "src/Make/linux64GccDPInt32Opt/",
+            "src/lnInclude/"
+          ],
+          "status_porcelain": [
+            "?? lib/",
+            "?? src/Make/linux64GccDPInt32Opt/",
+            "?? src/lnInclude/"
+          ],
+          "tracked_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "resolved_libraries": [
+          {
+            "path": "${RUNTIME_REPO}/lib/libfiniteVolumeGCFOAM.so",
+            "sha256": "e13af080edca54982d9950378ab27d1c0df5cc1b26d384eb6bb64845348502ad"
+          },
+          {
+            "path": "${RUNTIME_REPO}/lib/libreactionThermophysicalModelsGCFOAM.so",
+            "sha256": "447d857aa9679a1962f72d5df71f09c3faf0b84f4c5b74e279e092af1cdd425a"
+          },
+          {
+            "path": "${RUNTIME_REPO}/ThirdParty/PhreeqcRM/lib/libPhreeqcRM.so",
+            "sha256": "90ffa2f6c554941c40535739fc9359af19528425e6dc61b2876d00b016affe29"
+          }
+        ],
+        "solver": {
+          "path": "${RUNTIME_REPO}/bin/reactiveTransportDBSFoam",
+          "sha256": "3b41fd0914b4407fa591ea403cc66c4fde1daa7d1608481edaac19533e11b124"
+        }
+      },
+      "surface": {
+        "integrated_area_m2": 0.021990199701030694,
+        "mode": "occupancyGaussian",
+        "path": "${RUN_CASE_DIR}/createASurfReactive.out",
+        "sha256": "6d612d9ad1d47b7d6eac3b7f4e4fb5ba5b46f191dfd0244da847f18a5e3f9900",
+        "sigma_vox": 0.75
+      }
+    }
+  },
+  "schema_scope": "bounded_figure2",
+  "schema_version": 3
+}
